@@ -1,0 +1,12 @@
+export { default as Glass1 } from "public/vectors/glass-1.svg";
+export { default as Glass2 } from "public/vectors/glass-2.svg";
+export { default as XSocial } from "public/icons/x-social.svg";
+export { default as Telegram } from "public/icons/telegram.svg";
+export { default as Instagram } from "public/icons/instagram.svg";
+export { default as Wallet1 } from "public/icons/wallet-1.svg";
+export { default as Users3 } from "public/icons/users-3.svg";
+export { default as ThumbsUp } from "public/icons/thumbs-up.svg";
+export { default as Passcode } from "public/icons/passcode.svg";
+export { default as Key1 } from "public/icons/key-1.svg";
+export { default as Check } from "public/icons/check.svg";
+export { default as Success } from "public/icons/success.svg";

@@ -1,0 +1,44 @@
+# EXAMPLE USAGE:
+
+# Refer for explanation to following link:
+# https://lefthook.dev/configuration/
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: pnpm dlx --no-install commitlint --edit {1}
+
+pre-push:
+  jobs:
+    - name: build
+      run: pnpm build
+
+pre-commit:
+  parralel: true
+  jobs:
+    - name: eslint
+      run: npx eslint --fix {staged_files}
+      glob: "*.{js,ts,jsx,tsx}"
+
+    - name: prettier
+      glob: "*.{js,ts,jsx,tsx,html,json,css,scss,md,mdx}"
+      run: npx prettier --write {staged_files}
+
+    - name: re-stage
+      run: git add {staged_files}
+
+post-merge:
+  jobs:
+    - name: install
+      run: pnpm install
+
+output:
+  - meta # Print lefthook version
+  - summary # Print summary block (successful and failed steps)
+  - empty_summary # Print summary heading when there are no steps to run
+  - success # Print successful steps
+  - failure # Print failed steps printing
+  - execution # Print any execution logs
+  - execution_out # Print execution output
+  - execution_info # Print `EXECUTE > ...` logging
+  - skips # Print skipped steps

@@ -1,15 +1,30 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import "@/app/globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+import type { Metadata } from "next";
+import { Figtree, Inter, Montserrat } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
+import { GlobalProvider } from "@/providers/global-provider";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+
+const inter = Inter({
   subsets: ["latin"],
+  display: "swap",
+  variable: "--font-sans",
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const figtree = Figtree({
   subsets: ["latin"],
+  display: "swap",
+  variable: "--font-figtree",
+  weight: ["400", "500", "600", "700"],
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-montserrat",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -23,11 +38,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="h-full" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${figtree.variable} ${montserrat.variable} font-sans antialiased noligatures h-full`}
       >
-        {children}
+        <NuqsAdapter>
+          <GlobalProvider>
+            {children}
+            <Toaster
+              position="top-center"
+              richColors
+              toastOptions={{
+                style: {
+                  justifyContent: "center",
+                },
+              }}
+            />
+          </GlobalProvider>
+        </NuqsAdapter>
       </body>
     </html>
   );
