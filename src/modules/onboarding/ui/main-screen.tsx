@@ -12,16 +12,16 @@ import { JoinTelegramCommunity } from "./join-telegram-community";
 import { FollowSocials } from "./follow-socials";
 import { ReferralCode } from "./referral-code";
 import { ClaimKeys } from "./claim-keys";
-import { JoinOurCommunities } from "./join-our-communities";
+import { JoinVMCCDao } from "./join-vmcc-dao";
 import { fade } from "@/lib/animation.utils";
 
 function StepWrapper({ children }: { children: React.ReactNode }) {
   return (
     <m.div
       variants={fade}
-      initial="hidden"
-      animate="visible"
-      exit="hidden"
+      initial="initial"
+      animate="animate"
+      exit="exit"
       transition={{ duration: 0.3 }}
       className="w-full grid-child-stack"
     >
@@ -42,9 +42,9 @@ export function MainScreen() {
   }, [status]);
 
   return (
-    <div className="w-full space-y-8">
+    <div className="w-full space-y-6 @sm:space-y-8 @container">
       <OnboardingNav />
-      <GlassCard className="p-6 w-full">
+      <GlassCard className="p-4 @sm:p-6 w-full">
         <div className="grid-parent-stack">
           <AnimatePresence mode="sync">
             {stepSlug === "wallet-connected" && (
@@ -74,7 +74,7 @@ export function MainScreen() {
             )}
             {stepSlug === "join-vmcc-dao" && (
               <StepWrapper key={stepSlug}>
-                <JoinOurCommunities />
+                <JoinVMCCDao />
               </StepWrapper>
             )}
           </AnimatePresence>

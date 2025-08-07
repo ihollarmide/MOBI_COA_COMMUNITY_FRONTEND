@@ -110,6 +110,40 @@ export const isValidUsernameWithAtSign = (
   return { isError: false, error: null };
 };
 
+export const isValidReferralCode = (
+  referralCode: string
+): { isError: boolean; error: string | null } => {
+  // Check if referral code is empty or undefined
+  if (!referralCode || referralCode.trim().length === 0) {
+    return { isError: true, error: "Referral code is required" };
+  }
+
+  // Check if referral code starts with "MCL"
+  if (!referralCode.startsWith("MCL")) {
+    return { isError: true, error: "Referral code must start with MCL" };
+  }
+
+  // Check if referral code has exactly 9 characters (MCL + 6 digits)
+  if (referralCode.length !== 9) {
+    return {
+      isError: true,
+      error: "Referral code must be exactly 9 characters (MCL + 6 digits)",
+    };
+  }
+
+  // Check if the part after "MCL" contains exactly 6 digits
+  const digitsPart = referralCode.slice(3);
+  const validDigitsRegex = /^\d{6}$/;
+  if (!validDigitsRegex.test(digitsPart)) {
+    return {
+      isError: true,
+      error: "Referral code must have exactly 6 digits after MCL",
+    };
+  }
+
+  return { isError: false, error: null };
+};
+
 export const getTelegramUserVerifiedKey = ({
   chainId,
   address,

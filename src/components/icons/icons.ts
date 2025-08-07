@@ -10,3 +10,5 @@ export { default as Passcode } from "public/icons/passcode.svg";
 export { default as Key1 } from "public/icons/key-1.svg";
 export { default as Check } from "public/icons/check.svg";
 export { default as Success } from "public/icons/success.svg";
+export { default as Directions } from "public/icons/directions.svg";
+export { default as Telecast } from "public/icons/telecast.svg";

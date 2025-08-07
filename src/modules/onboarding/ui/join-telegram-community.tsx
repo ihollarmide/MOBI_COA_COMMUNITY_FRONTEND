@@ -10,7 +10,7 @@ import {
 import { useChainId } from "wagmi";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import { useSessionStorage } from "@/shared/hooks";
-import { CITY_OF_ATLANTUS_TELEGRAM_LINK } from "@/constants";
+import { CITY_OF_ATLANTUS_TELEGRAM_LINK } from "@/common/constants";
 import { SectionAction } from "./section-action";
 import { SectionMetaInfo } from "./section-meta-info";
 

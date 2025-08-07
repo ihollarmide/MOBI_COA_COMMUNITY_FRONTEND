@@ -24,7 +24,7 @@ function NavItem({
       <button
         type="button"
         onClick={onClick}
-        className="bg-glass-gradient shrink-0 inline-flex items-center justify-center rounded-[10px] border-[0.5px] border-white/[0.05] border-solid py-[11px] px-3 relative w-11 aspect-square"
+        className="bg-glass-gradient shrink-0 inline-flex items-center justify-center rounded-[10px] border-[0.5px] border-white/[0.05] border-solid @sm:py-[11px] @sm:px-3 relative w-9 h-9 @sm:w-11 @sm:h-11 aspect-square"
       >
         <Icon
           name={isCompleted ? IconsNames.CHECK : icon}
@@ -75,17 +75,19 @@ export function OnboardingNav() {
   };
 
   return (
-    <nav className="flex items-center w-full gap-x-2.5">
-      {ONBOARDING_STEPS.map((step, index) => (
-        <NavItem
-          key={step.slug}
-          icon={step.icon}
-          isActive={stepSlug === step.slug}
-          isCompleted={stepsCompletionStatus[step.slug]}
-          isLast={index === ONBOARDING_STEPS.length - 1}
-          onClick={() => handleStepClick(step.slug)}
-        />
-      ))}
-    </nav>
+    <div className="w-full @container">
+      <nav className="flex items-center w-full gap-1 @sm:gap-x-2.5">
+        {ONBOARDING_STEPS.map((step, index) => (
+          <NavItem
+            key={step.slug}
+            icon={step.icon}
+            isActive={stepSlug === step.slug}
+            isCompleted={stepsCompletionStatus[step.slug]}
+            isLast={index === ONBOARDING_STEPS.length - 1}
+            onClick={() => handleStepClick(step.slug)}
+          />
+        ))}
+      </nav>
+    </div>
   );
 }

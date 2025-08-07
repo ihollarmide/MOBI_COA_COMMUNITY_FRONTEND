@@ -5,6 +5,7 @@ import { IconSlate } from "./icon-slate";
 import clsx from "clsx";
 import { Icon } from "@/components/icons/icon";
 import { IconsNames } from "@/components/icons/icon.types";
+import { ReactNode } from "react";
 
 export function SectionAction({
   title,
@@ -17,6 +18,7 @@ export function SectionAction({
   inputPlaceholder,
   onInputChange,
   inputValue,
+  collapsibleContent,
 }: {
   title: string;
   description: string;
@@ -28,6 +30,7 @@ export function SectionAction({
   inputPlaceholder: string;
   onInputChange: (value: string) => void;
   inputValue: string;
+  collapsibleContent?: ReactNode;
 }) {
   return (
     <GlassCard
@@ -35,7 +38,7 @@ export function SectionAction({
         "bg-green-tint": isSuccess,
       })}
     >
-      <div className="flex items-center justify-start gap-x-2">
+      <div className="flex items-start justify-start gap-x-2">
         <IconSlate variant="default" icon={icon} as="div" />
         <div className="space-y-1 flex-1 overflow-ellipsis">
           <p className="text-base font-medium leading-[1.5] tracking-mxs text-white">
@@ -57,16 +60,22 @@ export function SectionAction({
 
       <Collapsible isOpen={isCollapsibleOpen}>
         <div className="pt-4">
-          <Input
-            aria-invalid={isError}
-            value={inputValue}
-            onChange={(e) => onInputChange(e.target.value)}
-            placeholder={inputPlaceholder}
-          />
-          {isError && errorMessage && (
-            <p className="text-destructive text-sm font-normal leading-[1.5] tracking-xxs">
-              {errorMessage}
-            </p>
+          {collapsibleContent ? (
+            collapsibleContent
+          ) : (
+            <>
+              <Input
+                aria-invalid={isError}
+                value={inputValue}
+                onChange={(e) => onInputChange(e.target.value)}
+                placeholder={inputPlaceholder}
+              />
+              {isError && errorMessage && (
+                <p className="text-destructive mt-1 text-xs font-normal leading-[1.5] tracking-xxs">
+                  {errorMessage}
+                </p>
+              )}
+            </>
           )}
         </div>
       </Collapsible>

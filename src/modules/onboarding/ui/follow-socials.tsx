@@ -11,75 +11,221 @@ import {
 import { useChainId } from "wagmi";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import { useSessionStorage } from "@/shared/hooks";
-import { INSTAGRAM_LINK, TWITTER_LINK } from "@/constants";
+import { INSTAGRAM_LINK, TWITTER_LINK } from "@/common/constants";
 import { SectionAction } from "./section-action";
 import { SectionMetaInfo } from "./section-meta-info";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const getTitleMap = (tab: "x" | "instagram") => ({
-  follow: {
-    title: `Follow us on ${tab === "x" ? "X" : "Instagram"}`,
-    description: `This button redirects you to the ${tab === "x" ? "X" : "Instagram"} app on your device`,
-  },
-  verify: {
-    title: `Confirm ${tab === "x" ? "X" : "Instagram"} Follow`,
-    description: `Enter your ${tab === "x" ? "X" : "Instagram"} username to verify`,
-  },
-  success: {
-    title: `Your ${tab === "x" ? "X" : "Instagram"} account has been verified!`,
-    description: `Move on to the next step to claim your airdrop.`,
-  },
-});
+type Platform = "x" | "instagram";
+type PageState = "follow" | "verify" | "success";
 
-const getJoinActionList = (tab: "x" | "instagram") => [
-  `Click the “Follow” button to access the ${tab === "x" ? "X" : "Instagram"}. This button redirects you to the ${tab === "x" ? "X" : "Instagram"} app on your device and enables you to join the community.`,
-  `After joining, come back to this window and enter your ${tab === "x" ? "X" : "Instagram"} username in the input box.`,
-  `Click “Verify” to confirm you've followed the page.`,
-  `Click “Next” to proceed to the next action.`,
-];
+interface PlatformConfig {
+  name: string;
+  displayName: string;
+  icon: IconsNames;
+  link: string;
+  placeholder: string;
+  getVerifiedKey: (params: { chainId: number; address: string }) => string;
+}
 
-export function FollowSocials() {
+const PLATFORM_CONFIG: Record<Platform, PlatformConfig> = {
+  x: {
+    name: "x",
+    displayName: "X",
+    icon: IconsNames.X_SOCIAL,
+    link: TWITTER_LINK,
+    placeholder: "Your X @username",
+    getVerifiedKey: getXUserVerifiedKey,
+  },
+  instagram: {
+    name: "instagram",
+    displayName: "Instagram",
+    icon: IconsNames.INSTAGRAM,
+    link: INSTAGRAM_LINK,
+    placeholder: "Your Instagram @username",
+    getVerifiedKey: getInstagramUserVerifiedKey,
+  },
+};
+
+const getTitleMap = (platform: Platform) => {
+  const config = PLATFORM_CONFIG[platform];
+  return {
+    follow: {
+      title: `Follow us on ${config.displayName}`,
+      description: `This button redirects you to the ${config.displayName} app on your device`,
+    },
+    verify: {
+      title: `Confirm ${config.displayName} Follow`,
+      description: `Enter your ${config.displayName} username to verify`,
+    },
+    success: {
+      title: `Your ${config.displayName} account has been verified!`,
+      description: `Move on to the next step to claim your airdrop.`,
+    },
+  };
+};
+
+const getJoinActionList = (platform: Platform) => {
+  const config = PLATFORM_CONFIG[platform];
+  return [
+    `Click the "Follow" button to access the ${config.displayName}. This button redirects you to the ${config.displayName} app on your device and enables you to join the community.`,
+    `After joining, come back to this window and enter your ${config.displayName} username in the input box.`,
+    `Click "Verify" to confirm you've followed the page.`,
+    `Click "Next" to proceed to the next action.`,
+  ];
+};
+
+interface PlatformState {
+  username: string;
+  page: PageState;
+  error: { isError: boolean; error: string | null };
+  isVerified: boolean;
+}
+
+function usePlatformState(platform: Platform): PlatformState & {
+  setUsername: (username: string) => void;
+  setPage: (page: PageState) => void;
+  setError: (error: { isError: boolean; error: string | null }) => void;
+  setVerified: (verified: boolean) => void;
+} {
   const chainId = useChainId();
   const { address } = useWalletConnectionStatus();
-  const [xUsername, setXUsername] = useState<string>("");
-  const [instagramUsername, setInstagramUsername] = useState<string>("");
-  const { set: setXUserVerified, value: xUserVerified } = useSessionStorage(
-    getXUserVerifiedKey({
+  const config = PLATFORM_CONFIG[platform];
+
+  const [username, setUsername] = useState<string>("");
+  const [page, setPage] = useState<PageState>("follow");
+  const [error, setError] = useState<{
+    isError: boolean;
+    error: string | null;
+  }>({
+    isError: false,
+    error: null,
+  });
+
+  const { set: setVerified, value: isVerified } = useSessionStorage(
+    config.getVerifiedKey({
       chainId,
       address: address ?? "",
     })
   );
 
-  const { set: setInstagramUserVerified, value: instagramUserVerified } =
-    useSessionStorage(
-      getInstagramUserVerifiedKey({
-        chainId,
-        address: address ?? "",
-      })
-    );
+  useEffect(() => {
+    if (isVerified === true && page !== "success") {
+      setPage("success");
+    }
+  }, [isVerified, page]);
 
-  const [xPage, setXPage] = useState<"follow" | "verify" | "success">(
-    xUserVerified === true ? "success" : "follow"
+  return {
+    username,
+    page,
+    error,
+    isVerified: isVerified === true,
+    setUsername,
+    setPage,
+    setError,
+    setVerified,
+  };
+}
+
+interface PlatformTabProps {
+  platform: Platform;
+  onBack: () => void;
+  onConfirm: (platform: Platform) => void;
+  otherPlatformVerified: boolean;
+}
+
+function PlatformTab({
+  platform,
+  onBack,
+  onConfirm,
+  otherPlatformVerified,
+}: PlatformTabProps) {
+  const config = PLATFORM_CONFIG[platform];
+  const { username, page, error, setUsername, setPage, setError, setVerified } =
+    usePlatformState(platform);
+
+  const handleConfirm = () => {
+    if (page === "follow") {
+      setPage("verify");
+    } else if (page === "verify") {
+      const { isError, error: validationError } =
+        isValidUsernameWithAtSign(username);
+      if (isError) {
+        setError({ isError, error: validationError });
+        return;
+      }
+      // TODO: call api to verify username
+      setPage("success");
+      setVerified(true);
+      return;
+    } else if (page === "success") {
+      if (otherPlatformVerified) {
+        onConfirm(platform);
+      } else {
+        // Switch to other platform
+        onConfirm(platform);
+      }
+      return;
+    }
+  };
+
+  const getButtonText = () => {
+    switch (page) {
+      case "follow":
+        return "Follow";
+      case "verify":
+        return "Verify";
+      case "success":
+        return "Next";
+    }
+  };
+
+  const getButtonContent = () => {
+    if (page === "follow") {
+      return (
+        <a href={config.link} target="_blank" rel="noopener noreferrer">
+          Follow
+        </a>
+      );
+    }
+    return getButtonText();
+  };
+
+  return (
+    <TabsContent className="w-full mt-2 space-y-6" value={platform}>
+      <SectionMetaInfo items={getJoinActionList(platform)} />
+      <SectionAction
+        title={getTitleMap(platform)[page].title}
+        description={getTitleMap(platform)[page].description}
+        icon={config.icon}
+        isSuccess={page === "success"}
+        isCollapsibleOpen={page === "verify"}
+        isError={error.isError}
+        errorMessage={error.error}
+        inputPlaceholder={config.placeholder}
+        onInputChange={setUsername}
+        inputValue={username}
+      />
+      <div className="w-full grid @sm:grid-cols-2 gap-y-4 gap-x-2 @md:gap-x-3.5">
+        <Button variant="secondary" onClick={onBack} className="cursor-pointer">
+          Back
+        </Button>
+        <Button
+          asChild={page === "follow"}
+          onClick={handleConfirm}
+          className="cursor-pointer"
+        >
+          {getButtonContent()}
+        </Button>
+      </div>
+    </TabsContent>
   );
-  const [instagramPage, setInstagramPage] = useState<
-    "follow" | "verify" | "success"
-  >(instagramUserVerified === true ? "success" : "follow");
-  const [xUsernameError, setXUsernameError] = useState<{
-    isError: boolean;
-    error: string | null;
-  }>({
-    isError: false,
-    error: null,
-  });
+}
 
-  const [instagramUsernameError, setInstagramUsernameError] = useState<{
-    isError: boolean;
-    error: string | null;
-  }>({
-    isError: false,
-    error: null,
-  });
+export function FollowSocials() {
   const [{ tab }, setOnboardingUrlStates] = useOnboardingUrlStates();
+  const xState = usePlatformState("x");
+  const instagramState = usePlatformState("instagram");
 
   const handleBack = () => {
     setOnboardingUrlStates((prev) => ({
@@ -88,50 +234,21 @@ export function FollowSocials() {
     }));
   };
 
-  const handleConfirm = (tab: "x" | "instagram") => {
-    if (tab === "x") {
-      if (xPage === "follow") {
-        setXPage("verify");
-      } else if (xPage === "verify") {
-        const { isError, error } = isValidUsernameWithAtSign(xUsername);
-        if (isError) {
-          setXUsernameError({ isError, error });
-          return;
-        }
-        // TODO: call api to verify username
-        setXPage("success");
-        setXUserVerified(true);
-        return;
-      } else if (xPage === "success") {
-        if (instagramUserVerified === true) {
-          setOnboardingUrlStates((prev) => ({
-            ...prev,
-            step: "enter-referral-code",
-          }));
-        } else {
-          setOnboardingUrlStates((prev) => ({
-            ...prev,
-            tab: "instagram",
-          }));
-        }
-        return;
+  const handleConfirm = (platform: Platform) => {
+    if (platform === "x" && xState.page === "success") {
+      if (instagramState.isVerified) {
+        setOnboardingUrlStates((prev) => ({
+          ...prev,
+          step: "enter-referral-code",
+        }));
+      } else {
+        setOnboardingUrlStates((prev) => ({
+          ...prev,
+          tab: "instagram",
+        }));
       }
-    }
-
-    if (instagramPage === "follow") {
-      setInstagramPage("verify");
-    } else if (instagramPage === "verify") {
-      const { isError, error } = isValidUsernameWithAtSign(instagramUsername);
-      if (isError) {
-        setInstagramUsernameError({ isError, error });
-        return;
-      }
-      // TODO: call api to verify username
-      setInstagramPage("success");
-      setInstagramUserVerified(true);
-      return;
-    } else if (instagramPage === "success") {
-      if (xUserVerified === true) {
+    } else if (platform === "instagram" && instagramState.page === "success") {
+      if (xState.isVerified) {
         setOnboardingUrlStates((prev) => ({
           ...prev,
           step: "enter-referral-code",
@@ -148,22 +265,13 @@ export function FollowSocials() {
   const handleTabChange = (value: string) => {
     setOnboardingUrlStates((prev) => ({
       ...prev,
-      tab: value as "x" | "instagram",
+      tab: value as Platform,
     }));
   };
 
-  useEffect(() => {
-    if (xUserVerified === true && xPage !== "success") {
-      setXPage("success");
-    }
-    if (instagramUserVerified === true && instagramPage !== "success") {
-      setInstagramPage("success");
-    }
-  }, [xUserVerified, xPage, instagramUserVerified, instagramPage]);
-
   return (
     <Tabs
-      defaultValue={"x"}
+      defaultValue="x"
       value={tab}
       onValueChange={handleTabChange}
       className="w-full"
@@ -179,92 +287,19 @@ export function FollowSocials() {
           </TabsList>
         </div>
 
-        <TabsContent className="w-full mt-2 space-y-6" value="x">
-          <SectionMetaInfo items={getJoinActionList("x")} />
-          <SectionAction
-            title={getTitleMap(tab)[xPage].title}
-            description={getTitleMap(tab)[xPage].description}
-            icon={IconsNames.X_SOCIAL}
-            isSuccess={xPage === "success"}
-            isCollapsibleOpen={xPage === "verify"}
-            isError={xUsernameError.isError}
-            errorMessage={xUsernameError.error}
-            inputPlaceholder={`Your X @username`}
-            onInputChange={setXUsername}
-            inputValue={xUsername}
-          />
-          <div className="w-full grid @sm:grid-cols-2 gap-y-4 gap-x-2 @md:gap-x-3.5">
-            <Button
-              variant="secondary"
-              onClick={handleBack}
-              className="cursor-pointer"
-            >
-              Back
-            </Button>
-            <Button
-              asChild={xPage === "follow"}
-              onClick={() => handleConfirm("x")}
-              className="cursor-pointer"
-            >
-              {xPage === "follow" ? (
-                <a
-                  href={TWITTER_LINK}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Follow
-                </a>
-              ) : xPage === "verify" ? (
-                "Verify"
-              ) : (
-                "Next"
-              )}
-            </Button>
-          </div>
-        </TabsContent>
-        <TabsContent className="w-full mt-2 space-y-6" value="instagram">
-          <SectionMetaInfo items={getJoinActionList("instagram")} />
-          <SectionAction
-            title={getTitleMap(tab)[instagramPage].title}
-            description={getTitleMap(tab)[instagramPage].description}
-            icon={IconsNames.INSTAGRAM}
-            isSuccess={instagramPage === "success"}
-            isCollapsibleOpen={instagramPage === "verify"}
-            isError={instagramUsernameError.isError}
-            errorMessage={instagramUsernameError.error}
-            inputPlaceholder={`Your Instagram @username`}
-            onInputChange={setInstagramUsername}
-            inputValue={instagramUsername}
-          />
-          <div className="w-full grid @sm:grid-cols-2 gap-y-4 gap-x-2 @md:gap-x-3.5">
-            <Button
-              variant="secondary"
-              onClick={handleBack}
-              className="cursor-pointer"
-            >
-              Back
-            </Button>
-            <Button
-              asChild={instagramPage === "follow"}
-              onClick={() => handleConfirm("instagram")}
-              className="cursor-pointer"
-            >
-              {instagramPage === "follow" ? (
-                <a
-                  href={INSTAGRAM_LINK}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Follow
-                </a>
-              ) : instagramPage === "verify" ? (
-                "Verify"
-              ) : (
-                "Next"
-              )}
-            </Button>
-          </div>
-        </TabsContent>
+        <PlatformTab
+          platform="x"
+          onBack={handleBack}
+          onConfirm={handleConfirm}
+          otherPlatformVerified={instagramState.isVerified}
+        />
+
+        <PlatformTab
+          platform="instagram"
+          onBack={handleBack}
+          onConfirm={handleConfirm}
+          otherPlatformVerified={xState.isVerified}
+        />
       </section>
     </Tabs>
   );

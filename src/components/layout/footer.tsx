@@ -3,21 +3,26 @@ import Image from "next/image";
 import Link from "next/link";
 import { IconsNames } from "../icons/icon.types";
 import { Icon } from "../icons/icon";
+import {
+  INSTAGRAM_LINK,
+  TWITTER_LINK,
+  VMCC_DAO_LINK,
+} from "@/common/constants";
 
 const socialLinks = [
   {
     name: "X",
-    href: "https://x.com/vmcc_atlantus",
+    href: TWITTER_LINK,
     icon: IconsNames.X_SOCIAL,
   },
   {
     name: "Telegram",
-    href: "https://t.me/vmcc_atlantus",
+    href: VMCC_DAO_LINK,
     icon: IconsNames.TELEGRAM,
   },
   {
     name: "Instagram",
-    href: "https://www.instagram.com/vmcc_atlantus",
+    href: INSTAGRAM_LINK,
     icon: IconsNames.INSTAGRAM,
   },
 ];
@@ -69,8 +74,8 @@ const resources: {
 
 export function Footer() {
   return (
-    <footer className="w-full">
-      <div className="flex items-start justify-between">
+    <footer className="w-full @container">
+      <div className="flex @2xl:flex-row gap-6 @2xl:gap-0 flex-col items-start justify-between">
         <div className="flex flex-col gap-y-5">
           <Link href="/">
             <Image
@@ -118,9 +123,8 @@ export function Footer() {
         </div>
       </div>
       <Separator className="my-6" />
-      <div className="font-montserrat text-xs leading-[1.4] text-white flex">
-        <p>Copyright&copy;City of atlantus. All rights reserved</p>
-        <span className="mx-2">|</span>
+      <div className="font-montserrat text-xs leading-[1.4] text-white flex flex-wrap gap-x-2">
+        <p>Copyright&copy;City of atlantus. All rights reserved</p>|
         <p>Designed and developed by MOBI AUTOMATION</p>
       </div>
     </footer>

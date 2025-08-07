@@ -13,6 +13,8 @@ import {
   Key1,
   Check,
   Success,
+  Directions,
+  Telecast,
 } from "./icons";
 
 export function Icon(props: IconProps) {
@@ -43,6 +45,10 @@ export function Icon(props: IconProps) {
       return <Check {...rest} />;
     case IconsNames.SUCCESS:
       return <Success {...rest} />;
+    case IconsNames.DIRECTIONS:
+      return <Directions {...rest} />;
+    case IconsNames.TELECAST:
+      return <Telecast {...rest} />;
     default:
       return null;
   }
