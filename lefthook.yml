@@ -6,7 +6,7 @@
 commit-msg:
   jobs:
     - name: commitlint
-      run: pnpm dlx --no-install commitlint --edit {1}
+      run: npx --no-install commitlint --edit {1}
 
 pre-push:
   jobs:
