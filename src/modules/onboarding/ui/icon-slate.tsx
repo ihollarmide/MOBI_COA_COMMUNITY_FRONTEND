@@ -7,8 +7,8 @@ export function IconSlate({
   icon,
   as = "div",
   onClick,
-  isCompleted,
-  isActive,
+  isCompleted = false,
+  isActive = false,
 }: {
   icon: IconsNames;
   variant: "default" | "nav";

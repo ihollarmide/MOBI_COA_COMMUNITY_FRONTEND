@@ -1,7 +1,11 @@
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import { OnboardingStepSlug } from "../types";
 import { useSessionStorage } from "@/shared/hooks";
-import { getTelegramUserVerifiedKey } from "../lib/utils";
+import {
+  getInstagramUserVerifiedKey,
+  getTelegramUserVerifiedKey,
+  getXUserVerifiedKey,
+} from "../lib/utils";
 import { useChainId } from "wagmi";
 
 export function useStepsCompletionStatus(): Record<
@@ -18,6 +22,20 @@ export function useStepsCompletionStatus(): Record<
     })
   );
 
+  const { value: xUserVerified } = useSessionStorage(
+    getXUserVerifiedKey({
+      chainId,
+      address: address ?? "",
+    })
+  );
+
+  const { value: instagramUserVerified } = useSessionStorage(
+    getInstagramUserVerifiedKey({
+      chainId,
+      address: address ?? "",
+    })
+  );
+
   return {
     "wallet-connected": status === "connected",
     // "join-telegram": onboardingUrlStates.step === "join-telegram",
@@ -26,7 +44,7 @@ export function useStepsCompletionStatus(): Record<
     // "claim-genesis-key": onboardingUrlStates.step === "claim-genesis-key",
     // "join-vmcc-dao": onboardingUrlStates.step === "join-vmcc-dao",
     "join-telegram": telegramUserVerified === true,
-    "follow-us": false,
+    "follow-us": xUserVerified === true && instagramUserVerified === true,
     "enter-referral-code": false,
     "claim-genesis-key": false,
     "join-vmcc-dao": false,

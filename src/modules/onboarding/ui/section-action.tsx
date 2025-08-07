@@ -31,7 +31,7 @@ export function SectionAction({
 }) {
   return (
     <GlassCard
-      className={clsx("px-3.5 py-4.5 rounded-lg w-full", {
+      className={clsx("px-3.5 py-4.5 rounded-lg w-full font-sans", {
         "bg-green-tint": isSuccess,
       })}
     >

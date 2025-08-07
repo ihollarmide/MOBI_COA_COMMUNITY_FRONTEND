@@ -119,3 +119,23 @@ export const getTelegramUserVerifiedKey = ({
 }): string => {
   return `${chainId}-${address}-telegram-account-verified`;
 };
+
+export const getXUserVerifiedKey = ({
+  chainId,
+  address,
+}: {
+  chainId: number;
+  address: string;
+}): string => {
+  return `${chainId}-${address}-x-account-verified`;
+};
+
+export const getInstagramUserVerifiedKey = ({
+  chainId,
+  address,
+}: {
+  chainId: number;
+  address: string;
+}): string => {
+  return `${chainId}-${address}-instagram-account-verified`;
+};
