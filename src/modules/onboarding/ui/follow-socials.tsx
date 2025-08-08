@@ -255,8 +255,6 @@ export function FollowSocials() {
   const xState = usePlatformState("x");
   const instagramState = usePlatformState("instagram");
 
-  console.log(authStatus);
-
   const handleBack = () => {
     setOnboardingUrlStates((prev) => ({
       ...prev,

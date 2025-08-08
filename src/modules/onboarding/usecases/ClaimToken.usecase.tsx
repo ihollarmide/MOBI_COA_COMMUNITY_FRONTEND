@@ -67,7 +67,7 @@ export const useClaimToken = () => {
       },
       onWriteContractError(error) {
         console.error(error);
-        toast.error("Unable to claim", {
+        toast.error("Unable to claim genesis key", {
           description:
             typeof error === "string"
               ? error
@@ -76,12 +76,12 @@ export const useClaimToken = () => {
         });
       },
       onTransactionReceiptError(error) {
-        toast.error(error?.message || "Transaction error. Please try again", {
+        toast.error(error?.message || "Unable to claim genesis key", {
           id: TOAST_ID,
         });
       },
       onBlockError(error) {
-        toast.error(error?.message || "Block error. Please try again", {
+        toast.error(error?.message || "Unable to claim genesis key", {
           id: TOAST_ID,
         });
       },

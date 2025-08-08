@@ -74,7 +74,7 @@ const resources: {
 
 export function Footer() {
   return (
-    <footer className="w-full @container">
+    <footer className="w-full @container py-6 lg:py-10">
       <div className="flex @2xl:flex-row gap-6 @2xl:gap-0 flex-col items-start justify-between">
         <div className="flex flex-col gap-y-5">
           <Link href="/">

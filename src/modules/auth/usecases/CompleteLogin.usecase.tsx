@@ -3,13 +3,11 @@ import { CompleteLoginPayload, CompleteLoginResponse } from "../types";
 import { post } from "@/lib/api-client";
 import { useMutation } from "@tanstack/react-query";
 import { signIn } from "next-auth/react";
-import { AUTH_ACTIONS } from "../constants";
+import { AUTH_ACTIONS, AUTH_TOAST_ID } from "../constants";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { serializeOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboardingUrlStates";
 import { useGetUplineId } from "@/modules/onboarding/usecases/GetUplineId.usecase";
-
-const AUTH_TOAST_ID = "auth-toast";
 
 export const createUserSession = async (payload: CompleteLoginResponse) => {
   try {
@@ -56,18 +54,25 @@ export const completeLogin = async (payload: CompleteLoginPayload) => {
 };
 
 export const useCompleteLogin = () => {
-  const { mutate: createUserSessionMutate } = useCreateUserSession();
+  const { mutate: createUserSessionMutate, isPending: isCreatingSession } =
+    useCreateUserSession();
   const mutation = useMutation({
     mutationFn: completeLogin,
     onSuccess: (data) => {
       createUserSessionMutate(data);
     },
     onError: (error) => {
+      toast.error("Error completing authentication", {
+        id: AUTH_TOAST_ID,
+      });
       console.error("Complete login error:", error);
     },
   });
 
-  return mutation;
+  return {
+    ...mutation,
+    isPending: mutation.isPending || isCreatingSession,
+  };
 };
 
 export const useCreateUserSession = () => {

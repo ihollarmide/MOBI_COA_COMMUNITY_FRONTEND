@@ -10,7 +10,10 @@ import { ButtonsFooter } from "./buttons-footer";
 import { useGetUplineId } from "../usecases/GetUplineId.usecase";
 import { useSetUplineId } from "../usecases/SetUplineId.usecase";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
-import { useGetVmccDetailsByCoaUserId } from "@/modules/auth/usecases/GetVmccDetailsByCoaUserId.usecase";
+import {
+  useGetVmccDetailsByCoaUserId,
+  useRetrieveVmccDetailsByCoaUserIdMutation,
+} from "@/modules/auth/usecases/GetVmccDetailsByCoaUserId.usecase";
 
 const getTitleMap = (referredBy: string) => ({
   submit: {
@@ -21,7 +24,7 @@ const getTitleMap = (referredBy: string) => ({
   confirm: {
     title: "Confirm Referral Code",
     description:
-      "Please enter your referrer’s unique code in the input box below.",
+      "Please review your referrer’s details in the input box below.",
   },
   success: {
     title: "Referral Code Confirmed!",
@@ -71,9 +74,17 @@ export function ReferralCode() {
       setPage("success");
     },
     onError: (error) => {
+      setPage("submit");
       setReferralCodeError({
         isError: true,
         error: error.message,
+      });
+    },
+    onGenericError: () => {
+      setPage("submit");
+      setReferralCodeError({
+        isError: true,
+        error: "Unable to apply referral code",
       });
     },
   });
@@ -87,6 +98,13 @@ export function ReferralCode() {
     error: null,
   });
   const [, setOnboardingUrlStates] = useOnboardingUrlStates();
+
+  const {
+    mutate: retrieveVmccDetails,
+    data: checkedVmccDetails,
+    variables: checkedVmccDetailsVariables,
+    isPending: isCheckingVmccDetails,
+  } = useRetrieveVmccDetailsByCoaUserIdMutation();
 
   const getNumberFromReferralCode = (referralCode: string): number => {
     // Remove "MCL" prefix and convert remaining digits to number
@@ -102,10 +120,6 @@ export function ReferralCode() {
         : !isValidReferralCode(referralCode).isError &&
           !!getNumberFromReferralCode(referralCode),
     });
-
-  const isReferralCodeValid =
-    !isValidReferralCode(referralCode).isError &&
-    !!getNumberFromReferralCode(referralCode);
 
   const handleBack = () => {
     if (page === "submit") {
@@ -136,6 +150,28 @@ export function ReferralCode() {
       const coaUserId = getNumberFromReferralCode(referralCode);
 
       if (!!coaUserId) {
+        setReferralCodeError({
+          isError: false,
+          error: null,
+        });
+        retrieveVmccDetails(coaUserId, {
+          onSuccess: () => {
+            setPage("confirm");
+          },
+        });
+      } else {
+        setReferralCodeError({
+          isError: true,
+          error: "Invalid referral code",
+        });
+      }
+    } else if (page === "confirm") {
+      const coaUserId = getNumberFromReferralCode(referralCode);
+      if (!!coaUserId) {
+        setReferralCodeError({
+          isError: false,
+          error: null,
+        });
         handleSetUpline({
           coaUserId,
           address: address,
@@ -146,8 +182,6 @@ export function ReferralCode() {
           error: "Invalid referral code",
         });
       }
-    } else if (page === "confirm") {
-      setPage("success");
     } else if (page === "success") {
       setOnboardingUrlStates((prev) => ({
         ...prev,
@@ -188,13 +222,15 @@ export function ReferralCode() {
         inputPlaceholder="Enter Referral Code (e.g. MCL000000)"
         onInputChange={setReferralCode}
         inputValue={referralCode}
-        isInputLoading={isReferralCodeValid ? isRetrievingVmccDetails : false}
+        isInputLoading={isCheckingVmccDetails}
         collapsibleContent={
-          page === "confirm" && isReferralCodeValid && !!vmccDetails ? (
+          page === "confirm" &&
+          checkedVmccDetailsVariables &&
+          !!checkedVmccDetails ? (
             <ConfirmedReferralCode
-              vmccName={vmccDetails.data?.companyName ?? "N/A"}
-              vmccLogo={vmccDetails.data?.companyLogo ?? ""}
-              coaUserId={getNumberFromReferralCode(referralCode)}
+              vmccName={checkedVmccDetails.data?.companyName ?? "N/A"}
+              vmccLogo={checkedVmccDetails.data?.companyLogo ?? ""}
+              coaUserId={Number(checkedVmccDetailsVariables)}
             />
           ) : null
         }

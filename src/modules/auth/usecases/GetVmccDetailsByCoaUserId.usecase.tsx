@@ -4,7 +4,7 @@ import { API_ENDPOINTS } from "@/lib/api-endpoints";
 import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
 import { GetVmccDetailsByCoaUserIdResponse } from "@/modules/auth/types";
 
-export const getVmccDetailsByCoaUserId = async (coaUserId: string) => {
+export const getVmccDetailsByCoaUserId = async (coaUserId: string | number) => {
   try {
     const data = await get<GetVmccDetailsByCoaUserIdResponse>({
       url: API_ENDPOINTS.VMCC.GET_BY_COA_USER_ID,
@@ -12,7 +12,7 @@ export const getVmccDetailsByCoaUserId = async (coaUserId: string) => {
       config: {
         baseURL: process.env.NEXT_PUBLIC_COA_API_URL,
         params: {
-          coaUserId,
+          coaUserId: coaUserId.toString(),
         },
       },
     });
@@ -43,7 +43,7 @@ export const useGetVmccDetailsByCoaUserId = ({
   return res;
 };
 
-export const useRetrieveVmccDetailsByCoaUserId = () => {
+export const useRetrieveVmccDetailsByCoaUserIdMutation = () => {
   const res = useMutation({
     mutationFn: getVmccDetailsByCoaUserId,
   });

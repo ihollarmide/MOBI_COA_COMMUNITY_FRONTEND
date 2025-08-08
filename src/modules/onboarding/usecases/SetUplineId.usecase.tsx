@@ -9,9 +9,11 @@ const TOAST_ID = "set-upline-id";
 export const useSetUplineId = ({
   onSuccess,
   onError,
+  onGenericError,
 }: {
   onSuccess?: () => void;
   onError?: (error: Error) => void;
+  onGenericError?: (error: unknown) => void;
 }) => {
   const { refetch: refreshGetUplineId } = useGetUplineId();
   const {
@@ -24,7 +26,7 @@ export const useSetUplineId = ({
     ...rest
   } = useWriteContractWithReceipt({
     onMutate() {
-      toast.loading("Setting Upline...", {
+      toast.loading("Applying Referral Code...", {
         description: "",
         id: TOAST_ID,
       });
@@ -45,6 +47,22 @@ export const useSetUplineId = ({
       });
       onError?.(error);
     },
+    onTransactionReceiptError(error) {
+      toast.error("Unable to apply referral code", {
+        description:
+          typeof error === "string" ? error : error?.message || "Unknown error",
+        id: TOAST_ID,
+      });
+      onGenericError?.(error);
+    },
+    onBlockError(error) {
+      toast.error("Unable to apply referral code", {
+        description:
+          typeof error === "string" ? error : error?.message || "Unknown error",
+        id: TOAST_ID,
+      });
+      onGenericError?.(error);
+    },
   });
 
   const handleSetUpline = ({
@@ -54,6 +72,10 @@ export const useSetUplineId = ({
     coaUserId: string | number;
     address: Address;
   }) => {
+    toast.loading("Setting up referral code...", {
+      description: "",
+      id: TOAST_ID,
+    });
     retrieveExistingUplineId(address, {
       onSuccess: (existingUplineId) => {
         if (!!existingUplineId) {

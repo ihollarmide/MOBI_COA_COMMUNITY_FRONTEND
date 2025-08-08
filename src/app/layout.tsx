@@ -40,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${figtree.variable} ${montserrat.variable} font-sans antialiased noligatures h-full`}
+        className={`${inter.variable} ${figtree.variable} ${montserrat.variable} overscroll-none font-sans antialiased noligatures h-full`}
       >
         <NuqsAdapter>
           <GlobalProvider>

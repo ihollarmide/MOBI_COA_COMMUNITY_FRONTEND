@@ -11,13 +11,21 @@ import { useInitiateLogin } from "@/modules/auth/usecases/InitiateLogin.usecase"
 import { Address } from "viem";
 import { useGetUplineId } from "@/modules/onboarding/usecases/GetUplineId.usecase";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useDisconnect } from "wagmi";
 
 export function WelcomeScreen() {
+  const { disconnect } = useDisconnect();
   const router = useRouter();
   router.prefetch("/onboarding");
   useGetUplineId();
   const { isConnected, address } = useWalletConnectionStatus();
-  const { mutate: initiateLogin } = useInitiateLogin();
+  const {
+    mutate: initiateLogin,
+    isSigninMessage,
+    isCompletingLogin,
+    isInitiating,
+  } = useInitiateLogin();
 
   const { setOpen } = useModal({
     onConnect: ({ address }) => {
@@ -42,6 +50,12 @@ export function WelcomeScreen() {
       setOpen(true);
     }
   };
+
+  useEffect(() => {
+    disconnect();
+  }, []);
+
+  const isLoading = isSigninMessage || isCompletingLogin || isInitiating;
 
   return (
     <div className="w-full @container">
@@ -75,8 +89,20 @@ export function WelcomeScreen() {
           ))}
         </div>
 
-        <Button onClick={handleConnect} className="w-full cursor-pointer">
-          {isConnected && address ? "Continue" : "Connect Wallet"}
+        <Button
+          onClick={handleConnect}
+          disabled={isLoading}
+          className="w-full cursor-pointer"
+        >
+          {isSigninMessage ? (
+            "Signing Message"
+          ) : isInitiating ? (
+            "Initiating Sign in"
+          ) : isCompletingLogin ? (
+            "Completing Authentication"
+          ) : (
+            <>{isConnected && address ? "Continue" : "Connect Wallet"}</>
+          )}
         </Button>
       </GlassCard>
     </div>

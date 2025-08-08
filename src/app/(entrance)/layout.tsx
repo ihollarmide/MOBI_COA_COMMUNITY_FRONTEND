@@ -24,8 +24,8 @@ export default function MainLayout({
 
       <div className="w-full h-full overflow-hidden">
         <ScrollArea className="h-full">
-          <div className="px-4 py-10">
-            <div className="max-w-[1216px] min-h-[calc(100vh-80px)] h-full w-full mx-auto flex flex-col">
+          <div className="px-4">
+            <div className="max-w-[1216px] min-h-[calc(100vh)] h-full w-full mx-auto flex flex-col">
               <main className="w-full flex-1 flex flex-col items-center justify-center gap-y-[30px] max-w-[665px] py-5 mx-auto">
                 <Image
                   src="/images/vmcc-logo.png"

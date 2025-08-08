@@ -13,10 +13,11 @@ import { ReferralCode } from "./referral-code";
 import { ClaimKeys } from "./claim-keys";
 import { JoinVMCCDao } from "./join-vmcc-dao";
 import { fade } from "@/lib/animation.utils";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useGetStepToRedirectTo } from "../hooks/useStepsCompletionStatus";
 import { canAccessStep } from "../lib/utils";
 import { OnboardingStepSlug } from "../types";
+import { useRouter } from "next/navigation";
 
 function StepWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -34,7 +35,10 @@ function StepWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export function MainScreen() {
-  const { status } = useWalletConnectionStatus();
+  const router = useRouter();
+  router.prefetch("/welcome");
+  const { data: session, status: sessionStatus } = useSession();
+  const { status: walletStatus, address } = useWalletConnectionStatus();
   const [{ step: stepSlug }, setOnboardingUrlStates] = useOnboardingUrlStates();
   const accessibleSlug = useGetStepToRedirectTo();
 
@@ -53,13 +57,24 @@ export function MainScreen() {
   }, [stepSlug, accessibleSlug, isAccessible]);
 
   useEffect(() => {
-    if (status === "disconnected") {
+    if (walletStatus === "disconnected") {
       signOut({
         redirect: true,
         redirectTo: "/",
       });
     }
-  }, [status]);
+  }, [walletStatus]);
+
+  useEffect(() => {
+    if (sessionStatus === "authenticated" && address) {
+      if (session.user.walletAddress.toLowerCase() !== address.toLowerCase()) {
+        signOut({
+          redirect: true,
+          redirectTo: "/",
+        });
+      }
+    }
+  }, [sessionStatus, address, session?.user?.walletAddress]);
 
   return (
     <div className="w-full space-y-6 @sm:space-y-8 @container">
