@@ -54,7 +54,7 @@ export function WelcomeScreen() {
     <div className="w-full @container">
       <GlassCard className="p-4 @sm:p-6 w-full space-y-8">
         <div className="space-y-2 text-center w-full">
-          <SectionTitle>Join the VMCC DA0</SectionTitle>
+          <SectionTitle>Join the VMCC DAO</SectionTitle>
           <p className="text-sm leading-[1.4] text-white/70">
             To claim your free Yard Genesis Key NFT, please complete the
             following steps:

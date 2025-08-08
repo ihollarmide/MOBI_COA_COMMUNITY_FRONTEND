@@ -13,7 +13,10 @@ export function SectionTitle({
 
   return (
     <Comp
-      className={cn("title-text-gradient text-2xl font-extrabold", className)}
+      className={cn(
+        "title-text-gradient text-2xl font-extrabold inline-block",
+        className
+      )}
     >
       {children}
     </Comp>
