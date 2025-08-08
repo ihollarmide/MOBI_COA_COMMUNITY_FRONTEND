@@ -112,14 +112,13 @@ export function ReferralCode() {
     return parseInt(digitsPart, 10); // Convert to number, automatically removes leading zeros
   };
 
-  const { data: vmccDetails, isPending: isRetrievingVmccDetails } =
-    useGetVmccDetailsByCoaUserId({
-      coaUserId: uplineId ?? getNumberFromReferralCode(referralCode),
-      enabled: uplineId
-        ? !!uplineId
-        : !isValidReferralCode(referralCode).isError &&
-          !!getNumberFromReferralCode(referralCode),
-    });
+  const { data: vmccDetails } = useGetVmccDetailsByCoaUserId({
+    coaUserId: uplineId ?? getNumberFromReferralCode(referralCode),
+    enabled: uplineId
+      ? !!uplineId
+      : !isValidReferralCode(referralCode).isError &&
+        !!getNumberFromReferralCode(referralCode),
+  });
 
   const handleBack = () => {
     if (page === "submit") {

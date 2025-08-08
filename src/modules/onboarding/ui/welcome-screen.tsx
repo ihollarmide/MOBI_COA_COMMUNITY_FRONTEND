@@ -11,7 +11,6 @@ import { useInitiateLogin } from "@/modules/auth/usecases/InitiateLogin.usecase"
 import { Address } from "viem";
 import { useGetUplineId } from "@/modules/onboarding/usecases/GetUplineId.usecase";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { useDisconnect } from "wagmi";
 
 export function WelcomeScreen() {
@@ -50,10 +49,6 @@ export function WelcomeScreen() {
       setOpen(true);
     }
   };
-
-  useEffect(() => {
-    disconnect();
-  }, []);
 
   const isLoading = isSigninMessage || isCompletingLogin || isInitiating;
 

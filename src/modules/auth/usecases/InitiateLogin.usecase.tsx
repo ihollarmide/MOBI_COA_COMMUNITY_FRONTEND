@@ -54,7 +54,7 @@ export const useInitiateLogin = () => {
               chainId: chainId,
             });
           },
-          onError: (error) => {
+          onError: () => {
             toast.error("Signing message failed", {
               id: AUTH_TOAST_ID,
             });
