@@ -1,6 +1,5 @@
 import { useWriteContractWithReceipt } from "@/hooks/useWriteContractWithReceipt";
 import { toast } from "sonner";
-import { referralContract } from "@/common/constants/contracts/referralContract";
 import { Address } from "viem";
 import {
   updateUplineIdQuery,
@@ -10,6 +9,9 @@ import {
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
+import { useChainId } from "wagmi";
+import { referralAbi } from "@/common/contract-abis/referralAbi";
+import { ADDRESSES } from "@/common/constants/contracts";
 
 const TOAST_ID = "set-upline-id";
 
@@ -22,6 +24,7 @@ export const useSetUplineId = ({
   onError?: (error: Error) => void;
   onGenericError?: (error: unknown) => void;
 }) => {
+  const chainId = useChainId();
   const queryClient = useQueryClient();
   const { address } = useWalletConnectionStatus();
   const [uplineId, setUplineId] = useState<string | number | null>(null);
@@ -48,6 +51,7 @@ export const useSetUplineId = ({
           payload: {
             uplineId: parseInt(uplineId.toString()),
             address: address,
+            chainId,
           },
         });
       } else {
@@ -90,22 +94,28 @@ export const useSetUplineId = ({
       description: "",
       id: TOAST_ID,
     });
-    retrieveExistingUplineId(address, {
-      onSuccess: (existingUplineId) => {
-        if (!!existingUplineId) {
-          toast.error("You have already applied a referral code", {
-            id: TOAST_ID,
-          });
-        } else {
-          setUpline({
-            abi: referralContract.abi,
-            address: referralContract.address,
-            functionName: "setUplinePublic",
-            args: [address, BigInt(coaUserId)],
-          });
-        }
+    retrieveExistingUplineId(
+      {
+        address,
+        chainId,
       },
-    });
+      {
+        onSuccess: (existingUplineId) => {
+          if (!!existingUplineId) {
+            toast.error("You have already applied a referral code", {
+              id: TOAST_ID,
+            });
+          } else {
+            setUpline({
+              abi: referralAbi,
+              address: ADDRESSES[chainId].REFERRAL,
+              functionName: "setUplinePublic",
+              args: [address, BigInt(coaUserId)],
+            });
+          }
+        },
+      }
+    );
   };
 
   return {

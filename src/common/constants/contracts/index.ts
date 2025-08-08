@@ -1,17 +1,16 @@
-import { Abi, Address } from "viem";
-import { airdropContract } from "./airdropContract";
-import { referralContract } from "./referralContract";
+import { Address } from "viem";
 
-export const CONTRACTS: Record<string, { address: Address; abi: Abi }> = {
-  AIRDROP: {
-    address: airdropContract.address,
-    abi: airdropContract.abi,
+export const ADDRESSES: { [id: number]: { [key: string]: Address } } = {
+  //base sepolia -- testnet
+  84532: {
+    AIRDROP: "0x69843f92F1f4b0239061458472A66ce7913C6802",
+    REFERRAL: "0x97c555a114A49E72DC17F5481D59892b3ED26680",
+    AUTH_CONTRACT: "0x382aAcFcd643209525F8A5fa711C121DdFE72416",
   },
-  REFERRAL: {
-    address: referralContract.address,
-    abi: referralContract.abi,
+  // binace smart chain -- mainnet
+  56: {
+    AIRDROP: "0x2eD2ffE28098EDEe0691fa4B5d9C1570046D0A0a",
+    REFERRAL: "0x8F40C8ED7b05Cb7754a749638eA804795B2f323E",
+    AUTH_CONTRACT: "0x5D0B7444a6Dc08bC84D00c383B3222c5B5A26D36",
   },
-} as const;
-
-export const YARD_CONTRACT_ADDRESS: Address =
-  "0x38b26E496edED8023Cefba7F8EcF25be68fEB898";
+};

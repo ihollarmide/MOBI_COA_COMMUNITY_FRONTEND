@@ -136,15 +136,15 @@ export function WelcomeScreen() {
     uplineId,
   ]);
 
-  useEffect(() => {
-    console.log({
-      NEXT_PUBLIC_PROJECT_ID: process.env.NEXT_PUBLIC_PROJECT_ID,
-      NEXT_PUBLIC_SEPOLIA_ID: process.env.NEXT_PUBLIC_SEPOLIA_ID,
-      NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
-      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-      NEXT_PUBLIC_COA_API_URL: process.env.NEXT_PUBLIC_COA_API_URL,
-    });
-  }, []);
+  // useEffect(() => {
+  //   console.log({
+  //     NEXT_PUBLIC_PROJECT_ID: process.env.NEXT_PUBLIC_PROJECT_ID,
+  //     NEXT_PUBLIC_SEPOLIA_ID: process.env.NEXT_PUBLIC_SEPOLIA_ID,
+  //     NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
+  //     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+  //     NEXT_PUBLIC_COA_API_URL: process.env.NEXT_PUBLIC_COA_API_URL,
+  //   });
+  // }, []);
 
   return (
     <div className="w-full @container">
