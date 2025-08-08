@@ -11,10 +11,8 @@ import { useInitiateLogin } from "@/modules/auth/usecases/InitiateLogin.usecase"
 import { Address } from "viem";
 import { useGetUplineId } from "@/modules/onboarding/usecases/GetUplineId.usecase";
 import { useRouter } from "next/navigation";
-import { useDisconnect } from "wagmi";
 
 export function WelcomeScreen() {
-  const { disconnect } = useDisconnect();
   const router = useRouter();
   router.prefetch("/onboarding");
   useGetUplineId();
