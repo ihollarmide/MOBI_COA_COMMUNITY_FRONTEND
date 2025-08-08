@@ -1,0 +1,35 @@
+name: coa-user-dashboard
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - closed
+    branches:
+      - main
+      - dev
+      - uat
+
+jobs:
+  deploy-development:
+    if: github.event.pull_request.base.ref == 'dev' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to dev server # PORT=3201
+        run: |
+          sudo apt-get update -yqq
+          sudo apt-get install openssh-client sshpass -yqq
+          sshpass -p ${{ secrets.SERVER_PASSWORD }} ssh -o StrictHostKeyChecking=no -T ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} 'cd /home/dev/COA_COMMUNITY_FRONTEND && git stash && git pull && pnpm install && NODE_OPTIONS="--max-old-space-size=4096" pnpm build && pm2 reload  coa-community-frontend-dev && exit'
+
+  deploy-production:
+    if: github.event.pull_request.base.ref == 'main' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to production server # PORT=3202
+        run: |
+          sudo apt-get update -yqq
+          sudo apt-get install openssh-client sshpass -yqq
+          sshpass -p ${{ secrets.SERVER2_PASSWORD }} ssh -o StrictHostKeyChecking=no -T ${{ secrets.SERVER2_USER }}@${{ secrets.SERVER2_IP }} 'cd /home/production/COA_COMMUNITY_FRONTEND && git stash && git pull && pnpm install && NODE_OPTIONS="--max-old-space-size=4096" pnpm build && pm2 reload  coa-community-frontend-production && exit'
