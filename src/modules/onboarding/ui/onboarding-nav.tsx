@@ -4,7 +4,11 @@ import clsx from "clsx";
 import { ONBOARDING_STEPS } from "../data";
 import { useOnboardingUrlStates } from "../hooks/useOnboardingUrlStates";
 import { OnboardingStepSlug } from "../types";
-import { useStepsCompletionStatus } from "../hooks/useStepsCompletionStatus";
+import {
+  useGetStepToRedirectTo,
+  useStepsCompletionStatus,
+} from "../hooks/useStepsCompletionStatus";
+import { canAccessStep } from "../lib/utils";
 
 function NavItem({
   icon,
@@ -27,7 +31,7 @@ function NavItem({
         className="bg-glass-gradient shrink-0 inline-flex items-center justify-center rounded-[10px] border-[0.5px] border-white/[0.05] border-solid @sm:py-[11px] @sm:px-3 relative w-9 h-9 @sm:w-11 @sm:h-11 aspect-square"
       >
         <Icon
-          name={isCompleted ? IconsNames.CHECK : icon}
+          name={isCompleted && !isActive ? IconsNames.CHECK : icon}
           width={20}
           height={20}
           className={clsx(
@@ -39,7 +43,7 @@ function NavItem({
           )}
         />
         <Icon
-          name={isCompleted ? IconsNames.CHECK : icon}
+          name={isCompleted && !isActive ? IconsNames.CHECK : icon}
           width={20}
           height={20}
           className={clsx(
@@ -66,11 +70,18 @@ function NavItem({
 export function OnboardingNav() {
   const [{ step: stepSlug }, setStep] = useOnboardingUrlStates();
   const stepsCompletionStatus = useStepsCompletionStatus();
+  const accessibleSlug = useGetStepToRedirectTo();
+
+  const isAccessible = (slug: OnboardingStepSlug) => {
+    if (!accessibleSlug) return true;
+    return canAccessStep({
+      slugToAccess: slug,
+      accessibleSlug: accessibleSlug,
+    });
+  };
 
   const handleStepClick = (slug: OnboardingStepSlug) => {
-    // if (isLastStep(slug)) {
-    //   return;
-    // }
+    if (!isAccessible(slug)) return;
     setStep({ step: slug });
   };
 
@@ -82,7 +93,7 @@ export function OnboardingNav() {
             key={step.slug}
             icon={step.icon}
             isActive={stepSlug === step.slug}
-            isCompleted={stepsCompletionStatus[step.slug]}
+            isCompleted={stepsCompletionStatus.result[step.slug]}
             isLast={index === ONBOARDING_STEPS.length - 1}
             onClick={() => handleStepClick(step.slug)}
           />

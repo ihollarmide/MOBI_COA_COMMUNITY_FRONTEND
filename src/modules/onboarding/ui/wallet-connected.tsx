@@ -6,6 +6,9 @@ import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import { truncateAddress } from "@/lib/utils";
 import { useDisconnect } from "wagmi";
 import { useOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboardingUrlStates";
+import { ButtonsFooter } from "./buttons-footer";
+import { signOut } from "next-auth/react";
+import { Loader } from "@/components/ui/loader";
 
 export function WalletConnected() {
   const { disconnect } = useDisconnect();
@@ -13,7 +16,14 @@ export function WalletConnected() {
   const [, setOnboardingUrlStates] = useOnboardingUrlStates();
 
   const handleChangeWallet = () => {
-    disconnect();
+    disconnect(
+      {},
+      {
+        onSuccess: () => {
+          signOut();
+        },
+      }
+    );
   };
 
   const handleConfirm = () => {
@@ -24,7 +34,7 @@ export function WalletConnected() {
   };
 
   if (!address) {
-    return null;
+    return <Loader />;
   }
 
   return (
@@ -46,7 +56,7 @@ export function WalletConnected() {
         <p className="">{truncateAddress(address)}</p>
       </div>
 
-      <div className="w-full grid @sm:grid-cols-2 gap-y-4 gap-x-2 @md:gap-x-3.5">
+      <ButtonsFooter>
         <Button
           variant="secondary"
           onClick={handleChangeWallet}
@@ -57,7 +67,7 @@ export function WalletConnected() {
         <Button onClick={handleConfirm} className="cursor-pointer">
           Confirm &amp; Continue
         </Button>
-      </div>
+      </ButtonsFooter>
     </section>
   );
 }

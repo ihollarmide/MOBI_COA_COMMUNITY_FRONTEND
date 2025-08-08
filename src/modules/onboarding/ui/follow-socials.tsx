@@ -3,18 +3,16 @@ import { Button } from "@/components/ui/button";
 import { SectionTitle } from "@/components/ui/section-title";
 import { useOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboardingUrlStates";
 import { useEffect, useState } from "react";
-import {
-  getInstagramUserVerifiedKey,
-  getXUserVerifiedKey,
-  isValidUsernameWithAtSign,
-} from "../lib/utils";
-import { useChainId } from "wagmi";
-import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
-import { useSessionStorage } from "@/shared/hooks";
+import { isValidUsernameWithAtSign, removeAtSign } from "../lib/utils";
 import { INSTAGRAM_LINK, TWITTER_LINK } from "@/common/constants";
 import { SectionAction } from "./section-action";
 import { SectionMetaInfo } from "./section-meta-info";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ButtonsFooter } from "./buttons-footer";
+import { useVerifyInstagram } from "../usecases/VerifyInstagram.usecase";
+import { useVerifyTwitter } from "../usecases/VerifyTwitter.usecase";
+import { useGetAuthStatus } from "@/modules/auth/usecases/GetAuthStatus.usecase";
+import { Icon } from "@/components/icons/icon";
 
 type Platform = "x" | "instagram";
 type PageState = "follow" | "verify" | "success";
@@ -25,7 +23,6 @@ interface PlatformConfig {
   icon: IconsNames;
   link: string;
   placeholder: string;
-  getVerifiedKey: (params: { chainId: number; address: string }) => string;
 }
 
 const PLATFORM_CONFIG: Record<Platform, PlatformConfig> = {
@@ -35,7 +32,6 @@ const PLATFORM_CONFIG: Record<Platform, PlatformConfig> = {
     icon: IconsNames.X_SOCIAL,
     link: TWITTER_LINK,
     placeholder: "Your X @username",
-    getVerifiedKey: getXUserVerifiedKey,
   },
   instagram: {
     name: "instagram",
@@ -43,7 +39,6 @@ const PLATFORM_CONFIG: Record<Platform, PlatformConfig> = {
     icon: IconsNames.INSTAGRAM,
     link: INSTAGRAM_LINK,
     placeholder: "Your Instagram @username",
-    getVerifiedKey: getInstagramUserVerifiedKey,
   },
 };
 
@@ -52,7 +47,7 @@ const getTitleMap = (platform: Platform) => {
   return {
     follow: {
       title: `Follow us on ${config.displayName}`,
-      description: `This button redirects you to the ${config.displayName} app on your device`,
+      description: `Click "Follow" to join our ${config.displayName} community`,
     },
     verify: {
       title: `Confirm ${config.displayName} Follow`,
@@ -86,11 +81,8 @@ function usePlatformState(platform: Platform): PlatformState & {
   setUsername: (username: string) => void;
   setPage: (page: PageState) => void;
   setError: (error: { isError: boolean; error: string | null }) => void;
-  setVerified: (verified: boolean) => void;
 } {
-  const chainId = useChainId();
-  const { address } = useWalletConnectionStatus();
-  const config = PLATFORM_CONFIG[platform];
+  const { data: authStatus } = useGetAuthStatus();
 
   const [username, setUsername] = useState<string>("");
   const [page, setPage] = useState<PageState>("follow");
@@ -102,12 +94,10 @@ function usePlatformState(platform: Platform): PlatformState & {
     error: null,
   });
 
-  const { set: setVerified, value: isVerified } = useSessionStorage(
-    config.getVerifiedKey({
-      chainId,
-      address: address ?? "",
-    })
-  );
+  const isVerified =
+    platform === "x"
+      ? authStatus?.data?.twitterFollowed
+      : authStatus?.data?.instagramFollowed;
 
   useEffect(() => {
     if (isVerified === true && page !== "success") {
@@ -123,7 +113,6 @@ function usePlatformState(platform: Platform): PlatformState & {
     setUsername,
     setPage,
     setError,
-    setVerified,
   };
 }
 
@@ -131,17 +120,17 @@ interface PlatformTabProps {
   platform: Platform;
   onBack: () => void;
   onConfirm: (platform: Platform) => void;
-  otherPlatformVerified: boolean;
 }
 
-function PlatformTab({
-  platform,
-  onBack,
-  onConfirm,
-  otherPlatformVerified,
-}: PlatformTabProps) {
+function PlatformTab({ platform, onBack, onConfirm }: PlatformTabProps) {
   const config = PLATFORM_CONFIG[platform];
-  const { username, page, error, setUsername, setPage, setError, setVerified } =
+
+  const { data: authStatus } = useGetAuthStatus();
+
+  const { mutate: verifyInstagram } = useVerifyInstagram();
+  const { mutate: verifyX } = useVerifyTwitter();
+
+  const { username, page, error, setUsername, setPage, setError } =
     usePlatformState(platform);
 
   const handleConfirm = () => {
@@ -154,17 +143,38 @@ function PlatformTab({
         setError({ isError, error: validationError });
         return;
       }
-      // TODO: call api to verify username
-      setPage("success");
-      setVerified(true);
+      if (platform === "instagram") {
+        verifyInstagram(
+          {
+            username: removeAtSign(username),
+          },
+          {
+            onSuccess: () => {
+              setPage("success");
+            },
+            onError: (error) => {
+              setError({ isError: true, error: error.message });
+            },
+          }
+        );
+      } else if (platform === "x") {
+        verifyX(
+          {
+            username: removeAtSign(username),
+          },
+          {
+            onSuccess: () => {
+              setPage("success");
+            },
+            onError: (error) => {
+              setError({ isError: true, error: error.message });
+            },
+          }
+        );
+      }
       return;
     } else if (page === "success") {
-      if (otherPlatformVerified) {
-        onConfirm(platform);
-      } else {
-        // Switch to other platform
-        onConfirm(platform);
-      }
+      onConfirm(platform);
       return;
     }
   };
@@ -191,6 +201,23 @@ function PlatformTab({
     return getButtonText();
   };
 
+  useEffect(() => {
+    // Only set to success if this specific platform is verified
+    const isPlatformVerified =
+      platform === "x"
+        ? !!authStatus?.data?.twitterFollowed
+        : !!authStatus?.data?.instagramFollowed;
+
+    if (isPlatformVerified && page !== "success") {
+      setPage("success");
+    }
+  }, [
+    authStatus?.data?.twitterFollowed,
+    authStatus?.data?.instagramFollowed,
+    page,
+    platform,
+  ]);
+
   return (
     <TabsContent className="w-full mt-2 space-y-6" value={platform}>
       <SectionMetaInfo items={getJoinActionList(platform)} />
@@ -206,7 +233,7 @@ function PlatformTab({
         onInputChange={setUsername}
         inputValue={username}
       />
-      <div className="w-full grid @sm:grid-cols-2 gap-y-4 gap-x-2 @md:gap-x-3.5">
+      <ButtonsFooter>
         <Button variant="secondary" onClick={onBack} className="cursor-pointer">
           Back
         </Button>
@@ -217,15 +244,18 @@ function PlatformTab({
         >
           {getButtonContent()}
         </Button>
-      </div>
+      </ButtonsFooter>
     </TabsContent>
   );
 }
 
 export function FollowSocials() {
   const [{ tab }, setOnboardingUrlStates] = useOnboardingUrlStates();
+  const { data: authStatus } = useGetAuthStatus();
   const xState = usePlatformState("x");
   const instagramState = usePlatformState("instagram");
+
+  console.log(authStatus);
 
   const handleBack = () => {
     setOnboardingUrlStates((prev) => ({
@@ -235,30 +265,22 @@ export function FollowSocials() {
   };
 
   const handleConfirm = (platform: Platform) => {
-    if (platform === "x" && xState.page === "success") {
-      if (instagramState.isVerified) {
-        setOnboardingUrlStates((prev) => ({
-          ...prev,
-          step: "enter-referral-code",
-        }));
-      } else {
-        setOnboardingUrlStates((prev) => ({
-          ...prev,
-          tab: "instagram",
-        }));
-      }
-    } else if (platform === "instagram" && instagramState.page === "success") {
-      if (xState.isVerified) {
-        setOnboardingUrlStates((prev) => ({
-          ...prev,
-          step: "enter-referral-code",
-        }));
-      } else {
-        setOnboardingUrlStates((prev) => ({
-          ...prev,
-          tab: "x",
-        }));
-      }
+    if (
+      platform === "x" &&
+      (xState.page === "success" || instagramState.page === "success")
+    ) {
+      setOnboardingUrlStates((prev) => ({
+        ...prev,
+        step: "enter-referral-code",
+      }));
+    } else if (
+      platform === "instagram" &&
+      (instagramState.page === "success" || xState.page === "success")
+    ) {
+      setOnboardingUrlStates((prev) => ({
+        ...prev,
+        step: "enter-referral-code",
+      }));
     }
   };
 
@@ -282,8 +304,32 @@ export function FollowSocials() {
             {tab === "x" ? "Follow Us on X" : "Follow Us on Instagram"}
           </SectionTitle>
           <TabsList className="w-full flex items-center gap-2">
-            <TabsTrigger value="x">X</TabsTrigger>
-            <TabsTrigger value="instagram">Instagram</TabsTrigger>
+            <TabsTrigger value="x">
+              X
+              {authStatus?.data?.twitterFollowed ? (
+                <>
+                  <Icon
+                    name={IconsNames.SUCCESS}
+                    width={16}
+                    height={16}
+                    className="w-4 h-4"
+                  />
+                </>
+              ) : null}
+            </TabsTrigger>
+            <TabsTrigger value="instagram">
+              Instagram
+              {authStatus?.data?.instagramFollowed ? (
+                <>
+                  <Icon
+                    name={IconsNames.SUCCESS}
+                    width={16}
+                    height={16}
+                    className="w-4 h-4"
+                  />
+                </>
+              ) : null}
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -291,14 +337,12 @@ export function FollowSocials() {
           platform="x"
           onBack={handleBack}
           onConfirm={handleConfirm}
-          otherPlatformVerified={instagramState.isVerified}
         />
 
         <PlatformTab
           platform="instagram"
           onBack={handleBack}
           onConfirm={handleConfirm}
-          otherPlatformVerified={xState.isVerified}
         />
       </section>
     </Tabs>

@@ -3,22 +3,19 @@ import { Button } from "@/components/ui/button";
 import { SectionTitle } from "@/components/ui/section-title";
 import { useOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboardingUrlStates";
 import { useEffect, useState } from "react";
-import {
-  getTelegramUserVerifiedKey,
-  isValidUsernameWithAtSign,
-} from "../lib/utils";
-import { useChainId } from "wagmi";
-import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
-import { useSessionStorage } from "@/shared/hooks";
+import { isValidUsernameWithAtSign, removeAtSign } from "../lib/utils";
 import { CITY_OF_ATLANTUS_TELEGRAM_LINK } from "@/common/constants";
 import { SectionAction } from "./section-action";
 import { SectionMetaInfo } from "./section-meta-info";
+import { ButtonsFooter } from "./buttons-footer";
+import { useVerifyTelegram } from "../usecases/VerifyTelegram.usecase";
+import { useGetAuthStatus } from "@/modules/auth/usecases/GetAuthStatus.usecase";
 
 const TITLE_MAP = {
   join: {
     title: "Join our Telegram Community",
     description:
-      "Click “Join Now” to become a part of the Atlantus City Hall Community.",
+      "Click “Join Community” to become a part of the Atlantus City Hall Community.",
   },
   verify: {
     title: "Confirm Atlantus City Hall Membership",
@@ -26,7 +23,7 @@ const TITLE_MAP = {
   },
   success: {
     title: "Your telegram account has been verified!",
-    description: "Move on to the next step to claim your airdrop.",
+    description: "Click “Next” to continue.",
   },
 };
 
@@ -38,19 +35,12 @@ const JOIN_ACTION_LIST = [
 ];
 
 export function JoinTelegramCommunity() {
-  const chainId = useChainId();
-  const { address } = useWalletConnectionStatus();
   const [username, setUsername] = useState("");
-  const { set: setTelegramUserVerified, value: telegramUserVerified } =
-    useSessionStorage(
-      getTelegramUserVerifiedKey({
-        chainId,
-        address: address ?? "",
-      })
-    );
-  const [page, setPage] = useState<"join" | "verify" | "success">(
-    telegramUserVerified === true ? "success" : "join"
-  );
+  const { data: authStatus } = useGetAuthStatus();
+
+  const { mutate: verifyTelegram } = useVerifyTelegram();
+
+  const [page, setPage] = useState<"join" | "verify" | "success">("join");
   const [usernameError, setUsernameError] = useState<{
     isError: boolean;
     error: string | null;
@@ -77,10 +67,19 @@ export function JoinTelegramCommunity() {
         return;
       }
       setUsernameError({ isError: false, error: null });
-      // TODO: call api to verify username
-      setPage("success");
-      setTelegramUserVerified(true);
-      // Store in session storage that user has verified their telegram account
+      verifyTelegram(
+        {
+          username: removeAtSign(username),
+        },
+        {
+          onSuccess: () => {
+            setPage("success");
+          },
+          onError: (error) => {
+            setUsernameError({ isError: true, error: error.message });
+          },
+        }
+      );
     } else if (page === "success") {
       setOnboardingUrlStates((prev) => ({
         ...prev,
@@ -90,18 +89,16 @@ export function JoinTelegramCommunity() {
   };
 
   useEffect(() => {
-    if (telegramUserVerified === true && page !== "success") {
+    if (authStatus?.data?.telegramJoined && page !== "success") {
       setPage("success");
     }
-  }, [telegramUserVerified, page]);
+  }, [authStatus?.data?.telegramJoined, page]);
 
   return (
     <section className="w-full space-y-6 @container">
       <div className="space-y-2">
         <SectionTitle className="text-center">
-          {page === "success"
-            ? "Join Our Communities"
-            : "Join our Telegram Community"}
+          Join our Telegram Community
         </SectionTitle>
         <SectionMetaInfo items={JOIN_ACTION_LIST} />
       </div>
@@ -119,7 +116,7 @@ export function JoinTelegramCommunity() {
         inputValue={username}
       />
 
-      <div className="w-full grid @sm:grid-cols-2 gap-y-4 gap-x-2 @md:gap-x-3.5">
+      <ButtonsFooter>
         <Button
           variant="secondary"
           onClick={handleBack}
@@ -146,7 +143,7 @@ export function JoinTelegramCommunity() {
             "Next"
           )}
         </Button>
-      </div>
+      </ButtonsFooter>
     </section>
   );
 }

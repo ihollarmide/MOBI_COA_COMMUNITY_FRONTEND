@@ -5,7 +5,6 @@ import { OnboardingNav } from "./onboarding-nav";
 import { AnimatePresence, m } from "motion/react";
 import { useEffect } from "react";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
-import { useRouter } from "next/navigation";
 import { useOnboardingUrlStates } from "../hooks/useOnboardingUrlStates";
 import { WalletConnected } from "./wallet-connected";
 import { JoinTelegramCommunity } from "./join-telegram-community";
@@ -14,6 +13,10 @@ import { ReferralCode } from "./referral-code";
 import { ClaimKeys } from "./claim-keys";
 import { JoinVMCCDao } from "./join-vmcc-dao";
 import { fade } from "@/lib/animation.utils";
+import { signOut } from "next-auth/react";
+import { useGetStepToRedirectTo } from "../hooks/useStepsCompletionStatus";
+import { canAccessStep } from "../lib/utils";
+import { OnboardingStepSlug } from "../types";
 
 function StepWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -31,13 +34,30 @@ function StepWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export function MainScreen() {
-  const router = useRouter();
   const { status } = useWalletConnectionStatus();
-  const [{ step: stepSlug }] = useOnboardingUrlStates();
+  const [{ step: stepSlug }, setOnboardingUrlStates] = useOnboardingUrlStates();
+  const accessibleSlug = useGetStepToRedirectTo();
+
+  const isAccessible = (slug: OnboardingStepSlug) => {
+    if (!accessibleSlug) return true;
+    return canAccessStep({
+      slugToAccess: slug,
+      accessibleSlug: accessibleSlug,
+    });
+  };
+
+  useEffect(() => {
+    if (!isAccessible(stepSlug)) {
+      setOnboardingUrlStates({ step: accessibleSlug });
+    }
+  }, [stepSlug, accessibleSlug, isAccessible]);
 
   useEffect(() => {
     if (status === "disconnected") {
-      router.replace("/");
+      signOut({
+        redirect: true,
+        redirectTo: "/",
+      });
     }
   }, [status]);
 

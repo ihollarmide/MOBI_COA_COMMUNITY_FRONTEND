@@ -6,6 +6,11 @@ import { useEffect, useState } from "react";
 import { isValidReferralCode } from "../lib/utils";
 import { SectionAction } from "./section-action";
 import Image from "next/image";
+import { ButtonsFooter } from "./buttons-footer";
+import { useGetUplineId } from "../usecases/GetUplineId.usecase";
+import { useSetUplineId } from "../usecases/SetUplineId.usecase";
+import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
+import { useGetVmccDetailsByCoaUserId } from "@/modules/auth/usecases/GetVmccDetailsByCoaUserId.usecase";
 
 const getTitleMap = (referredBy: string) => ({
   submit: {
@@ -24,29 +29,55 @@ const getTitleMap = (referredBy: string) => ({
   },
 });
 
-function ConfirmedReferralCode() {
+function ConfirmedReferralCode({
+  vmccName,
+  vmccLogo,
+  coaUserId,
+}: {
+  vmccName: string;
+  vmccLogo: string;
+  coaUserId: number;
+}) {
   return (
-    <div className="w-full h-[46px] bg-glass-gradient border-border/[0.05] border-solid px-3 py-[12.5px] rounded-lg flex items-center justify-start gap-x-2">
+    <div className="w-full min-h-[46px] bg-glass-gradient border-border/[0.05] border-solid px-3 py-[12.5px] rounded-lg flex items-center justify-start gap-x-2">
       <Image
-        src="/images/vmcc-sample-image.png"
-        alt="VMCC"
+        src={vmccLogo}
+        alt={vmccName}
         width={20}
         height={20}
         className="size-5 object-cover rounded-full shrink-0"
       />
-      <div className="flex-1 overflow-hidden text-white text-sm font-medium leading-[1.5] tracking-sm">
-        Atlantus Mining Works{" "}
-        <span className="text-[#929292]">(MCL000213)</span>
+      <div className="overflow-hidden text-white text-sm font-medium leading-[1.5] tracking-sm">
+        <p className="">
+          <span className="">{vmccName}</span>{" "}
+          <span className="text-[#929292]">
+            MCL{coaUserId.toString().padStart(6, "0")}
+          </span>
+        </p>
       </div>
     </div>
   );
 }
 
-const isReferred = false;
-
 export function ReferralCode() {
+  const { address } = useWalletConnectionStatus();
+  const { data: uplineId } = useGetUplineId();
+  const { handleSetUpline, isLoading: isSettingUpline } = useSetUplineId({
+    onSuccess: () => {
+      setReferralCodeError({
+        isError: false,
+        error: null,
+      });
+      setPage("success");
+    },
+    onError: (error) => {
+      setReferralCodeError({
+        isError: true,
+        error: error.message,
+      });
+    },
+  });
   const [referralCode, setReferralCode] = useState("");
-  const [referredBy] = useState("");
   const [page, setPage] = useState<"submit" | "confirm" | "success">("submit");
   const [referralCodeError, setReferralCodeError] = useState<{
     isError: boolean;
@@ -57,6 +88,25 @@ export function ReferralCode() {
   });
   const [, setOnboardingUrlStates] = useOnboardingUrlStates();
 
+  const getNumberFromReferralCode = (referralCode: string): number => {
+    // Remove "MCL" prefix and convert remaining digits to number
+    const digitsPart = referralCode.slice(3); // Remove "MCL"
+    return parseInt(digitsPart, 10); // Convert to number, automatically removes leading zeros
+  };
+
+  const { data: vmccDetails, isPending: isRetrievingVmccDetails } =
+    useGetVmccDetailsByCoaUserId({
+      coaUserId: uplineId ?? getNumberFromReferralCode(referralCode),
+      enabled: uplineId
+        ? !!uplineId
+        : !isValidReferralCode(referralCode).isError &&
+          !!getNumberFromReferralCode(referralCode),
+    });
+
+  const isReferralCodeValid =
+    !isValidReferralCode(referralCode).isError &&
+    !!getNumberFromReferralCode(referralCode);
+
   const handleBack = () => {
     if (page === "submit") {
       setOnboardingUrlStates((prev) => ({
@@ -66,11 +116,16 @@ export function ReferralCode() {
     } else if (page === "confirm") {
       setPage("submit");
     } else if (page === "success") {
-      setPage("confirm");
+      setOnboardingUrlStates((prev) => ({
+        ...prev,
+        step: "follow-us",
+      }));
     }
   };
 
   const handleConfirm = () => {
+    if (!address) return;
+
     if (page === "submit") {
       const { isError, error } = isValidReferralCode(referralCode);
       if (isError) {
@@ -78,8 +133,19 @@ export function ReferralCode() {
         return;
       }
 
-      // TODO: call api to submit referral code and verify
-      setPage("confirm");
+      const coaUserId = getNumberFromReferralCode(referralCode);
+
+      if (!!coaUserId) {
+        handleSetUpline({
+          coaUserId,
+          address: address,
+        });
+      } else {
+        setReferralCodeError({
+          isError: true,
+          error: "Invalid referral code",
+        });
+      }
     } else if (page === "confirm") {
       setPage("success");
     } else if (page === "success") {
@@ -90,11 +156,16 @@ export function ReferralCode() {
     }
   };
 
+  const referredBy =
+    vmccDetails && !!uplineId
+      ? `${vmccDetails.data?.companyName ?? "N/A"} (MCL${uplineId?.toString().padStart(6, "0")})`
+      : "N/A";
+
   useEffect(() => {
-    if (isReferred && page !== "success") {
+    if (!!uplineId && page !== "success") {
       setPage("success");
     }
-  }, [page]);
+  }, [page, uplineId]);
 
   return (
     <section className="w-full space-y-8 @container">
@@ -114,34 +185,54 @@ export function ReferralCode() {
         isCollapsibleOpen={page !== "success"}
         isError={referralCodeError.isError}
         errorMessage={referralCodeError.error}
-        inputPlaceholder="Enter Referral Code (e.g. MCL000213)"
+        inputPlaceholder="Enter Referral Code (e.g. MCL000000)"
         onInputChange={setReferralCode}
         inputValue={referralCode}
+        isInputLoading={isReferralCodeValid ? isRetrievingVmccDetails : false}
         collapsibleContent={
-          page === "confirm" ? <ConfirmedReferralCode /> : null
+          page === "confirm" && isReferralCodeValid && !!vmccDetails ? (
+            <ConfirmedReferralCode
+              vmccName={vmccDetails.data?.companyName ?? "N/A"}
+              vmccLogo={vmccDetails.data?.companyLogo ?? ""}
+              coaUserId={getNumberFromReferralCode(referralCode)}
+            />
+          ) : null
         }
       />
 
-      <div className="w-full grid @sm:grid-cols-2 gap-y-4 gap-x-2 @md:gap-x-3.5">
+      <ButtonsFooter>
         <Button
           variant="secondary"
           onClick={handleBack}
           className="cursor-pointer"
+          disabled={isSettingUpline}
         >
           {page === "confirm" ? "Edit Referral Code" : "Back"}
         </Button>
         <Button
-          disabled={isValidReferralCode(referralCode).isError}
+          disabled={
+            !!uplineId
+              ? false
+              : (page === "submit" &&
+                  isValidReferralCode(referralCode).isError) ||
+                isSettingUpline
+          }
           onClick={handleConfirm}
           className="cursor-pointer"
         >
-          {page === "submit"
-            ? "Submit Code"
-            : page === "confirm"
-              ? "Confirm Code"
-              : "Next"}
+          {isSettingUpline ? (
+            "Applying Referral Code"
+          ) : (
+            <>
+              {page === "submit"
+                ? "Submit Code"
+                : page === "confirm"
+                  ? "Confirm Code"
+                  : "Next"}
+            </>
+          )}
         </Button>
-      </div>
+      </ButtonsFooter>
     </section>
   );
 }

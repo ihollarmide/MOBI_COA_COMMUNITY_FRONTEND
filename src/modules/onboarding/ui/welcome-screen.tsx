@@ -7,16 +7,25 @@ import { SectionTitle } from "@/components/ui/section-title";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import { useModal } from "connectkit";
 import { ONBOARDING_STEPS } from "@/modules/onboarding/data";
+import { useInitiateLogin } from "@/modules/auth/usecases/InitiateLogin.usecase";
+import { Address } from "viem";
+import { useGetUplineId } from "@/modules/onboarding/usecases/GetUplineId.usecase";
 import { useRouter } from "next/navigation";
 
 export function WelcomeScreen() {
   const router = useRouter();
+  router.prefetch("/onboarding");
+  useGetUplineId();
   const { isConnected, address } = useWalletConnectionStatus();
+  const { mutate: initiateLogin } = useInitiateLogin();
 
   const { setOpen } = useModal({
     onConnect: ({ address }) => {
       if (address) {
-        router.replace(`/onboarding`);
+        initiateLogin({
+          walletAddress: address as Address,
+          appName: "COA Community",
+        });
       }
     },
   });
@@ -24,7 +33,10 @@ export function WelcomeScreen() {
   const handleConnect = () => {
     if (isConnected) {
       if (address) {
-        router.replace(`/onboarding`);
+        initiateLogin({
+          walletAddress: address as Address,
+          appName: "COA Community",
+        });
       }
     } else {
       setOpen(true);

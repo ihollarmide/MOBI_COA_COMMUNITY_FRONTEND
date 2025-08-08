@@ -43,6 +43,19 @@ export const isLastStep = (slug: OnboardingStepSlug): boolean => {
   return getStepNumberBySlug(slug) === ONBOARDING_STEPS.length;
 };
 
+export function canAccessStep({
+  slugToAccess,
+  accessibleSlug,
+}: {
+  slugToAccess: OnboardingStepSlug;
+  accessibleSlug: OnboardingStepSlug;
+}) {
+  const accessibleSlugNumber = getStepNumberBySlug(accessibleSlug);
+  const slugToAccessNumber = getStepNumberBySlug(slugToAccess);
+
+  return slugToAccessNumber <= accessibleSlugNumber;
+}
+
 export const isValidUsernameWithAtSign = (
   username: string
 ): { isError: boolean; error: string | null } => {
@@ -144,32 +157,6 @@ export const isValidReferralCode = (
   return { isError: false, error: null };
 };
 
-export const getTelegramUserVerifiedKey = ({
-  chainId,
-  address,
-}: {
-  chainId: number;
-  address: string;
-}): string => {
-  return `${chainId}-${address}-telegram-account-verified`;
-};
-
-export const getXUserVerifiedKey = ({
-  chainId,
-  address,
-}: {
-  chainId: number;
-  address: string;
-}): string => {
-  return `${chainId}-${address}-x-account-verified`;
-};
-
-export const getInstagramUserVerifiedKey = ({
-  chainId,
-  address,
-}: {
-  chainId: number;
-  address: string;
-}): string => {
-  return `${chainId}-${address}-instagram-account-verified`;
+export const removeAtSign = (username: string) => {
+  return username.replace("@", "").trim();
 };

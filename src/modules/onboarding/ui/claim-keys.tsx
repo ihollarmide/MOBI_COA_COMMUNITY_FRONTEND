@@ -2,14 +2,54 @@ import { Button } from "@/components/ui/button";
 import { GenesisKeyGif } from "@/components/ui/genesis-key.gif";
 import { SectionTitle } from "@/components/ui/section-title";
 import Image from "next/image";
+import { ButtonsFooter } from "./buttons-footer";
+import { useGetIsClaimedKey } from "@/modules/onboarding/usecases/GetIsClaimedKey.usecase";
+import { useClaimToken } from "@/modules/onboarding/usecases/ClaimToken.usecase";
+import { useOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboardingUrlStates";
+import { useGetUplineId } from "../usecases/GetUplineId.usecase";
+import { useGetVmccDetailsByCoaUserId } from "@/modules/auth/usecases/GetVmccDetailsByCoaUserId.usecase";
+import { Loader } from "@/components/ui/loader";
 
 export function ClaimKeys() {
+  const { data: isClaimed, isPending } = useGetIsClaimedKey();
+  const [, setOnboardingUrlStates] = useOnboardingUrlStates();
+  const { data: uplineId } = useGetUplineId();
+
+  const { data: vmccDetails } = useGetVmccDetailsByCoaUserId({
+    coaUserId: uplineId || "",
+    enabled: !!uplineId,
+  });
+
+  const { handleClaim, isLoading: isClaiming } = useClaimToken();
+
+  const handleBack = () => {
+    setOnboardingUrlStates((prev) => ({
+      ...prev,
+      step: "enter-referral-code",
+    }));
+  };
+
+  const handleContinue = () => {
+    if (isClaiming) return;
+
+    if (isClaimed) {
+      setOnboardingUrlStates((prev) => ({
+        ...prev,
+        step: "follow-us",
+      }));
+    } else {
+      handleClaim();
+    }
+  };
+
   return (
     <section className="w-full @container">
       <div className="space-y-2 text-center">
         <SectionTitle>Claim Yard Genesis Key</SectionTitle>
         <p className="text-sm leading-[1.4] tracking-sm text-gray-100">
-          Confirm your referrer and claim your Yard Genesis Key.
+          {isClaimed
+            ? "You have already claimed"
+            : "Confirm your referrer and claim your Yard Genesis Key."}
         </p>
       </div>
 
@@ -21,27 +61,44 @@ export function ClaimKeys() {
           height={167}
           imageClassName="w-[203px] h-auto"
         />
-        <div className="w-full flex items-center justify-center gap-x-2 text-center">
-          <Image
-            src="/images/vmcc-sample-image.png"
-            alt="VMCC"
-            width={20}
-            height={20}
-            className="size-5 object-cover rounded-full shrink-0"
-          />
-          <div className="overflow-hidden text-white text-sm font-medium leading-[1.5] tracking-sm -mt-2">
-            Atlantus Mining Works{" "}
-            <span className="text-[#929292]">(MCL000213)</span>
+        {vmccDetails && !!uplineId ? (
+          <div className="w-full flex items-center justify-center gap-x-2 text-center -mt-2">
+            <Image
+              src={vmccDetails?.data?.companyLogo || ""}
+              alt={vmccDetails?.data?.companyName || ""}
+              width={20}
+              height={20}
+              className="size-5 object-cover rounded-full shrink-0"
+            />
+            <div className="overflow-hidden text-white text-sm font-medium leading-[1.5] tracking-sm flex">
+              {vmccDetails.data?.companyName ?? "N/A"}
+              &nbsp;
+              <span className="text-[#929292]">
+                (MCL{uplineId?.toString().padStart(6, "0")})
+              </span>
+            </div>
           </div>
-        </div>
+        ) : (
+          <Loader label="Loading Referral details..." />
+        )}
       </div>
 
-      <div className="w-full grid @sm:grid-cols-2 gap-y-4 gap-x-2 @md:gap-x-3.5">
-        <Button variant="secondary" className="cursor-pointer">
+      <ButtonsFooter>
+        <Button
+          variant="secondary"
+          className="cursor-pointer"
+          onClick={handleBack}
+        >
           Back
         </Button>
-        <Button className="cursor-pointer">Claim</Button>
-      </div>
+        <Button
+          disabled={isPending || isClaiming}
+          className="cursor-pointer"
+          onClick={handleContinue}
+        >
+          {!!isClaimed ? "Continue" : isClaiming ? "Claiming..." : "Claim"}
+        </Button>
+      </ButtonsFooter>
     </section>
   );
 }

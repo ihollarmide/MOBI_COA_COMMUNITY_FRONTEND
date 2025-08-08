@@ -6,6 +6,7 @@ import clsx from "clsx";
 import { Icon } from "@/components/icons/icon";
 import { IconsNames } from "@/components/icons/icon.types";
 import { ReactNode } from "react";
+import { Loader } from "@/components/ui/loader";
 
 export function SectionAction({
   title,
@@ -16,6 +17,7 @@ export function SectionAction({
   isError,
   errorMessage,
   inputPlaceholder,
+  isInputLoading,
   onInputChange,
   inputValue,
   collapsibleContent,
@@ -27,6 +29,7 @@ export function SectionAction({
   isCollapsibleOpen: boolean;
   isError: boolean;
   errorMessage: string | null;
+  isInputLoading?: boolean;
   inputPlaceholder: string;
   onInputChange: (value: string) => void;
   inputValue: string;
@@ -41,7 +44,7 @@ export function SectionAction({
       <div className="flex items-start justify-start gap-x-2">
         <IconSlate variant="default" icon={icon} as="div" />
         <div className="space-y-1 flex-1 overflow-ellipsis">
-          <p className="text-base font-medium leading-[1.5] tracking-mxs text-white">
+          <p className="text-base font-medium leading-[1.5] tracking-mxs text-white whitespace-normal">
             {title}
           </p>
           <p className="text-sm font-normal leading-[1.5] tracking-xxs text-[#aaa]">
@@ -53,7 +56,7 @@ export function SectionAction({
             name={IconsNames.SUCCESS}
             width={24}
             height={24}
-            className="size-6"
+            className="size-6 hidden @[300px]:block"
           />
         ) : null}
       </div>
@@ -69,9 +72,11 @@ export function SectionAction({
                 value={inputValue}
                 onChange={(e) => onInputChange(e.target.value)}
                 placeholder={inputPlaceholder}
+                disabled={isInputLoading}
+                endContent={isInputLoading ? <Loader loaderSize={16} /> : null}
               />
               {isError && errorMessage && (
-                <p className="text-destructive mt-1 text-xs font-normal leading-[1.5] tracking-xxs">
+                <p className="text-destructive mt-1 text-xs font-normal leading-[1.5] tracking-xxs line-clamp-1">
                   {errorMessage}
                 </p>
               )}

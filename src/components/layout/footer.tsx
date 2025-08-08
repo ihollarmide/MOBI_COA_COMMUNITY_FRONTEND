@@ -83,6 +83,7 @@ export function Footer() {
               alt="VMCC"
               width={260}
               height={50}
+              className="max-w-[146px] @sm:max-w-[180px] @lg:max-w-[260px] w-full h-auto"
             />
           </Link>
           <div className="flex items-center justify-start gap-x-4">
