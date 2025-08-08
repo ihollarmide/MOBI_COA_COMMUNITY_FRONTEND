@@ -15,8 +15,12 @@ import { useGetIsClaimedKey } from "../usecases/GetIsClaimedKey.usecase";
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { serializeOnboardingUrlStates } from "../hooks/useOnboardingUrlStates";
+import { useChainId } from "wagmi";
 
 export function WelcomeScreen() {
+  const chainId = useChainId();
+
+  console.log({ chainId });
   const { status: sessionStatus, data: session } = useSession();
   const { data: isClaimed } = useGetIsClaimedKey();
   const { data: uplineId } = useGetUplineId();
