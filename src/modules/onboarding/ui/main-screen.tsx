@@ -71,7 +71,7 @@ export function MainScreen() {
     if (walletStatus === "disconnected") {
       signOut({
         redirect: true,
-        redirectTo: "/",
+        redirectTo: "/welcome",
       });
     }
   }, [walletStatus]);
@@ -81,7 +81,7 @@ export function MainScreen() {
       if (session.user.walletAddress.toLowerCase() !== address.toLowerCase()) {
         signOut({
           redirect: true,
-          redirectTo: "/",
+          redirectTo: "/welcome",
         });
       }
     }
