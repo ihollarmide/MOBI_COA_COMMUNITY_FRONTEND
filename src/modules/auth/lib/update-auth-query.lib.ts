@@ -12,7 +12,7 @@ export const updateAuthStatusQuery = ({
   const existingQuery: GetAuthStatusResponse | undefined =
     queryClient.getQueryData(QUERY_KEYS.AUTH_STATUS.list());
 
-  if (existingQuery) {
+  if (existingQuery !== undefined) {
     queryClient.setQueryData(QUERY_KEYS.AUTH_STATUS.list(), {
       ...existingQuery,
       data: {

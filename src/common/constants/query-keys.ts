@@ -1,3 +1,5 @@
+import { Address } from "viem";
+
 /**
  * Creates a set of query keys for React Query caching.
  *
@@ -39,4 +41,6 @@ export const QUERY_KEYS = {
   AUTH_STATUS: createQueryKeys("auth-status"),
   CLAIM_PARAMETERS: createQueryKeys("claim-parameters"),
   VMCC_DETAILS: createQueryKeys("vmcc-details"),
+  IS_CLAIMED_KEY: createQueryKeys<{ address?: Address }>("is-claimed-key"),
+  UPLINE_ID: createQueryKeys<{ address?: Address }>("upline-id"),
 };

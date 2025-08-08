@@ -4,16 +4,23 @@ import { toast } from "sonner";
 import { useRetrieveClaimParameters } from "./GetClaimParameters.usecase";
 import { getNextClaimableTokenId } from "./GetNextClaimableTokenId.usecase";
 import { airdropContract } from "@/common/constants/contracts/airdropContract";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Address } from "viem";
-import { getIsClaimedKey, useGetIsClaimedKey } from "./GetIsClaimedKey.usecase";
+import {
+  getIsClaimedKey,
+  updateIsClaimedKeyQuery,
+} from "./GetIsClaimedKey.usecase";
+import { useOnboardingUrlStates } from "../hooks/useOnboardingUrlStates";
 
 const TOAST_ID = "claim-token";
 
 export const useClaimToken = () => {
+  const queryClient = useQueryClient();
   const { address } = useWalletConnectionStatus();
   const { mutate: getClaimParameters, isPending: isGettingClaimParameters } =
     useRetrieveClaimParameters();
+
+  const [, setOnboardingUrlStates] = useOnboardingUrlStates();
 
   const { mutate: retrieveClaimStatus, isPending: isRetrievingClaimStatus } =
     useMutation({
@@ -30,8 +37,6 @@ export const useClaimToken = () => {
         });
       },
     });
-
-  const { refetch: refreshIsClaimedKey } = useGetIsClaimedKey();
 
   const {
     mutate: requestNextClaimableTokenId,
@@ -60,10 +65,26 @@ export const useClaimToken = () => {
         });
       },
       onCompleted() {
-        refreshIsClaimedKey();
-        toast.success("Acre has been claimed successfully", {
+        if (!address) {
+          toast.error("Please connect your wallet", {
+            id: TOAST_ID,
+          });
+          return;
+        }
+        updateIsClaimedKeyQuery({
+          queryClient,
+          payload: {
+            isClaimed: true,
+            address,
+          },
+        });
+        toast.success("Yard has been claimed successfully", {
           id: TOAST_ID,
         });
+        setOnboardingUrlStates((prev) => ({
+          ...prev,
+          step: "join-vmcc-dao",
+        }));
       },
       onWriteContractError(error) {
         console.error(error);
@@ -76,11 +97,6 @@ export const useClaimToken = () => {
         });
       },
       onTransactionReceiptError(error) {
-        toast.error(error?.message || "Unable to claim genesis key", {
-          id: TOAST_ID,
-        });
-      },
-      onBlockError(error) {
         toast.error(error?.message || "Unable to claim genesis key", {
           id: TOAST_ID,
         });
@@ -114,6 +130,15 @@ export const useClaimToken = () => {
                       claimParameters.data.r as unknown as Address,
                       claimParameters.data.s as unknown as Address,
                     ],
+                    // args: [
+                    //   "0x517177605394118D4A9d55bd36F48F850C6cF894",
+                    //   "0x14D0B4A8aDB4c9d6AE26Cf2723b197c2316d9417",
+                    //   BigInt(156),
+                    //   BigInt(1754646982),
+                    //   27,
+                    //   "0xd0e340566db26efcf8d564e552af76b755ee76dbd067e8457c75b178fc5fee9b",
+                    //   "0x634f2877443001022b5872ca1ee36eb519b3ef9e7c0d46684b32012007ef9492",
+                    // ]
                   });
                 },
               });

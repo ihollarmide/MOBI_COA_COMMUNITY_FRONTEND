@@ -113,11 +113,8 @@ export function ReferralCode() {
   };
 
   const { data: vmccDetails } = useGetVmccDetailsByCoaUserId({
-    coaUserId: uplineId ?? getNumberFromReferralCode(referralCode),
-    enabled: uplineId
-      ? !!uplineId
-      : !isValidReferralCode(referralCode).isError &&
-        !!getNumberFromReferralCode(referralCode),
+    coaUserId: uplineId ?? 0,
+    enabled: !!uplineId,
   });
 
   const handleBack = () => {

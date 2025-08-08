@@ -177,7 +177,6 @@ export function useWriteContractWithReceipt({
     isWaitingForBlock,
     block,
     blockError,
-    isWritingContractWithReceipt:
-      isPending || isWaitingForTransactionReceipt || isWaitingForBlock,
+    isWritingContractWithReceipt: isPending || isWaitingForTransactionReceipt,
   };
 }

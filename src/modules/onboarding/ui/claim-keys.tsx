@@ -35,7 +35,7 @@ export function ClaimKeys() {
     if (isClaimed) {
       setOnboardingUrlStates((prev) => ({
         ...prev,
-        step: "follow-us",
+        step: "join-vmcc-dao",
       }));
     } else {
       handleClaim();

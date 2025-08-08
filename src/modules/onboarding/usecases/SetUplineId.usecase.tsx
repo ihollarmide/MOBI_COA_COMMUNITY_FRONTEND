@@ -55,14 +55,6 @@ export const useSetUplineId = ({
       });
       onGenericError?.(error);
     },
-    onBlockError(error) {
-      toast.error("Unable to apply referral code", {
-        description:
-          typeof error === "string" ? error : error?.message || "Unknown error",
-        id: TOAST_ID,
-      });
-      onGenericError?.(error);
-    },
   });
 
   const handleSetUpline = ({

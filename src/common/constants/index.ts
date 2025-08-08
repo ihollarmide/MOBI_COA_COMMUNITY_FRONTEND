@@ -1,3 +1,5 @@
+import { Address } from "viem";
+
 export const CITY_OF_ATLANTUS_TELEGRAM_LINK = "https://t.me/atlantuscityhall";
 export const INSTAGRAM_LINK =
   "https://www.instagram.com/vmcc.dao?igsh=OHQ3YTZzcDZ1dXAy&utm_source=qr";
@@ -19,3 +21,6 @@ export const GIFS = {
   PRLZ: "https://res.cloudinary.com/djhkn5moz/image/upload/v1740770519/frame-_1k_knkj2j.gif",
   NO_KEYS: "/img/no-detected-gen-keys.gif",
 };
+
+export const ZERO_ADDRESS =
+  "0x0000000000000000000000000000000000000000" as Address;
