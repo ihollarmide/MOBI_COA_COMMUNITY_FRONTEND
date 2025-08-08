@@ -18,6 +18,8 @@ import { useGetStepToRedirectTo } from "../hooks/useStepsCompletionStatus";
 import { canAccessStep } from "../lib/utils";
 import { OnboardingStepSlug } from "../types";
 import { useRouter } from "next/navigation";
+import { useGetIsClaimedKey } from "../usecases/GetIsClaimedKey.usecase";
+import { useGetUplineId } from "../usecases/GetUplineId.usecase";
 
 function StepWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -35,8 +37,11 @@ function StepWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export function MainScreen() {
+  useGetIsClaimedKey();
+  useGetUplineId();
   const router = useRouter();
   router.prefetch("/welcome");
+
   const { data: session, status: sessionStatus } = useSession();
   const { status: walletStatus, address } = useWalletConnectionStatus();
   const [{ step: stepSlug }, setOnboardingUrlStates] = useOnboardingUrlStates();
@@ -55,6 +60,12 @@ export function MainScreen() {
       setOnboardingUrlStates({ step: accessibleSlug });
     }
   }, [stepSlug, accessibleSlug, isAccessible]);
+
+  useEffect(() => {
+    if (sessionStatus === "unauthenticated") {
+      router.replace("/welcome");
+    }
+  }, [sessionStatus]);
 
   useEffect(() => {
     if (walletStatus === "disconnected") {

@@ -33,6 +33,7 @@ const resources: {
     title: string;
     isInternal: boolean;
     href: string;
+    disabled?: boolean;
   }[];
 }[] = [
   {
@@ -41,17 +42,19 @@ const resources: {
       {
         title: "COA Blackpaper",
         isInternal: false,
-        href: "https://www.atlantus.com/coa-blackpaper",
+        href: "https://acrobat.adobe.com/id/urn:aaid:sc:VA6C2:23cc7c72-d7c1-4e3a-8e08-3b4acc136892",
       },
       {
         title: "COA Support",
         isInternal: false,
+        disabled: true,
         href: "https://www.atlantus.com/coa-whitepaper",
       },
       {
         title: "Network State (Book)",
+        disabled: false,
         isInternal: false,
-        href: "https://www.atlantus.com/coa-whitepaper",
+        href: "https://thenetworkstate.com",
       },
     ],
   },
@@ -60,11 +63,13 @@ const resources: {
     links: [
       {
         title: "Terms of Service",
+        disabled: true,
         isInternal: true,
         href: "/terms-of-service",
       },
       {
         title: "Privacy Policy",
+        disabled: true,
         isInternal: true,
         href: "/privacy-policy",
       },
@@ -77,7 +82,11 @@ export function Footer() {
     <footer className="w-full @container py-6 lg:py-10">
       <div className="flex @2xl:flex-row gap-6 @2xl:gap-0 flex-col items-start justify-between">
         <div className="flex flex-col gap-y-5">
-          <Link href="/">
+          <a
+            href="https://www.vmcc.build/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <Image
               src="/vectors/vmcc-footer-logo.svg"
               alt="VMCC"
@@ -85,7 +94,7 @@ export function Footer() {
               height={50}
               className="max-w-[146px] @sm:max-w-[180px] @lg:max-w-[260px] w-full h-auto"
             />
-          </Link>
+          </a>
           <div className="flex items-center justify-start gap-x-4">
             {socialLinks.map((link) => (
               <a key={link.name} href={link.href} className="text-white/75">
@@ -107,17 +116,30 @@ export function Footer() {
                 {resource.title}
               </h3>
               <div className="flex flex-col gap-y-3">
-                {resource.links.map((link) => (
-                  <Link
-                    key={link.title}
-                    href={link.href}
-                    target={link.isInternal ? undefined : "_blank"}
-                    rel={link.isInternal ? undefined : "noopener noreferrer"}
-                    className="font-montserrat text-sm leading-[1.4] text-white/80"
-                  >
-                    {link.title}
-                  </Link>
-                ))}
+                {resource.links.map((link) => {
+                  if (link.disabled) {
+                    return (
+                      <p
+                        key={link.title}
+                        className="font-montserrat text-sm leading-[1.4] text-white/80"
+                      >
+                        {link.title}
+                      </p>
+                    );
+                  }
+
+                  return (
+                    <Link
+                      key={link.title}
+                      href={link.href}
+                      target={link.isInternal ? undefined : "_blank"}
+                      rel={link.isInternal ? undefined : "noopener noreferrer"}
+                      className="font-montserrat text-sm leading-[1.4] text-white/80"
+                    >
+                      {link.title}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           ))}

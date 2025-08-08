@@ -226,6 +226,16 @@
     rgba(33, 193, 121, 0.06) !important;
 }
 
+.bg-disconnect {
+  background:
+    linear-gradient(
+      0deg,
+      rgba(244, 49, 49, 0.22) 0%,
+      rgba(244, 49, 49, 0.22) 100%
+    ),
+    #030910;
+}
+
 .grid-parent-stack {
   display: grid;
   grid-template-areas: "stack";

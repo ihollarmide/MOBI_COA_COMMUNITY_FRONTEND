@@ -18,10 +18,15 @@ export const getAuthStatus = async () => {
   }
 };
 
-export const useGetAuthStatus = () => {
+export const useGetAuthStatus = ({
+  isEnabled = true,
+}: {
+  isEnabled?: boolean;
+} = {}) => {
   const res = useQuery({
     queryKey: QUERY_KEYS.AUTH_STATUS.list(),
     queryFn: getAuthStatus,
+    enabled: isEnabled,
   });
 
   return res;

@@ -11,8 +11,15 @@ import { useInitiateLogin } from "@/modules/auth/usecases/InitiateLogin.usecase"
 import { Address } from "viem";
 import { useGetUplineId } from "@/modules/onboarding/usecases/GetUplineId.usecase";
 import { useRouter } from "next/navigation";
+import { useGetIsClaimedKey } from "../usecases/GetIsClaimedKey.usecase";
+import { useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { serializeOnboardingUrlStates } from "../hooks/useOnboardingUrlStates";
 
 export function WelcomeScreen() {
+  const { status: sessionStatus, data: session } = useSession();
+  const { data: isClaimed } = useGetIsClaimedKey();
+  const { data: uplineId } = useGetUplineId();
   const router = useRouter();
   router.prefetch("/onboarding");
   useGetUplineId();
@@ -49,6 +56,63 @@ export function WelcomeScreen() {
   };
 
   const isLoading = isSigninMessage || isCompletingLogin || isInitiating;
+
+  console.log(
+    isClaimed,
+    uplineId,
+    session?.user?.uplineId,
+    session?.user?.twitterFollowed,
+    session?.user?.instagramFollowed,
+    session?.user?.telegramJoined
+  );
+
+  useEffect(() => {
+    const onboardingRoute = "/onboarding";
+    if (sessionStatus === "authenticated" && address) {
+      if (isClaimed) {
+        return router.replace(
+          onboardingRoute +
+            serializeOnboardingUrlStates({
+              step: "join-vmcc-dao",
+            })
+        );
+      } else if (session?.user?.uplineId || !!uplineId) {
+        return router.replace(
+          onboardingRoute +
+            serializeOnboardingUrlStates({
+              step: "claim-genesis-key",
+            })
+        );
+      } else if (
+        session?.user?.twitterFollowed ||
+        session?.user?.instagramFollowed
+      ) {
+        return router.replace(
+          onboardingRoute +
+            serializeOnboardingUrlStates({
+              step: "enter-referral-code",
+            })
+        );
+      } else if (session?.user?.telegramJoined) {
+        return router.replace(
+          onboardingRoute +
+            serializeOnboardingUrlStates({
+              step: "follow-us",
+            })
+        );
+      }
+      router.replace(onboardingRoute);
+    }
+  }, [
+    sessionStatus,
+    address,
+    session?.user?.uplineId,
+    session?.user?.twitterFollowed,
+    session?.user?.instagramFollowed,
+    session?.user?.telegramJoined,
+    isClaimed,
+    uplineId,
+  ]);
 
   return (
     <div className="w-full @container">

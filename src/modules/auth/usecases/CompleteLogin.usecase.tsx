@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { serializeOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboardingUrlStates";
 import { useGetUplineId } from "@/modules/onboarding/usecases/GetUplineId.usecase";
+import { useGetIsClaimedKey } from "@/modules/onboarding/usecases/GetIsClaimedKey.usecase";
 
 export const createUserSession = async (payload: CompleteLoginResponse) => {
   try {
@@ -18,7 +19,6 @@ export const createUserSession = async (payload: CompleteLoginResponse) => {
         id: payload.data.user.id.toString(),
       }),
       redirect: false,
-      redirectTo: "/onboarding",
     });
 
     if (result?.error) {
@@ -76,6 +76,7 @@ export const useCompleteLogin = () => {
 };
 
 export const useCreateUserSession = () => {
+  const { data: isClaimed } = useGetIsClaimedKey();
   const { data: uplineId } = useGetUplineId();
   const router = useRouter();
   const res = useMutation({
@@ -92,17 +93,17 @@ export const useCreateUserSession = () => {
           description: "",
           id: AUTH_TOAST_ID,
         });
-        const onboardingRoute = "/onboarding";
 
-        if (variables.data.user.genesisClaimed) {
-          router.replace(
+        const onboardingRoute = "/onboarding";
+        if (isClaimed || variables.data.user.genesisClaimed) {
+          return router.replace(
             onboardingRoute +
               serializeOnboardingUrlStates({
                 step: "join-vmcc-dao",
               })
           );
-        } else if (variables.data.user.uplineId || !!uplineId) {
-          router.replace(
+        } else if (!!variables.data.user.uplineId || !!uplineId) {
+          return router.replace(
             onboardingRoute +
               serializeOnboardingUrlStates({
                 step: "claim-genesis-key",
@@ -112,22 +113,21 @@ export const useCreateUserSession = () => {
           variables.data.user.twitterFollowed ||
           variables.data.user.instagramFollowed
         ) {
-          router.replace(
+          return router.replace(
             onboardingRoute +
               serializeOnboardingUrlStates({
                 step: "enter-referral-code",
               })
           );
         } else if (variables.data.user.telegramJoined) {
-          router.replace(
+          return router.replace(
             onboardingRoute +
               serializeOnboardingUrlStates({
                 step: "follow-us",
               })
           );
-        } else {
-          router.replace(onboardingRoute);
         }
+        router.replace(onboardingRoute);
       } else if (data?.error) {
         toast.error(`Unable to Log In`, {
           description:

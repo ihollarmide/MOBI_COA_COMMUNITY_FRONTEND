@@ -2,6 +2,7 @@ import React from "react";
 import { Footer } from "@/components/layout/footer";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Header } from "@/components/layout/header";
 
 export default function MainLayout({
   children,
@@ -26,6 +27,7 @@ export default function MainLayout({
         <ScrollArea className="h-full">
           <div className="px-4">
             <div className="max-w-[1216px] min-h-[calc(100vh)] h-full w-full mx-auto flex flex-col">
+              <Header />
               <main className="w-full flex-1 flex flex-col items-center justify-center gap-y-[30px] max-w-[665px] py-5 mx-auto">
                 <Image
                   src="/images/vmcc-logo.png"

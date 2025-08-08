@@ -62,20 +62,25 @@ export function ClaimKeys() {
           imageClassName="w-[203px] h-auto"
         />
         {vmccDetails && !!uplineId ? (
-          <div className="w-full flex items-center justify-center gap-x-2 text-center -mt-2">
-            <Image
-              src={vmccDetails?.data?.companyLogo || ""}
-              alt={vmccDetails?.data?.companyName || ""}
-              width={20}
-              height={20}
-              className="size-5 object-cover rounded-full shrink-0"
-            />
-            <div className="overflow-hidden text-white text-sm font-medium leading-[1.5] tracking-sm flex">
-              {vmccDetails.data?.companyName ?? "N/A"}
-              &nbsp;
-              <span className="text-[#929292]">
-                (MCL{uplineId?.toString().padStart(6, "0")})
-              </span>
+          <div className="w-full flex items-center justify-center gap-x-1 flex-wrap text-center -mt-2">
+            <p className="text-sm leading-[1.4] tracking-sm text-gray-100">
+              Referred by:
+            </p>
+            <div className="flex items-center justify-center gap-x-2">
+              <Image
+                src={vmccDetails?.data?.companyLogo || ""}
+                alt={vmccDetails?.data?.companyName || ""}
+                width={20}
+                height={20}
+                className="size-5 object-cover rounded-full shrink-0"
+              />
+              <div className="overflow-hidden text-white text-sm font-medium leading-[1.5] tracking-sm flex">
+                {vmccDetails.data?.companyName ?? "N/A"}
+                &nbsp;
+                <span className="text-[#929292]">
+                  (MCL{uplineId?.toString().padStart(6, "0")})
+                </span>
+              </div>
             </div>
           </div>
         ) : (
