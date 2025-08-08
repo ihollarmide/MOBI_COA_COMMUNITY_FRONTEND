@@ -97,7 +97,13 @@ export function Footer() {
           </a>
           <div className="flex items-center justify-start gap-x-4">
             {socialLinks.map((link) => (
-              <a key={link.name} href={link.href} className="text-white/75">
+              <a
+                key={link.name}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/75"
+              >
                 <Icon
                   name={link.icon}
                   width={24}
@@ -121,8 +127,14 @@ export function Footer() {
                     return (
                       <p
                         key={link.title}
-                        className="font-montserrat text-sm leading-[1.4] text-white/80"
+                        className="font-montserrat text-sm leading-[1.4] text-white/80 flex items-center gap-x-1"
                       >
+                        <Icon
+                          name={IconsNames.PADLOCK}
+                          width={16}
+                          height={16}
+                          className="w-4 h-4"
+                        />
                         {link.title}
                       </p>
                     );

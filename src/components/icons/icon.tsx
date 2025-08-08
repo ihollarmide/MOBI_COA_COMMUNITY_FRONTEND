@@ -15,6 +15,7 @@ import {
   Success,
   Directions,
   Telecast,
+  Padlock,
 } from "./icons";
 
 export function Icon(props: IconProps) {
@@ -49,6 +50,8 @@ export function Icon(props: IconProps) {
       return <Directions {...rest} />;
     case IconsNames.TELECAST:
       return <Telecast {...rest} />;
+    case IconsNames.PADLOCK:
+      return <Padlock {...rest} />;
     default:
       return null;
   }
