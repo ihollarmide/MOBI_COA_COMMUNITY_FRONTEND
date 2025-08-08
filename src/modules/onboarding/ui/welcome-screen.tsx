@@ -57,19 +57,10 @@ export function WelcomeScreen() {
 
   const isLoading = isSigninMessage || isCompletingLogin || isInitiating;
 
-  console.log(
-    isClaimed,
-    uplineId,
-    session?.user?.uplineId,
-    session?.user?.twitterFollowed,
-    session?.user?.instagramFollowed,
-    session?.user?.telegramJoined
-  );
-
   useEffect(() => {
     const onboardingRoute = "/onboarding";
     if (sessionStatus === "authenticated" && address) {
-      if (isClaimed) {
+      if (isClaimed || session?.user?.genesisClaimed) {
         return router.replace(
           onboardingRoute +
             serializeOnboardingUrlStates({
@@ -77,6 +68,27 @@ export function WelcomeScreen() {
             })
         );
       } else if (session?.user?.uplineId || !!uplineId) {
+        if (!session?.user?.telegramJoined) {
+          return router.replace(
+            onboardingRoute +
+              serializeOnboardingUrlStates({
+                step: "join-telegram",
+              })
+          );
+        }
+
+        if (
+          !session?.user?.twitterFollowed &&
+          !session?.user?.instagramFollowed
+        ) {
+          return router.replace(
+            onboardingRoute +
+              serializeOnboardingUrlStates({
+                step: "follow-us",
+              })
+          );
+        }
+
         return router.replace(
           onboardingRoute +
             serializeOnboardingUrlStates({
@@ -87,6 +99,15 @@ export function WelcomeScreen() {
         session?.user?.twitterFollowed ||
         session?.user?.instagramFollowed
       ) {
+        if (!session?.user?.telegramJoined) {
+          return router.replace(
+            onboardingRoute +
+              serializeOnboardingUrlStates({
+                step: "join-telegram",
+              })
+          );
+        }
+
         return router.replace(
           onboardingRoute +
             serializeOnboardingUrlStates({
@@ -110,6 +131,7 @@ export function WelcomeScreen() {
     session?.user?.twitterFollowed,
     session?.user?.instagramFollowed,
     session?.user?.telegramJoined,
+    session?.user?.genesisClaimed,
     isClaimed,
     uplineId,
   ]);

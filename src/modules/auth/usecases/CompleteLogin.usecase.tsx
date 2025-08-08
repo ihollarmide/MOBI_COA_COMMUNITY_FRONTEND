@@ -103,6 +103,27 @@ export const useCreateUserSession = () => {
               })
           );
         } else if (!!variables.data.user.uplineId || !!uplineId) {
+          if (!variables.data.user.telegramJoined) {
+            return router.replace(
+              onboardingRoute +
+                serializeOnboardingUrlStates({
+                  step: "join-telegram",
+                })
+            );
+          }
+
+          if (
+            !variables.data.user.twitterFollowed &&
+            !variables.data.user.instagramFollowed
+          ) {
+            return router.replace(
+              onboardingRoute +
+                serializeOnboardingUrlStates({
+                  step: "follow-us",
+                })
+            );
+          }
+
           return router.replace(
             onboardingRoute +
               serializeOnboardingUrlStates({
@@ -113,6 +134,15 @@ export const useCreateUserSession = () => {
           variables.data.user.twitterFollowed ||
           variables.data.user.instagramFollowed
         ) {
+          if (!variables.data.user.telegramJoined) {
+            return router.replace(
+              onboardingRoute +
+                serializeOnboardingUrlStates({
+                  step: "join-telegram",
+                })
+            );
+          }
+
           return router.replace(
             onboardingRoute +
               serializeOnboardingUrlStates({

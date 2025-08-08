@@ -154,6 +154,12 @@ export function ReferralCode() {
           onSuccess: () => {
             setPage("confirm");
           },
+          onError: () => {
+            setReferralCodeError({
+              isError: true,
+              error: "User not found",
+            });
+          },
         });
       } else {
         setReferralCodeError({

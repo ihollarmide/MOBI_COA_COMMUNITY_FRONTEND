@@ -4,7 +4,12 @@ import { QUERY_KEYS } from "@/common/constants/query-keys";
 import { config } from "@/config/wagmi";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import { isZeroAddress } from "@/lib/utils";
-import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
+import {
+  QueryClient,
+  skipToken,
+  useMutation,
+  useQuery,
+} from "@tanstack/react-query";
 import { readContract } from "@wagmi/core";
 import { Address } from "viem";
 
@@ -52,4 +57,21 @@ export const useRetrieveUplineId = () => {
   });
 
   return res;
+};
+
+export const updateUplineIdQuery = ({
+  queryClient,
+  payload,
+}: {
+  queryClient: QueryClient;
+  payload: {
+    uplineId: number;
+    address: Address;
+  };
+}) => {
+  // Always update the query data, regardless of whether it exists
+  queryClient.setQueryData(
+    QUERY_KEYS.UPLINE_ID.detail(payload.address ?? ""),
+    payload.uplineId
+  );
 };

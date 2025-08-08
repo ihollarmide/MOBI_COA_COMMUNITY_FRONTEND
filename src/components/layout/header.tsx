@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useWalletIconWithAvatar } from "@/hooks/useWalletIconWithAvatar";
-import { Loader } from "../ui/loader";
 import { useSession } from "next-auth/react";
 
 export function Header() {

@@ -2,7 +2,14 @@ import { useWriteContractWithReceipt } from "@/hooks/useWriteContractWithReceipt
 import { toast } from "sonner";
 import { referralContract } from "@/common/constants/contracts/referralContract";
 import { Address } from "viem";
-import { useGetUplineId, useRetrieveUplineId } from "./GetUplineId.usecase";
+import {
+  updateUplineIdQuery,
+  useGetUplineId,
+  useRetrieveUplineId,
+} from "./GetUplineId.usecase";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 
 const TOAST_ID = "set-upline-id";
 
@@ -15,6 +22,9 @@ export const useSetUplineId = ({
   onError?: (error: Error) => void;
   onGenericError?: (error: unknown) => void;
 }) => {
+  const queryClient = useQueryClient();
+  const { address } = useWalletConnectionStatus();
+  const [uplineId, setUplineId] = useState<string | number | null>(null);
   const { refetch: refreshGetUplineId } = useGetUplineId();
   const {
     mutate: retrieveExistingUplineId,
@@ -32,7 +42,18 @@ export const useSetUplineId = ({
       });
     },
     onCompleted() {
-      refreshGetUplineId();
+      if (uplineId && address) {
+        updateUplineIdQuery({
+          queryClient: queryClient,
+          payload: {
+            uplineId: parseInt(uplineId.toString()),
+            address: address,
+          },
+        });
+      } else {
+        refreshGetUplineId();
+      }
+
       toast.success("Your Referral code has been successfully applied", {
         id: TOAST_ID,
       });
@@ -64,6 +85,7 @@ export const useSetUplineId = ({
     coaUserId: string | number;
     address: Address;
   }) => {
+    setUplineId(coaUserId);
     toast.loading("Setting up referral code...", {
       description: "",
       id: TOAST_ID,
