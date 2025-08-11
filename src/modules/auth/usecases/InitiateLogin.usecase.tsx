@@ -63,7 +63,10 @@ export const useInitiateLogin = () => {
       );
     },
     onError: (error) => {
-      toast.dismiss(AUTH_TOAST_ID);
+      toast.error("Initiate login failed", {
+        description: error instanceof Error ? error.message : "Unknown error",
+        id: AUTH_TOAST_ID,
+      });
       console.error("Initiate login error:", error);
     },
   });
