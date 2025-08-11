@@ -15,19 +15,19 @@ import { useGetIsClaimedKey } from "../usecases/GetIsClaimedKey.usecase";
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { serializeOnboardingUrlStates } from "../hooks/useOnboardingUrlStates";
-import { useChainId } from "wagmi";
+import { useDisconnect } from "wagmi";
+import { toast } from "sonner";
+
+const TOAST_ID = "onboarding-toast";
 
 export function WelcomeScreen() {
-  const chainId = useChainId();
-
-  console.log({ chainId });
   const { status: sessionStatus, data: session } = useSession();
   const { data: isClaimed } = useGetIsClaimedKey();
   const { data: uplineId } = useGetUplineId();
   const router = useRouter();
   router.prefetch("/onboarding");
   useGetUplineId();
-  const { isConnected, address } = useWalletConnectionStatus();
+  const { isConnected, address, status } = useWalletConnectionStatus();
   const {
     mutate: initiateLogin,
     isSigninMessage,
@@ -35,25 +35,43 @@ export function WelcomeScreen() {
     isInitiating,
   } = useInitiateLogin();
 
+  const { disconnectAsync } = useDisconnect({
+    mutation: {
+      onSuccess: () => {
+        setOpen(true);
+      },
+      onError: (error) => {
+        toast.error("Unable to open wallet connector. Please reload", {
+          description:
+            typeof error === "string"
+              ? error
+              : error?.message || "Unknown error",
+          id: TOAST_ID,
+        });
+      },
+    },
+  });
+
   const { setOpen } = useModal({
-    onConnect: ({ address }) => {
+    onConnect: async ({ address }) => {
       if (address) {
         initiateLogin({
           walletAddress: address as Address,
           appName: "COA Community",
+        });
+      } else {
+        await disconnectAsync();
+        toast.error("Unable to get wallet address. Please reload", {
+          description: "No address found",
+          id: TOAST_ID,
         });
       }
     },
   });
 
-  const handleConnect = () => {
-    if (isConnected) {
-      if (address) {
-        initiateLogin({
-          walletAddress: address as Address,
-          appName: "COA Community",
-        });
-      }
+  const handleConnect = async () => {
+    if (status !== "disconnected") {
+      await disconnectAsync();
     } else {
       setOpen(true);
     }
@@ -139,16 +157,6 @@ export function WelcomeScreen() {
     isClaimed,
     uplineId,
   ]);
-
-  // useEffect(() => {
-  //   console.log({
-  //     NEXT_PUBLIC_PROJECT_ID: process.env.NEXT_PUBLIC_PROJECT_ID,
-  //     NEXT_PUBLIC_SEPOLIA_ID: process.env.NEXT_PUBLIC_SEPOLIA_ID,
-  //     NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
-  //     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-  //     NEXT_PUBLIC_COA_API_URL: process.env.NEXT_PUBLIC_COA_API_URL,
-  //   });
-  // }, []);
 
   return (
     <div className="w-full @container">

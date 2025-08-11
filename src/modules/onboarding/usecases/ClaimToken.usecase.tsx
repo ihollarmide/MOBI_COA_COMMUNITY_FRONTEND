@@ -143,15 +143,6 @@ export const useClaimToken = () => {
                           claimParameters.data.r as unknown as Address,
                           claimParameters.data.s as unknown as Address,
                         ],
-                        // args: [
-                        //   "0x517177605394118D4A9d55bd36F48F850C6cF894",
-                        //   "0x14D0B4A8aDB4c9d6AE26Cf2723b197c2316d9417",
-                        //   BigInt(156),
-                        //   BigInt(1754646982),
-                        //   27,
-                        //   "0xd0e340566db26efcf8d564e552af76b755ee76dbd067e8457c75b178fc5fee9b",
-                        //   "0x634f2877443001022b5872ca1ee36eb519b3ef9e7c0d46684b32012007ef9492",
-                        // ]
                       });
                     },
                   }
