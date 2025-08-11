@@ -64,51 +64,34 @@ export const isValidUsernameWithAtSign = (
     return { isError: true, error: "Username is required" };
   }
 
-  // Check if username starts with @
-  if (!username.startsWith("@")) {
-    return { isError: true, error: "Username must start with @" };
-  }
+  // Remove @ if present for validation
+  const usernameWithoutAt = username.startsWith("@")
+    ? username.slice(1)
+    : username;
 
-  // Check if username has minimum length (excluding @)
-  if (username.length < 2) {
+  // Check if username has minimum length
+  if (usernameWithoutAt.length < 1) {
     return {
       isError: true,
-      error: "Username must be at least 1 character after @",
+      error: "Username must be at least 1 character",
     };
   }
 
   // Check if username has maximum length (common social media limits)
-  if (username.length > 16) {
+  if (usernameWithoutAt.length > 15) {
     return {
       isError: true,
-      error: "Username must be 15 characters or less after @",
+      error: "Username must be 15 characters or less",
     };
   }
 
   // Check for valid characters (alphanumeric, underscore, hyphen)
-  const usernameWithoutAt = username.slice(1);
   const validUsernameRegex = /^[a-zA-Z0-9_-]+$/;
   if (!validUsernameRegex.test(usernameWithoutAt)) {
     return {
       isError: true,
       error:
         "Username can only contain letters, numbers, underscores, and hyphens",
-    };
-  }
-
-  // Check if username doesn't start with a number or special character after @
-  if (/^[0-9_-]/.test(usernameWithoutAt)) {
-    return {
-      isError: true,
-      error: "Username must start with a letter after @",
-    };
-  }
-
-  // Check if username doesn't end with underscore or hyphen
-  if (/[_-]$/.test(usernameWithoutAt)) {
-    return {
-      isError: true,
-      error: "Username cannot end with underscore or hyphen",
     };
   }
 
