@@ -19,6 +19,17 @@ export function ChainAlertProvider() {
       : "Base Sepolia";
 
   useEffect(() => {
+    console.log("chainId", chainId);
+    console.log("preferredChainId", preferredChainId);
+    console.log("status", status);
+    console.log("chainName", chainName);
+    console.log(
+      "process.env.NEXT_PUBLIC_ENVIRONMENT",
+      process.env.NEXT_PUBLIC_ENVIRONMENT
+    );
+  }, [status, chainId, preferredChainId, chainName]);
+
+  useEffect(() => {
     if (
       status === "connected" &&
       !!chainId &&
