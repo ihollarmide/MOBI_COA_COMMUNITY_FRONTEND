@@ -19,7 +19,7 @@ export function Web3Provider({ children }: Web3ProviderProps) {
           options={{
             hideRecentBadge: true,
             initialChainId:
-              process.env.NEXT_PUBLIC_ENVIRONMENT === "local" ? 84532 : 56,
+              process.env.NEXT_PUBLIC_ENVIRONMENT === "production" ? 56 : 84532,
             disclaimer: (
               <div className="text-[#cfd0d2] text-xs leading-[1.3] tracking-sm font-inter">
                 By connecting your wallet, you agree to the{" "}
