@@ -56,8 +56,24 @@ export function canAccessStep({
   return slugToAccessNumber <= accessibleSlugNumber;
 }
 
+export const CHARACTER_LIMITS = {
+  x: {
+    min: 4,
+    max: 15,
+  },
+  instagram: {
+    min: 1,
+    max: 32,
+  },
+  telegram: {
+    min: 5,
+    max: 32,
+  },
+};
+
 export const isValidUsernameWithAtSign = (
-  username: string
+  username: string,
+  platform: "x" | "instagram" | "telegram"
 ): { isError: boolean; error: string | null } => {
   // Check if username is empty or undefined
   if (!username || username.trim().length === 0) {
@@ -69,19 +85,28 @@ export const isValidUsernameWithAtSign = (
     ? username.slice(1)
     : username;
 
-  // Check if username has minimum length
-  if (usernameWithoutAt.length < 1) {
+  const { min, max } = CHARACTER_LIMITS[platform];
+  const isUsernameTooShort = usernameWithoutAt.length < min;
+  const isUsernameTooLong = usernameWithoutAt.length > max;
+
+  const platformName =
+    platform === "x"
+      ? "X"
+      : platform === "instagram"
+        ? "Instagram"
+        : "Telegram";
+
+  if (isUsernameTooShort) {
     return {
       isError: true,
-      error: "Username must be at least 1 character",
+      error: `${platformName} Username must be at least ${min} characters`,
     };
   }
 
-  // Check if username has maximum length (common social media limits)
-  if (usernameWithoutAt.length > 15) {
+  if (isUsernameTooLong) {
     return {
       isError: true,
-      error: "Username must be 15 characters or less",
+      error: `${platformName} Username must be at most ${max} characters`,
     };
   }
 
@@ -95,13 +120,13 @@ export const isValidUsernameWithAtSign = (
     };
   }
 
-  // Check for consecutive special characters
-  if (/[_-]{2,}/.test(usernameWithoutAt)) {
-    return {
-      isError: true,
-      error: "Username cannot have consecutive underscores or hyphens",
-    };
-  }
+  // // Check for consecutive special characters
+  // if (/[_-]{2,}/.test(usernameWithoutAt)) {
+  //   return {
+  //     isError: true,
+  //     error: "Username cannot have consecutive underscores or hyphens",
+  //   };
+  // }
 
   return { isError: false, error: null };
 };
