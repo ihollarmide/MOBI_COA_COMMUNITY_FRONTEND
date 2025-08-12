@@ -137,8 +137,10 @@ function PlatformTab({ platform, onBack, onConfirm }: PlatformTabProps) {
     if (page === "follow") {
       setPage("verify");
     } else if (page === "verify") {
-      const { isError, error: validationError } =
-        isValidUsernameWithAtSign(username);
+      const { isError, error: validationError } = isValidUsernameWithAtSign(
+        username,
+        platform
+      );
       if (isError) {
         setError({ isError, error: validationError });
         return;

@@ -61,7 +61,10 @@ export function JoinTelegramCommunity() {
     if (page === "join") {
       setPage("verify");
     } else if (page === "verify") {
-      const { isError, error } = isValidUsernameWithAtSign(username);
+      const { isError, error } = isValidUsernameWithAtSign(
+        username,
+        "telegram"
+      );
       if (isError) {
         setUsernameError({ isError, error });
         return;
