@@ -16,14 +16,14 @@ const socialLinks = [
     icon: IconsNames.X_SOCIAL,
   },
   {
-    name: "Telegram",
-    href: VMCC_DAO_LINK,
-    icon: IconsNames.TELEGRAM,
-  },
-  {
     name: "Instagram",
     href: INSTAGRAM_LINK,
     icon: IconsNames.INSTAGRAM,
+  },
+  {
+    name: "Telegram",
+    href: VMCC_DAO_LINK,
+    icon: IconsNames.TELEGRAM,
   },
 ];
 
@@ -40,14 +40,15 @@ const resources: {
     title: "Resources",
     links: [
       {
-        title: "COA Genesis Keys",
+        title: "Contact Us",
         isInternal: false,
-        disabled: true,
-        href: "",
+        disabled: false,
+        href: "https://t.me/atlantuscityhall",
       },
       {
         title: "VMCC Litepaper",
         isInternal: false,
+        disabled: true,
         href: "https://acrobat.adobe.com/id/urn:aaid:sc:VA6C2:23cc7c72-d7c1-4e3a-8e08-3b4acc136892",
       },
     ],
@@ -55,33 +56,33 @@ const resources: {
   {
     links: [
       {
-        title: "COA Support",
-        isInternal: false,
-        disabled: true,
-        href: "https://www.atlantus.com/coa-whitepaper",
-      },
-      {
         title: "Network State (Book)",
         disabled: false,
         isInternal: false,
         href: "https://thenetworkstate.com",
       },
+      {
+        title: "VMCC Support",
+        isInternal: false,
+        disabled: true,
+        href: "https://www.atlantus.com/coa-whitepaper",
+      },
     ],
   },
   {
-    title: "Legal & Compliance",
+    title: "Legal",
     links: [
-      {
-        title: "Terms of Service",
-        disabled: true,
-        isInternal: true,
-        href: "/terms-of-service",
-      },
       {
         title: "Privacy Policy",
         disabled: true,
         isInternal: true,
         href: "/privacy-policy",
+      },
+      {
+        title: "Terms of Service",
+        disabled: true,
+        isInternal: true,
+        href: "/terms-of-service",
       },
     ],
   },
@@ -142,15 +143,15 @@ export function Footer() {
                     return (
                       <p
                         key={link.title}
-                        className="font-montserrat text-sm leading-[1.4] text-white/80 flex items-center gap-x-1"
+                        className="font-montserrat text-sm leading-[1.4] text-gray-100 flex items-center gap-x-1"
                       >
+                        {link.title}
                         <Icon
                           name={IconsNames.PADLOCK}
                           width={16}
                           height={16}
                           className="w-4 h-4"
                         />
-                        {link.title}
                       </p>
                     );
                   }
@@ -175,7 +176,7 @@ export function Footer() {
       <Separator className="my-6" />
       <div className="font-montserrat text-xs leading-[1.4] text-white flex justify-between items-center flex-wrap gap-x-2">
         <div className="flex flex-wrap gap-x-2">
-          <p>Copyright&copy;City of atlantus. All rights reserved</p>|
+          <p>Copyright &copy; VMCC Builder DAO. All rights reserved</p>|
           <p>Designed and developed by MOBI AUTOMATION</p>
         </div>
 
