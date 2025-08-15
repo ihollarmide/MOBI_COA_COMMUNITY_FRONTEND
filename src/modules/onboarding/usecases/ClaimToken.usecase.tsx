@@ -10,13 +10,26 @@ import {
   updateIsClaimedKeyQuery,
 } from "./GetIsClaimedKey.usecase";
 import { useOnboardingUrlStates } from "../hooks/useOnboardingUrlStates";
-import { useChainId } from "wagmi";
+import { useChainId, useDisconnect } from "wagmi";
 import { ADDRESSES } from "@/common/constants/contracts";
 import { airdropAbi } from "@/common/contract-abis/airdropAbi";
+import { signOut, useSession } from "next-auth/react";
 
 const TOAST_ID = "claim-token";
 
 export const useClaimToken = () => {
+  const { data: session } = useSession();
+  const { disconnectAsync } = useDisconnect({
+    mutation: {
+      onSettled() {
+        signOut({
+          redirect: true,
+          redirectTo: "/welcome",
+        });
+      },
+    },
+  });
+
   const chainId = useChainId();
   const queryClient = useQueryClient();
   const { address } = useWalletConnectionStatus();
@@ -107,8 +120,29 @@ export const useClaimToken = () => {
       },
     });
 
-  const handleClaim = () => {
+  const handleClaim = async () => {
     if (!address) return;
+
+    if (!session) {
+      toast.error("Please sign in again", {
+        id: TOAST_ID,
+        description: "You will be redirected to the welcome page",
+      });
+      signOut({
+        redirect: true,
+        redirectTo: "/welcome",
+      });
+      return;
+    }
+
+    if (session?.user?.walletAddress.toLowerCase() !== address.toLowerCase()) {
+      toast.error("Session mismatch with wallet address", {
+        id: TOAST_ID,
+        description: "Please reconnect your wallet and sign in again",
+      });
+      await disconnectAsync();
+      return;
+    }
 
     retrieveClaimStatus(
       {
