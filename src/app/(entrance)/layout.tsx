@@ -35,6 +35,7 @@ export default function MainLayout({
                   width={136}
                   height={48}
                   className="max-w-[134px] w-full h-auto aspect-[133/47] mx-auto"
+                  priority
                 />
                 {children}
               </main>

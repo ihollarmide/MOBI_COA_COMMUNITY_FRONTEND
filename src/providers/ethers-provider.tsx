@@ -1,10 +1,30 @@
-import { ethers } from "ethers";
+import { type Config, getClient } from "@wagmi/core";
+import { FallbackProvider, JsonRpcProvider } from "ethers";
+import type { Client, Chain, Transport } from "viem";
 
-export const provider = new ethers.JsonRpcProvider(
-  // process.env.NEXT_PUBLIC_ENVIRONMENT === "production"
-  //   ? "https://bnb-mainnet.g.alchemy.com/v2/TCAngl9Gxs-7GF9JFRcJJaiY-Le3vdhK"
-  //   : "https://base-sepolia.g.alchemy.com/v2/VZp21oJ4tRhkRpONwkRGs"
-  process.env.NEXT_PUBLIC_ENVIRONMENT === "production"
-    ? "https://bsc-rpc.publicnode.com"
-    : "https://sepolia.base.org"
-);
+export function clientToProvider(client: Client<Transport, Chain>) {
+  const { chain, transport } = client;
+  const network = {
+    chainId: chain.id,
+    name: chain.name,
+    ensAddress: chain.contracts?.ensRegistry?.address,
+  };
+  if (transport.type === "fallback") {
+    const providers = (transport.transports as ReturnType<Transport>[]).map(
+      ({ value }) => new JsonRpcProvider(value?.url, network)
+    );
+    if (providers.length === 1) return providers[0];
+    return new FallbackProvider(providers);
+  }
+  return new JsonRpcProvider(transport.url, network);
+}
+
+/** Action to convert a viem Client to an ethers.js Provider. */
+export function getEthersProvider(
+  config: Config,
+  { chainId }: { chainId?: number } = {}
+) {
+  const client = getClient(config, { chainId });
+  if (!client) return;
+  return clientToProvider(client);
+}

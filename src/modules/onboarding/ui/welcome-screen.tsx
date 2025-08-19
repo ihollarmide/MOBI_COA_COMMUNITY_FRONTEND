@@ -26,7 +26,6 @@ export function WelcomeScreen() {
   const { data: uplineId } = useGetUplineId();
   const router = useRouter();
   router.prefetch("/onboarding");
-  useGetUplineId();
   const { isConnected, address, status } = useWalletConnectionStatus();
   const {
     mutate: initiateLogin,
