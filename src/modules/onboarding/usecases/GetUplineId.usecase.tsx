@@ -22,31 +22,37 @@ export const getUplineId = async ({
   address: Address;
   chainId: number;
 }) => {
-  const reffererAddress = await readContract(config, {
-    address: ADDRESSES[chainId].REFERRAL,
-    abi: referralAbi,
-    functionName: "uplines",
-    args: [address],
-  });
-
-  if (isZeroAddress(reffererAddress)) {
-    const res = await readContract(config, {
+  try {
+    const reffererAddress = await readContract(config, {
       address: ADDRESSES[chainId].REFERRAL,
       abi: referralAbi,
-      functionName: "downlineToUplineId",
+      functionName: "uplines",
       args: [address],
     });
+
+    if (isZeroAddress(reffererAddress)) {
+      const res = await readContract(config, {
+        address: ADDRESSES[chainId].REFERRAL,
+        abi: referralAbi,
+        functionName: "downlineToUplineId",
+        args: [address],
+      });
+      console.log("res", res);
+      return parseInt(res.toString());
+    }
+
+    const res = await readContract(config, {
+      address: ADDRESSES[chainId].AUTH_CONTRACT,
+      abi: coaAuthContractAbi,
+      functionName: "walletToUserId",
+      args: [reffererAddress],
+    });
+
     return parseInt(res.toString());
+  } catch (error) {
+    console.log("error", error);
+    return null;
   }
-
-  const res = await readContract(config, {
-    address: ADDRESSES[chainId].AUTH_CONTRACT,
-    abi: coaAuthContractAbi,
-    functionName: "walletToUserId",
-    args: [reffererAddress],
-  });
-
-  return parseInt(res.toString());
 };
 
 export const useGetUplineId = () => {

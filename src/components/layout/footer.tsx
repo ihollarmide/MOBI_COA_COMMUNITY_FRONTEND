@@ -127,9 +127,9 @@ export function Footer() {
         </div>
 
         <div className="items-start flex justify-between @[820px]:justify-end flex-wrap @[600px]:flex-nowrap gap-5 @[640px]:gap-x-[52px] w-full @[820px]:w-auto">
-          {resources.map((resource) => (
+          {resources.map((resource, index) => (
             <div
-              key={resource.title}
+              key={`${resource.title}-${index}`}
               className="flex flex-col justify-end gap-y-2.5 self-stretch"
             >
               {resource.title && (
@@ -138,11 +138,11 @@ export function Footer() {
                 </h3>
               )}
               <div className="flex flex-col gap-y-3">
-                {resource.links.map((link) => {
+                {resource.links.map((link, index) => {
                   if (link.disabled) {
                     return (
                       <p
-                        key={link.title}
+                        key={`${link.title}-${index}`}
                         className="font-montserrat text-sm leading-[1.4] text-gray-100 flex items-center gap-x-1"
                       >
                         {link.title}
@@ -158,7 +158,7 @@ export function Footer() {
 
                   return (
                     <Link
-                      key={link.title}
+                      key={`${link.title}-${index}`}
                       href={link.href}
                       target={link.isInternal ? undefined : "_blank"}
                       rel={link.isInternal ? undefined : "noopener noreferrer"}

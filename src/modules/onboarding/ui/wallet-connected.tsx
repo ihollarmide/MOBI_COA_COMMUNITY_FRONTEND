@@ -9,11 +9,14 @@ import { useOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboarding
 import { ButtonsFooter } from "./buttons-footer";
 import { signOut } from "next-auth/react";
 import { Loader } from "@/components/ui/loader";
+import { useGetUplineId } from "../usecases/GetUplineId.usecase";
 
 export function WalletConnected() {
   const { disconnect } = useDisconnect();
   const { address } = useWalletConnectionStatus();
   const [, setOnboardingUrlStates] = useOnboardingUrlStates();
+
+  useGetUplineId();
 
   const handleChangeWallet = () => {
     disconnect(
