@@ -1,4 +1,3 @@
-import { useWriteContractWithReceipt } from "@/hooks/useWriteContractWithReceipt";
 import { toast } from "sonner";
 import { Address } from "viem";
 import {
@@ -12,17 +11,16 @@ import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import { useChainId } from "wagmi";
 import { referralAbi } from "@/common/contract-abis/referralAbi";
 import { ADDRESSES } from "@/common/constants/contracts";
+import { useSequentialContractWrite } from "@/hooks/useSequentialContractWrite";
 
 const TOAST_ID = "set-upline-id";
 
 export const useSetUplineId = ({
   onSuccess,
   onError,
-  onGenericError,
 }: {
   onSuccess?: () => void;
-  onError?: (error: Error) => void;
-  onGenericError?: (error: unknown) => void;
+  onError?: (error: string) => void;
 }) => {
   const chainId = useChainId();
   const queryClient = useQueryClient();
@@ -34,17 +32,17 @@ export const useSetUplineId = ({
     isPending: isRetrievingExistingUplineId,
   } = useRetrieveUplineId();
   const {
-    writeContract: setUpline,
-    isWritingContractWithReceipt: isSettingUpline,
+    write: setUpline,
+    isLoading: isSettingUpline,
     ...rest
-  } = useWriteContractWithReceipt({
-    onMutate() {
+  } = useSequentialContractWrite({
+    onInProgress() {
       toast.loading("Applying Referral Code...", {
         description: "",
         id: TOAST_ID,
       });
     },
-    onCompleted() {
+    onSuccess() {
       if (uplineId && address) {
         updateUplineIdQuery({
           queryClient: queryClient,
@@ -63,22 +61,12 @@ export const useSetUplineId = ({
       });
       onSuccess?.();
     },
-    onWriteContractError(error) {
-      console.error(error);
+    onError(error) {
       toast.error("Unable to apply referral code", {
-        description:
-          typeof error === "string" ? error : error?.message || "Unknown error",
+        description: error,
         id: TOAST_ID,
       });
-      onError?.(error);
-    },
-    onTransactionReceiptError(error) {
-      toast.error("Unable to apply referral code", {
-        description:
-          typeof error === "string" ? error : error?.message || "Unknown error",
-        id: TOAST_ID,
-      });
-      onGenericError?.(error);
+      onError?.(error ?? "Unknown error");
     },
   });
 
