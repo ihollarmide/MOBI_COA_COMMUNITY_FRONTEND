@@ -5,6 +5,11 @@ const BASE_SEPOLIA_FALLBACK_RPC_URL = process.env.BASE_SEPOLIA_FALLBACK_RPC_URL;
 
 export async function POST(request: Request) {
   try {
+    const origin = request.headers.get("origin");
+    if (origin !== process.env.NEXT_PUBLIC_APP_URL) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const body = await request.json();
 
     let rpcResponse = await fetch(BASE_SEPOLIA_RPC_URL, {

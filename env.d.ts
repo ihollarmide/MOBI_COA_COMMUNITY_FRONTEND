@@ -4,6 +4,7 @@ declare namespace NodeJS {
     AUTH_TRUST_HOST: "true";
     NEXT_PUBLIC_API_URL: string;
     NEXT_PUBLIC_COA_API_URL: string;
+    NEXT_PUBLIC_APP_URL: string;
     AUTH_URL: string;
     AUTH_SECRET: string;
     BASE_SEPOLIA_RPC_URL: string;
