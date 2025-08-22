@@ -77,14 +77,7 @@ export function ReferralCode() {
       setPage("submit");
       setReferralCodeError({
         isError: true,
-        error: error.message,
-      });
-    },
-    onGenericError: () => {
-      setPage("submit");
-      setReferralCodeError({
-        isError: true,
-        error: "Unable to apply referral code",
+        error: error,
       });
     },
   });
