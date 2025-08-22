@@ -1,4 +1,4 @@
-name: coa-user-dashboard
+name: coa-community-frontend
 
 on:
   pull_request:
@@ -12,24 +12,99 @@ on:
       - uat
 
 jobs:
-  deploy-development:
-    if: github.event.pull_request.base.ref == 'dev' && github.event.pull_request.merged == true
+  build-and-deploy:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to dev server # PORT=3201
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      - name: Enable corepack (pnpm)
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Set environment variables
+        run: |
+          if [ "${{ github.event.pull_request.base.ref }}" = "dev" ]; then
+            echo "NEXT_PUBLIC_PROJECT_ID=COA_COMMUNITY" >> .env.production
+            echo "NEXT_PUBLIC_SEPOLIA_ID=KjA-gsb0RjUcKh9uLmX--Aftl5X2nsPr" >> .env.production
+            echo "NEXT_PUBLIC_ENVIRONMENT=local" >> .env.production
+            echo "AUTH_TRUST_HOST=true" >> .env.production
+            echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_DEV }}" >> .env.production
+            echo "NEXT_PUBLIC_COA_API_URL=${{ secrets.NEXT_PUBLIC_COA_API_URL_DEV }}" >> .env.production
+            echo "AUTH_SECRET=${{ secrets.AUTH_SECRET_DEV }}" >> .env.production
+            echo "AUTH_URL=${{ secrets.AUTH_URL_DEV }}" >> .env.production
+            echo "NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL_DEV }}" >> .env.production
+            echo "BASE_SEPOLIA_RPC_URL=${{ secrets.BASE_SEPOLIA_RPC_URL }}" >> .env.production
+            echo "BSC_RPC_URL=${{ secrets.BSC_RPC_URL }}" >> .env.production
+            echo "BASE_SEPOLIA_FALLBACK_RPC_URL=${{ secrets.BASE_SEPOLIA_FALLBACK_RPC_URL }}" >> .env.production
+            echo "BSC_FALLBACK_RPC_URL=${{ secrets.BSC_FALLBACK_RPC_URL }}" >> .env.production
+          elif [ "${{ github.event.pull_request.base.ref }}" = "main" ]; then
+            echo "NEXT_PUBLIC_PROJECT_ID=COA_COMMUNITY" >> .env.production
+            echo "NEXT_PUBLIC_SEPOLIA_ID=KjA-gsb0RjUcKh9uLmX--Aftl5X2nsPr" >> .env.production
+            echo "NEXT_PUBLIC_ENVIRONMENT=production" >> .env.production
+            echo "AUTH_TRUST_HOST=true" >> .env.production
+            echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_MAIN }}" >> .env.production
+            echo "NEXT_PUBLIC_COA_API_URL=${{ secrets.NEXT_PUBLIC_COA_API_URL_MAIN }}" >> .env.production
+            echo "AUTH_SECRET=${{ secrets.AUTH_SECRET_MAIN }}" >> .env.production
+            echo "AUTH_URL=${{ secrets.AUTH_URL_MAIN }}" >> .env.production
+            echo "NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL_MAIN }}" >> .env.production
+            echo "BASE_SEPOLIA_RPC_URL=${{ secrets.BASE_SEPOLIA_RPC_URL }}" >> .env.production
+            echo "BSC_RPC_URL=${{ secrets.BSC_RPC_URL }}" >> .env.production
+            echo "BASE_SEPOLIA_FALLBACK_RPC_URL=${{ secrets.BASE_SEPOLIA_FALLBACK_RPC_URL }}" >> .env.production
+            echo "BSC_FALLBACK_RPC_URL=${{ secrets.BSC_FALLBACK_RPC_URL }}" >> .env.production
+          fi
+
+      - name: Build Next.js
+        run: NODE_OPTIONS="--max-old-space-size=4096" pnpm build
+
+      - name: Package build files
+        run: tar -czf build.tar.gz .next .env.production
+
+      - name: Deploy to server
         run: |
           sudo apt-get update -yqq
-          sudo apt-get install openssh-client sshpass -yqq
-          sshpass -p ${{ secrets.SERVER_PASSWORD }} ssh -o StrictHostKeyChecking=no -T ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} 'cd /home/dev/COA_COMMUNITY_FRONTEND && git stash && git pull && pnpm install && NODE_OPTIONS="--max-old-space-size=4096" pnpm build && pm2 reload  coa-community-frontend-dev && exit'
+          sudo apt-get install -yqq sshpass
 
-  deploy-production:
-    if: github.event.pull_request.base.ref == 'main' && github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
+          if [ "${{ github.event.pull_request.base.ref }}" = "dev" ]; then
+            SERVER_USER=${{ secrets.SERVER_USER }}
+            SERVER_IP=${{ secrets.SERVER_IP }}
+            SERVER_PASS=${{ secrets.SERVER_PASSWORD }}
+            APP_DIR=/home/dev/COA_COMMUNITY_FRONTEND
+            PM2_NAME=coa-community-frontend-dev
+          elif [ "${{ github.event.pull_request.base.ref }}" = "uat" ]; then
+            SERVER_USER=${{ secrets.SERVER_USER }}
+            SERVER_IP=${{ secrets.SERVER_IP }}
+            SERVER_PASS=${{ secrets.SERVER_PASSWORD }}
+            APP_DIR=/home/uat/COA_COMMUNITY_FRONTEND
+            PM2_NAME=coa-community-frontend-uat
+          elif [ "${{ github.event.pull_request.base.ref }}" = "main" ]; then
+            SERVER_USER=${{ secrets.SERVER2_USER }}
+            SERVER_IP=${{ secrets.SERVER2_IP }}
+            SERVER_PASS=${{ secrets.SERVER2_PASSWORD }}
+            APP_DIR=/home/production/COA_COMMUNITY_FRONTEND
+            PM2_NAME=coa-community-frontend-production
+          fi
 
-    steps:
-      - name: Deploy to production server # PORT=3202
-        run: |
-          sudo apt-get update -yqq
-          sudo apt-get install openssh-client sshpass -yqq
-          sshpass -p ${{ secrets.SERVER2_PASSWORD }} ssh -o StrictHostKeyChecking=no -T ${{ secrets.SERVER2_USER }}@${{ secrets.SERVER2_IP }} 'cd /home/production/COA_COMMUNITY_FRONTEND && git stash && git pull && pnpm install && NODE_OPTIONS="--max-old-space-size=4096" pnpm build && pm2 reload  coa-community-frontend-production && exit'
+          # Copy build to server
+          sshpass -p $SERVER_PASS scp -o StrictHostKeyChecking=no build.tar.gz $SERVER_USER@$SERVER_IP:$APP_DIR/
+
+          # Deploy on server
+          sshpass -p $SERVER_PASS ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
+            cd $APP_DIR &&
+            tar -xzf build.tar.gz &&
+            rm build.tar.gz &&
+            mv .env.production .env &&
+            git stash &&
+            git pull &&
+            pnpm install  &&
+            pm2 reload $PM2_NAME
+          "
