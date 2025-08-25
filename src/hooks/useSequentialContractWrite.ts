@@ -22,7 +22,6 @@ import {
 import { type WriteContractVariables } from "wagmi/query";
 import { ethers } from "ethers";
 
-// Define a simpler, more powerful callback and state structure
 export type SequentialWriteState = {
   status:
     | "idle"
@@ -39,6 +38,41 @@ export type SequentialWriteState = {
   error: string | null;
 };
 
+async function traceTransactionReceiptError({
+  transactionReceipt,
+  chainId,
+  onError,
+  setState,
+}: {
+  transactionReceipt: TransactionReceipt;
+  chainId: number;
+  onError?: (error: string) => void;
+  setState: React.Dispatch<React.SetStateAction<SequentialWriteState>>;
+}) {
+  const alchemyProvider = new ethers.JsonRpcProvider(
+    chainId === 84532 ? `/api/rpc/base-sepolia` : `/api/rpc/bsc`
+  );
+  let errorMessage = "Transaction reverted on-chain";
+
+  try {
+    const trace = await alchemyProvider.send("debug_traceTransaction", [
+      transactionReceipt.transactionHash,
+      { tracer: "callTracer" },
+    ]);
+
+    if (trace?.result?.error) {
+      errorMessage = `Reverted: ${trace.result.error}`;
+    }
+  } catch (err) {
+    console.error("Error tracing transaction:", err);
+    errorMessage = "Transaction reverted on-chain";
+    throw new Error(errorMessage);
+    // If tracing fails, keep the generic message
+  }
+  onError?.(errorMessage);
+  setState((prev) => ({ ...prev, status: "error", error: errorMessage }));
+}
+
 export type SequentialWriteOptions = {
   onInProgress?: () => void;
   onSuccess?: (data: {
@@ -47,16 +81,12 @@ export type SequentialWriteOptions = {
     block?: Block;
   }) => void;
   onError?: (error: string) => void;
-  onSettled?: () => void; // Called on success or error
+  onSettled?: () => void; // Called after on success or error
   fetchBlock?: boolean; // Whether to fetch block info after transaction receipt
   blockFetchRetries?: number; // Number of retries for block fetching (default: 3)
   blockFetchDelay?: number; // Initial delay in ms between retries (default: 1000)
 };
 
-/**
- * A robust hook for writing to a contract and sequentially waiting for the transaction
- * receipt and block information. It prevents race conditions and provides a clean state model.
- */
 export function useSequentialContractWrite({
   onInProgress,
   onSuccess,
@@ -130,11 +160,10 @@ export function useSequentialContractWrite({
           account: walletClient?.account,
           chainId: chainId,
         });
-        // Step 1: Send the transaction
+
         const hash = await writeContractAsync(variables);
         setState((prev) => ({ ...prev, status: "confirming", data: { hash } }));
 
-        // Step 2: Wait for the transaction receipt
         const transactionReceipt = await waitForTransactionReceipt(config, {
           hash,
         });
@@ -151,49 +180,42 @@ export function useSequentialContractWrite({
             transactionReceipt.blockHash
           );
 
-          setState((prev) => ({
-            ...prev,
-            status: "success",
-            data: { ...prev.data, block },
-          }));
-
           // Success with block info (or undefined if block fetch failed)
           if (transactionReceipt.status === "success") {
             onSuccess?.({ hash, transactionReceipt, block });
+            setState((prev) => ({
+              ...prev,
+              status: "success",
+              data: { ...prev.data, block },
+            }));
           } else {
-            const alchemyProvider = new ethers.JsonRpcProvider(
-              chainId === 84532 ? `/api/rpc/base-sepolia` : `/api/rpc/bsc`
-            );
-            let errorMessage = "Transaction reverted on-chain";
-
-            try {
-              const trace = await alchemyProvider.send(
-                "debug_traceTransaction",
-                [transactionReceipt.transactionHash, { tracer: "callTracer" }]
-              );
-
-              if (trace?.result?.error) {
-                errorMessage = `Reverted: ${trace.result.error}`;
-              }
-            } catch (err) {
-              errorMessage = "Transaction reverted on-chain";
-              // If tracing fails, keep the generic message
-            }
-            throw new Error(errorMessage);
+            traceTransactionReceiptError({
+              transactionReceipt,
+              chainId,
+              onError,
+              setState,
+            });
           }
         } else {
-          // Success without block info
-          setState((prev) => ({
-            ...prev,
-            status: "success",
-            data: { ...prev.data, transactionReceipt },
-          }));
+          if (transactionReceipt.status === "success") {
+            setState((prev) => ({
+              ...prev,
+              status: "success",
+              data: { ...prev.data, transactionReceipt },
+            }));
 
-          onSuccess?.({ hash, transactionReceipt, block: undefined });
+            onSuccess?.({ hash, transactionReceipt, block: undefined });
+          } else {
+            traceTransactionReceiptError({
+              transactionReceipt,
+              chainId,
+              onError,
+              setState,
+            });
+          }
         }
       } catch (err) {
         let message = "Transaction failed";
-
         if (err instanceof ContractFunctionRevertedError) {
           if (err.data) {
             message = `Reverted: ${err.data.errorName}(${err.data.args?.join(", ")})`;
@@ -216,7 +238,6 @@ export function useSequentialContractWrite({
     [
       config,
       writeContractAsync,
-      simulateContract,
       chainId,
       walletClient,
       onSuccess,
@@ -225,6 +246,7 @@ export function useSequentialContractWrite({
       onSettled,
       fetchBlock,
       fetchBlockWithRetries,
+      traceTransactionReceiptError,
     ]
   );
 
