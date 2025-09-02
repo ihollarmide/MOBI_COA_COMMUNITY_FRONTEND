@@ -20,10 +20,32 @@ import { toast } from "sonner";
 import ReCAPTCHA from "react-google-recaptcha";
 import { getRecaptchaV3Token } from "@/lib/captcha";
 import { connectWalletAction } from "@/app/actions";
+import {
+  FpjsProvider
+} from '@fingerprintjs/fingerprintjs-pro-react'
+import { useVisitorData } from '@fingerprintjs/fingerprintjs-pro-react'
 
 const TOAST_ID = "onboarding-toast";
 
-export function WelcomeScreen() {
+
+export function WelcomeScreen({ fingerPrintKey }: { fingerPrintKey: string }) {
+  return (
+    <FpjsProvider
+      loadOptions={{
+        apiKey: fingerPrintKey,
+        region: "eu"
+      }}
+    >
+      <WelcomeScreenContent />
+    </FpjsProvider>
+  )
+}
+
+function WelcomeScreenContent() {
+  const {isLoading: isGettingFingerprint, error: fingerPrintError, data: fingerPrintData, getData} = useVisitorData(
+    {extendedResult: true},
+    {immediate: true}
+  )
   const [showV2Challenge, setShowV2Challenge] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { status: sessionStatus, data: session } = useSession();
@@ -37,7 +59,10 @@ export function WelcomeScreen() {
     isSigninMessage,
     isCompletingLogin,
     isInitiating,
-  } = useInitiateLogin();
+  } = useInitiateLogin({
+    fingerPrintId: fingerPrintData?.visitorId ?? "",
+    ipAddress: fingerPrintData?.ip ?? "",
+  });
 
   const { disconnectAsync } = useDisconnect({
     mutation: {
@@ -163,6 +188,13 @@ export function WelcomeScreen() {
   ]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    if (isGettingFingerprint) return;
+    if (fingerPrintError) {
+      getData({
+        ignoreCache: true
+      })
+    }
+
     e.preventDefault();
     setIsSubmitting(true);
     setShowV2Challenge(false);
@@ -216,6 +248,13 @@ export function WelcomeScreen() {
     setIsSubmitting(false);
   }
 
+  const isBtnDisabled = isLoading || isSubmitting || showV2Challenge || isGettingFingerprint;
+
+
+  useEffect(() => {
+    console.log(fingerPrintData)
+  }, [fingerPrintData])
+
   return (
     <form className="w-full" onSubmit={handleSubmit}>
       <div className="w-full @container">
@@ -260,11 +299,13 @@ export function WelcomeScreen() {
           )}
 
           <Button
-            type="submit"
-            disabled={isLoading || isSubmitting || showV2Challenge}
+            type={"submit"}
+            disabled={isBtnDisabled}
             className="w-full cursor-pointer"
           >
-            {isSubmitting ? (
+            {isGettingFingerprint ? "Analyzing User..." : 
+            fingerPrintError ? fingerPrintError.message: 
+            isSubmitting ? (
               "Verifying..."
             ) : isSigninMessage ? (
               "Signing Message"

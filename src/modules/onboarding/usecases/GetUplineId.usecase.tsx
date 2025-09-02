@@ -37,7 +37,6 @@ export const getUplineId = async ({
         functionName: "downlineToUplineId",
         args: [address],
       });
-      console.log("res", res);
       return parseInt(res.toString());
     }
 

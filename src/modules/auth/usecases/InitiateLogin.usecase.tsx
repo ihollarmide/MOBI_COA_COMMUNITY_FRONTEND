@@ -23,7 +23,8 @@ export const initiateLogin = async (payload: InitiateLoginPayload) => {
   }
 };
 
-export const useInitiateLogin = () => {
+export const useInitiateLogin = ({ fingerPrintId, ipAddress }: { fingerPrintId: string, ipAddress: string }) => {
+
   const chainId = useChainId();
   const { signMessage, isPending: isSigninMessage } = useSignMessage();
   const { mutate: completeLogin, isPending: isCompletingLogin } =
@@ -52,6 +53,8 @@ export const useInitiateLogin = () => {
               walletAddress: variables.walletAddress,
               signature: signature,
               chainId: chainId,
+              fingerPrintId: fingerPrintId,
+              ipAddress: ipAddress,
             });
           },
           onError: () => {

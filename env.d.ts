@@ -15,5 +15,10 @@ declare namespace NodeJS {
     GOOGLE_RECAPTCHA_V3_SECRET_KEY: string;
     NEXT_PUBLIC_GOOGLE_RECAPTCHA_V2_SITE_KEY: string;
     GOOGLE_RECAPTCHA_V2_SECRET_KEY: string;
+
+    TWITTER_CLIENT_ID: string;
+    TWITTER_CLIENT_SECRET: string;
+    FINGERPRINT_SECRET_KEY: string;
+    TELEGRAM_BOT_SECRET_KEY: string;
   }
 }

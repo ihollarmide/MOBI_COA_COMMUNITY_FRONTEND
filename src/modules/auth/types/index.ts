@@ -14,6 +14,8 @@ export interface CompleteLoginPayload {
   walletAddress: Address;
   signature: string;
   chainId: number;
+  fingerPrintId: string;
+  ipAddress: string;
 }
 
 export interface AuthUser {

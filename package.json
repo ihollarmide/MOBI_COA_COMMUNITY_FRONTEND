@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@cfx-kit/wallet-avatar": "^0.0.5",
+    "@fingerprintjs/fingerprintjs-pro-react": "^2.7.0",
     "@hookform/resolvers": "^5.2.1",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-dialog": "^1.1.14",

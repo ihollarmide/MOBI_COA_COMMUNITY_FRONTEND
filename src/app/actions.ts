@@ -2,12 +2,6 @@
 
 import { verifyRecaptchaV2Token, verifyRecaptchaV3Token } from "@/lib/captcha";
 
-type ActionResponse = {
-  success: boolean;
-  message: string;
-  requireV2?: boolean; // Flag to tell the client to show the v2 challenge
-  errors?: string[];
-};
 
 export const connectWalletAction = async ({
   v2Token,

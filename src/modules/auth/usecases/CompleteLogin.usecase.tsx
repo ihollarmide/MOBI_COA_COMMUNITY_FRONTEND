@@ -39,10 +39,21 @@ export const createUserSession = async (payload: CompleteLoginResponse) => {
 
 export const completeLogin = async (payload: CompleteLoginPayload) => {
   try {
-    const data = await post<CompleteLoginResponse, CompleteLoginPayload>({
+    const { fingerPrintId, ipAddress, ...rest } = payload;
+    if (!fingerPrintId || !ipAddress) {
+      throw new Error("Unable to get device information. Please try again.");
+    }
+    const data = await post<CompleteLoginResponse, Omit<CompleteLoginPayload, "fingerPrintId" | "ipAddress">>({
       url: API_ENDPOINTS.AUTH.COMPLETE_USER_AUTHENTICATION,
-      payload: payload,
+      payload: rest,
       isProtected: false,
+      config: {
+        headers: {
+          "x-api-fingerprint": fingerPrintId,
+          "x-forwarded-for": ipAddress,
+          "x-api-useragent": navigator.userAgent,
+        },
+      },
     });
     return data;
   } catch (error: unknown) {

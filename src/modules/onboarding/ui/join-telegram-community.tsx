@@ -10,8 +10,14 @@ import { SectionMetaInfo } from "./section-meta-info";
 import { ButtonsFooter } from "./buttons-footer";
 import { useVerifyTelegram } from "../usecases/VerifyTelegram.usecase";
 import { useGetAuthStatus } from "@/modules/auth/usecases/GetAuthStatus.usecase";
+import { TelegramButton } from "./telegram-button";
 
 const TITLE_MAP = {
+  signin: {
+    title: "Sign in",
+    description:
+      "Click the “Sign in with Telegram” button to login to your Telegram account. This button enables us to get your Telegram username.",
+  },
   join: {
     title: "Join our Telegram Community",
     description:
@@ -28,9 +34,9 @@ const TITLE_MAP = {
 };
 
 const JOIN_ACTION_LIST = [
+  "Click the “Sign in with Telegram” button to login to your Telegram account. This button redirects you to the Telegram app and enables us to get your Telegram username.",
   "Click the “Join” button to access the Atlantus City Hall Telegram community. This button redirects you to the Telegram app on your device and enables you to join the community.",
-  "After joining, come back to this window and enter your Telegram username in the input box.",
-  "Click “Verify” to validate your membership.",
+  "After joining, come back to this window and Click “Verify” to validate your membership.",
   "Click “Next” to proceed to the next action.",
 ];
 
@@ -40,7 +46,7 @@ export function JoinTelegramCommunity() {
 
   const { mutate: verifyTelegram } = useVerifyTelegram();
 
-  const [page, setPage] = useState<"join" | "verify" | "success">("join");
+  const [page, setPage] = useState<"signin" | "join" | "verify" | "success">("signin");
   const [usernameError, setUsernameError] = useState<{
     isError: boolean;
     error: string | null;
@@ -127,11 +133,7 @@ export function JoinTelegramCommunity() {
         >
           Back
         </Button>
-        <Button
-          asChild={page === "join"}
-          onClick={handleConfirm}
-          className="cursor-pointer"
-        >
+        {page === "signin" ? <TelegramButton /> : <>
           {page === "join" ? (
             <a
               href={CITY_OF_ATLANTUS_TELEGRAM_LINK}
@@ -144,8 +146,8 @@ export function JoinTelegramCommunity() {
             "Verify"
           ) : (
             "Next"
-          )}
-        </Button>
+          )}</>}
+        
       </ButtonsFooter>
     </section>
   );
