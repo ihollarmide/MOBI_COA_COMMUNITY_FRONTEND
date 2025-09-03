@@ -20,5 +20,6 @@ declare namespace NodeJS {
     TWITTER_CLIENT_SECRET: string;
     FINGERPRINT_SECRET_KEY: string;
     TELEGRAM_BOT_SECRET_KEY: string;
+    NEXT_PUBLIC_TELEGRAM_BOT_ID: string;
   }
 }

@@ -1,56 +1,61 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 
-const BOT_TOKEN = process.env.TELEGRAM_BOT_SECRET_KEY;
+const BOT_TOKEN = process.env.TELEGRAM_BOT_SECRET_KEY as string;
 
 function verifyTelegramAuth(data: Record<string, string>) {
   const { hash, ...rest } = data;
 
-  const checkString = Object.keys(rest)
+  const dataCheckString = Object.keys(rest)
+    .filter((key) => key !== "hash")
     .sort()
     .map((key) => `${key}=${rest[key]}`)
     .join("\n");
 
-  const secretKey = crypto
-    .createHash("sha256")
-    .update(BOT_TOKEN)
-    .digest();
+  const secretKey = crypto.createHash("sha256").update(BOT_TOKEN).digest();
 
   const hmac = crypto
     .createHmac("sha256", secretKey)
-    .update(checkString)
+    .update(dataCheckString)
     .digest("hex");
-
-  console.log("hmac", hmac);
-  console.log("hash", hash);
 
   return hmac === hash;
 }
 
-export async function GET(req: NextRequest) {
-  const url = new URL(req.url);
-  const data: Record<string, string> = {};
+export async function POST(req: NextRequest) {
+  try {
+    const data: Record<string, string> = await req.json();
 
-  url.searchParams.forEach((value, key) => {
-    data[key] = value;
-  });
+    // Add a check to ensure the hash exists
+    if (!data.hash) {
+      return NextResponse.json(
+        { error: "Invalid data: hash missing" },
+        { status: 400 }
+      );
+    }
 
-  const isValid = verifyTelegramAuth(data);
+    const isValid = verifyTelegramAuth(data);
 
-  if (!isValid) {
-    return NextResponse.json({ error: "Invalid Telegram login" }, { status: 401 });
+    if (!isValid) {
+      return NextResponse.json(
+        { error: "Invalid Telegram login" },
+        { status: 401 }
+      );
+    }
+
+    const user = {
+      id: data.id,
+      username: data.username,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      photo_url: data.photo_url,
+    };
+    return NextResponse.json({ success: true, user });
+  } catch (error) {
+    console.error("Error processing Telegram login:", error);
+    return NextResponse.json(
+      { error: "Failed to process login" },
+      { status: 500 }
+    );
   }
-
-  const user = {
-    id: data.id,
-    username: data.username,
-    first_name: data.first_name,
-    last_name: data.last_name,
-    photo_url: data.photo_url,
-  };
-
-  console.log("user", user);
-
-  // TODO: create session or JWT cookie here
-  return NextResponse.json({ success: true, user });
 }
