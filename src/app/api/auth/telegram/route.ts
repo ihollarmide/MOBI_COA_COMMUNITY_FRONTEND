@@ -53,7 +53,6 @@ export async function POST(req: NextRequest) {
       photo_url: data.photo_url,
     };
 
-    console.log("user in telegram route", user);
     return NextResponse.json({ success: true, user });
   } catch (error) {
     console.error("Error processing Telegram login:", error);
