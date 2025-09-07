@@ -3,7 +3,6 @@ import { SessionData } from "@/modules/auth/types";
 import { toast } from "sonner";
 import { disconnect } from "@wagmi/core";
 import { wagmiSSRConfig } from "./config/wagmi-ssr-config";
-import { getSession } from "./modules/auth/lib/session";
 
 // Constants
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;

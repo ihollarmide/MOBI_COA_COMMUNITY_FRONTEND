@@ -10,7 +10,7 @@ import { ONBOARDING_STEPS } from "@/modules/onboarding/data";
 import { useInitiateUserAuthentication } from "@/modules/auth/usecases/InitiateUserAuthentication.usecase";
 import { Address } from "viem";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDisconnect } from "wagmi";
 import { toast } from "sonner";
 import ReCAPTCHA from "react-google-recaptcha";

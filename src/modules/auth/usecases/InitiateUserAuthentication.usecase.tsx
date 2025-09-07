@@ -96,7 +96,7 @@ export const useInitiateUserAuthentication = ({
         id: AUTH_TOAST_ID,
       });
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       toast.loading("Signing user authentication message", {
         id: AUTH_TOAST_ID,
       });

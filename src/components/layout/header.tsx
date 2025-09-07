@@ -1,7 +1,7 @@
 "use client";
 
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
-import { useChainId, useDisconnect } from "wagmi";
+import { useChainId } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { ExternalLinkIcon, LoaderIcon, PowerIcon } from "lucide-react";
 import { truncateAddress } from "@/lib/utils";
