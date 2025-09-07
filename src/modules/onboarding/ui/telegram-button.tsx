@@ -4,48 +4,14 @@ import { useState, useCallback } from "react";
 import Script from "next/script";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-
-// Telegram Widget API types
-interface TelegramWidget {
-  Login: {
-    auth: (
-      options: TelegramAuthOptions,
-      callback: (response: TelegramResponseData | false | null) => void
-    ) => void;
-  };
-}
-
-interface TelegramAuthOptions {
-  bot_id: string;
-  request_access: boolean;
-}
-
-interface TelegramResponseData {
-  auth_date: number;
-  first_name: string;
-  hash: string;
-  id: number;
-  last_name: string;
-  photo_url: string;
-  username: string;
-}
-
-interface TelegramAuthResponse {
-  auth_date: number;
-  first_name: string;
-  id: number;
-  last_name: string;
-  photo_url: string;
-  username: string;
-}
-
-interface TelegramButtonProps {
-  onClick?: () => void;
-  onSuccess?: (data: TelegramAuthResponse) => void;
-  onError?: (error: string) => void;
-  disabled?: boolean;
-  className?: string;
-}
+import {
+  TelegramAuthApiResponse,
+  TelegramAuthResponse,
+  TelegramResponseData,
+  TelegramWidget,
+} from "@/types";
+import { post } from "@/lib/api-client";
+import { useMutation } from "@tanstack/react-query";
 
 declare global {
   interface Window {
@@ -56,6 +22,61 @@ declare global {
 const TOAST_ID = "telegram-button";
 const TELEGRAM_SCRIPT_URL = "https://telegram.org/js/telegram-widget.js?2";
 
+export const processTelegramAuth = async (payload: TelegramResponseData) => {
+  try {
+    const data = await post<TelegramAuthApiResponse, TelegramResponseData>({
+      url: "/api/auth/telegram",
+      isProtected: false,
+      config: {
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        baseURL: process.env.NEXT_PUBLIC_APP_URL,
+      },
+      payload: payload,
+    });
+    return data;
+  } catch (error: unknown) {
+    console.error(`Process Telegram auth error:`, error);
+    const message =
+      error instanceof Error ? error.message : `Process Telegram auth failed`;
+    throw new Error(message);
+  }
+};
+
+// export const useProcessTelegramAuth = () => {
+//   const mutation = useMutation({
+//     mutationFn: processTelegramAuth,
+//     onMutate: () => {
+//       toast.loading("Getting your Telegram account...", {
+//         id: TOAST_ID,
+//       });
+//     },
+//     onSuccess: () => {
+//       toast.success("Your Telegram account has been retrieved successfully", {
+//         id: TOAST_ID,
+//       });
+//     },
+//     onError: () => {
+//       toast.error("Failed to get your Telegram account", {
+//         id: TOAST_ID,
+//       });
+//     },
+//   });
+
+//   return mutation;
+// };
+
+// Telegram Widget API types
+interface TelegramButtonProps {
+  onClick?: () => void;
+  onSuccess?: (data: TelegramAuthResponse) => void;
+  onError?: (error: string) => void;
+  disabled?: boolean;
+  className?: string;
+}
+
 export function TelegramButton({
   onClick,
   onSuccess,
@@ -65,6 +86,28 @@ export function TelegramButton({
 }: TelegramButtonProps) {
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const { mutateAsync: processTelegramAuthAsync } = useMutation({
+    mutationFn: processTelegramAuth,
+    onMutate: () => {
+      toast.loading("Getting your Telegram account...", {
+        id: TOAST_ID,
+      });
+    },
+    onSuccess: (data) => {
+      onSuccess?.(data.user);
+      showSuccess("Telegram authorization successful.");
+      // toast.success("Your Telegram account has been retrieved successfully", {
+      //   id: TOAST_ID,
+      // });
+    },
+    onError: (error) => {
+      // toast.error("Failed to get your Telegram account", {
+      //   id: TOAST_ID,
+      // });
+      showError(`Telegram authorization failed: ${error.message}`);
+    },
+  });
 
   const BOT_ID = process.env.NEXT_PUBLIC_TELEGRAM_BOT_ID;
 
@@ -95,34 +138,38 @@ export function TelegramButton({
     []
   );
 
-  const handleApiResponse = useCallback(
-    async (response: TelegramResponseData) => {
-      try {
-        const apiResponse = await fetch("/api/telegram", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(response),
-        });
+  // const handleApiResponse = useCallback(
+  //   async (response: TelegramResponseData) => {
+  //     try {
+  //       const apiResponse = await fetch("/api/telegram", {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify(response),
+  //       });
 
-        if (!apiResponse.ok) {
-          throw new Error(
-            `API response failed with status: ${apiResponse.status}`
-          );
-        }
+  //       console.log(apiResponse);
 
-        const data: TelegramAuthResponse = await apiResponse.json();
-        showSuccess("Telegram authorization successful.");
-        onSuccess?.(data);
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
-        showError(`Telegram authorization failed: ${errorMessage}`);
-      }
-    },
-    [onSuccess, showError, showSuccess]
-  );
+  //       if (!apiResponse.ok) {
+  //         throw new Error(
+  //           `API response failed with status: ${apiResponse.status}`
+  //         );
+  //       }
+
+  //       const data: TelegramAuthApiResponse = await apiResponse.json();
+  //       console.log("data in handleApiResponse", data);
+  //       showSuccess("Telegram authorization successful.");
+  //       onSuccess?.(data.user);
+  //     } catch (error) {
+  //       console.log("error in handleApiResponse", error);
+  //       const errorMessage =
+  //         error instanceof Error ? error.message : "Unknown error occurred";
+  //       showError(`Telegram authorization failed: ${errorMessage}`);
+  //     }
+  //   },
+  //   [onSuccess, showError, showSuccess]
+  // );
 
   const handleSignInWithTelegram = useCallback(() => {
     if (!BOT_ID) {
@@ -148,10 +195,16 @@ export function TelegramButton({
           return;
         }
 
-        handleApiResponse(response);
+        processTelegramAuthAsync(response);
       }
     );
-  }, [BOT_ID, onClick, showError, validateTelegramResponse, handleApiResponse]);
+  }, [
+    BOT_ID,
+    onClick,
+    showError,
+    validateTelegramResponse,
+    processTelegramAuthAsync,
+  ]);
 
   const handleScriptLoad = useCallback(() => {
     setIsScriptLoaded(true);
@@ -160,9 +213,9 @@ export function TelegramButton({
   const isButtonDisabled = disabled || !isScriptLoaded || isLoading;
   const buttonText = isLoading
     ? "Authenticating..."
-    : !isScriptLoaded
-      ? "Loading Telegram..."
-      : "Sign in with Telegram";
+    : isScriptLoaded
+      ? "Sign in with Telegram"
+      : "Loading Telegram...";
 
   return (
     <>

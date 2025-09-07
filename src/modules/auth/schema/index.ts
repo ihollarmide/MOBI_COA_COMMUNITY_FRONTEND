@@ -5,6 +5,8 @@ export const sessionSchema = z.object({
   user: z.object({
     id: z.string(),
     walletAddress: z.string(),
+    telegramId: z.string().nullable(),
+    twitterUsername: z.string().nullable(),
     telegramJoined: z.boolean(),
     twitterFollowed: z.boolean(),
     instagramFollowed: z.boolean(),

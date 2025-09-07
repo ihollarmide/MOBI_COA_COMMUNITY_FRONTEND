@@ -3,7 +3,7 @@ import { OnboardingStepSlug } from "../types";
 import { useGetIsClaimedKey } from "@/modules/onboarding/usecases/GetIsClaimedKey.usecase";
 import { useGetAuthStatus } from "@/modules/auth/usecases/GetAuthStatus.usecase";
 import { useGetUplineId } from "../usecases/GetUplineId.usecase";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/modules/auth/hooks/useSession";
 
 export function useStepsCompletionStatus(): {
   result: Record<OnboardingStepSlug, boolean>;
@@ -23,10 +23,11 @@ export function useStepsCompletionStatus(): {
   return {
     result: {
       "wallet-connected": status === "connected",
-      "join-telegram": !!authStatus?.data.telegramJoined,
+      "join-telegram":
+        !!authStatus?.data.telegramId && !!authStatus?.data.telegramJoined,
       "follow-us":
-        !!authStatus?.data.twitterFollowed ||
-        !!authStatus?.data.instagramFollowed,
+        !!authStatus?.data.twitterUsername &&
+        !!authStatus?.data.twitterFollowed,
       "enter-referral-code": !!uplineId,
       "claim-genesis-key": !!isClaimed,
       "join-vmcc-dao": !!isClaimed,

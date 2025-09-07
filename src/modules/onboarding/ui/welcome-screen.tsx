@@ -7,59 +7,54 @@ import { SectionTitle } from "@/components/ui/section-title";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import { useModal } from "connectkit";
 import { ONBOARDING_STEPS } from "@/modules/onboarding/data";
-import { useInitiateLogin } from "@/modules/auth/usecases/InitiateLogin.usecase";
+import { useInitiateUserAuthentication } from "@/modules/auth/usecases/InitiateUserAuthentication.usecase";
 import { Address } from "viem";
-import { useGetUplineId } from "@/modules/onboarding/usecases/GetUplineId.usecase";
 import { useRouter } from "next/navigation";
-import { useGetIsClaimedKey } from "../usecases/GetIsClaimedKey.usecase";
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import { serializeOnboardingUrlStates } from "../hooks/useOnboardingUrlStates";
 import { useDisconnect } from "wagmi";
 import { toast } from "sonner";
 import ReCAPTCHA from "react-google-recaptcha";
 import { getRecaptchaV3Token } from "@/lib/captcha";
 import { connectWalletAction } from "@/app/actions";
-import {
-  FpjsProvider
-} from '@fingerprintjs/fingerprintjs-pro-react'
-import { useVisitorData } from '@fingerprintjs/fingerprintjs-pro-react'
+import { FpjsProvider } from "@fingerprintjs/fingerprintjs-pro-react";
+import { useVisitorData } from "@fingerprintjs/fingerprintjs-pro-react";
+import { SIGNIN_APP_NAME } from "@/modules/auth/constants";
 
 const TOAST_ID = "onboarding-toast";
-
 
 export function WelcomeScreen({ fingerPrintKey }: { fingerPrintKey: string }) {
   return (
     <FpjsProvider
       loadOptions={{
         apiKey: fingerPrintKey,
-        region: "eu"
+        region: "eu",
       }}
     >
       <WelcomeScreenContent />
     </FpjsProvider>
-  )
+  );
 }
 
 function WelcomeScreenContent() {
-  const {isLoading: isGettingFingerprint, error: fingerPrintError, data: fingerPrintData, getData} = useVisitorData(
-    {extendedResult: true},
-    {immediate: true}
-  )
-  const [showV2Challenge, setShowV2Challenge] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { status: sessionStatus, data: session } = useSession();
-  const { data: isClaimed } = useGetIsClaimedKey();
-  const { data: uplineId } = useGetUplineId();
   const router = useRouter();
   router.prefetch("/onboarding");
+  const {
+    isLoading: isGettingFingerprint,
+    error: fingerPrintError,
+    data: fingerPrintData,
+    getData,
+  } = useVisitorData({ extendedResult: true }, { immediate: true });
+  const [showV2Challenge, setShowV2Challenge] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const { isConnected, address, status } = useWalletConnectionStatus();
   const {
-    mutate: initiateLogin,
+    mutate: initiateUserAuthentication,
     isSigninMessage,
-    isCompletingLogin,
-    isInitiating,
-  } = useInitiateLogin({
+    isCompletingUserAuthentication,
+    isInitiatingUserAuthentication,
+    isPending: isAuthenticationInProgress,
+  } = useInitiateUserAuthentication({
     fingerPrintId: fingerPrintData?.visitorId ?? "",
     ipAddress: fingerPrintData?.ip ?? "",
   });
@@ -84,9 +79,9 @@ function WelcomeScreenContent() {
   const { setOpen } = useModal({
     onConnect: async ({ address }) => {
       if (address) {
-        initiateLogin({
+        initiateUserAuthentication({
           walletAddress: address as Address,
-          appName: "COA Community",
+          appName: SIGNIN_APP_NAME,
         });
       } else {
         await disconnectAsync();
@@ -106,93 +101,12 @@ function WelcomeScreenContent() {
     }
   };
 
-  const isLoading = isSigninMessage || isCompletingLogin || isInitiating;
-
-  useEffect(() => {
-    const onboardingRoute = "/onboarding";
-    if (sessionStatus === "authenticated" && address) {
-      if (isClaimed || session?.user?.genesisClaimed) {
-        return router.replace(
-          onboardingRoute +
-            serializeOnboardingUrlStates({
-              step: "join-vmcc-dao",
-            })
-        );
-      } else if (session?.user?.uplineId || !!uplineId) {
-        if (!session?.user?.telegramJoined) {
-          return router.replace(
-            onboardingRoute +
-              serializeOnboardingUrlStates({
-                step: "join-telegram",
-              })
-          );
-        }
-
-        if (
-          !session?.user?.twitterFollowed &&
-          !session?.user?.instagramFollowed
-        ) {
-          return router.replace(
-            onboardingRoute +
-              serializeOnboardingUrlStates({
-                step: "follow-us",
-              })
-          );
-        }
-
-        return router.replace(
-          onboardingRoute +
-            serializeOnboardingUrlStates({
-              step: "claim-genesis-key",
-            })
-        );
-      } else if (
-        session?.user?.twitterFollowed ||
-        session?.user?.instagramFollowed
-      ) {
-        if (!session?.user?.telegramJoined) {
-          return router.replace(
-            onboardingRoute +
-              serializeOnboardingUrlStates({
-                step: "join-telegram",
-              })
-          );
-        }
-
-        return router.replace(
-          onboardingRoute +
-            serializeOnboardingUrlStates({
-              step: "enter-referral-code",
-            })
-        );
-      } else if (session?.user?.telegramJoined) {
-        return router.replace(
-          onboardingRoute +
-            serializeOnboardingUrlStates({
-              step: "follow-us",
-            })
-        );
-      }
-      router.replace(onboardingRoute);
-    }
-  }, [
-    sessionStatus,
-    address,
-    session?.user?.uplineId,
-    session?.user?.twitterFollowed,
-    session?.user?.instagramFollowed,
-    session?.user?.telegramJoined,
-    session?.user?.genesisClaimed,
-    isClaimed,
-    uplineId,
-  ]);
-
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     if (isGettingFingerprint) return;
     if (fingerPrintError) {
       getData({
-        ignoreCache: true
-      })
+        ignoreCache: true,
+      });
     }
 
     e.preventDefault();
@@ -248,12 +162,11 @@ function WelcomeScreenContent() {
     setIsSubmitting(false);
   }
 
-  const isBtnDisabled = isLoading || isSubmitting || showV2Challenge || isGettingFingerprint;
-
-
-  useEffect(() => {
-    console.log(fingerPrintData)
-  }, [fingerPrintData])
+  const isBtnDisabled =
+    isAuthenticationInProgress ||
+    isSubmitting ||
+    showV2Challenge ||
+    isGettingFingerprint;
 
   return (
     <form className="w-full" onSubmit={handleSubmit}>
@@ -303,15 +216,17 @@ function WelcomeScreenContent() {
             disabled={isBtnDisabled}
             className="w-full cursor-pointer"
           >
-            {isGettingFingerprint ? "Analyzing User..." : 
-            fingerPrintError ? fingerPrintError.message: 
-            isSubmitting ? (
+            {isGettingFingerprint ? (
+              "Analyzing User..."
+            ) : fingerPrintError ? (
+              fingerPrintError.message
+            ) : isSubmitting ? (
               "Verifying..."
             ) : isSigninMessage ? (
               "Signing Message"
-            ) : isInitiating ? (
+            ) : isInitiatingUserAuthentication ? (
               "Initiating Sign in"
-            ) : isCompletingLogin ? (
+            ) : isCompletingUserAuthentication ? (
               "Completing Authentication"
             ) : (
               <>{isConnected && address ? "Continue" : "Connect Wallet"}</>

@@ -21,6 +21,7 @@ export function SectionAction({
   onInputChange,
   inputValue,
   collapsibleContent,
+  isInputReadOnly,
 }: {
   title: string;
   description: string;
@@ -31,9 +32,10 @@ export function SectionAction({
   errorMessage: string | null;
   isInputLoading?: boolean;
   inputPlaceholder: string;
-  onInputChange: (value: string) => void;
+  onInputChange?: (value: string) => void;
   inputValue: string;
   collapsibleContent?: ReactNode;
+  isInputReadOnly?: boolean;
 }) {
   return (
     <GlassCard
@@ -70,9 +72,10 @@ export function SectionAction({
               <Input
                 aria-invalid={isError}
                 value={inputValue}
-                onChange={(e) => onInputChange(e.target.value)}
+                onChange={(e) => onInputChange?.(e.target.value)}
                 placeholder={inputPlaceholder}
-                disabled={isInputLoading}
+                disabled={isInputLoading || isInputReadOnly}
+                readOnly={isInputReadOnly}
                 endContent={isInputLoading ? <Loader loaderSize={16} /> : null}
               />
               {isError && errorMessage && (

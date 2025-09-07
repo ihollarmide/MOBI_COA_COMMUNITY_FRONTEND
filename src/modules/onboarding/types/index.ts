@@ -9,6 +9,12 @@ export type VerifySocialPayload = {
   username: string;
 };
 
+export type VerifyTelegramMembershipPayload = {
+  telegramJoined: boolean;
+  telegramUsername: string;
+  telegramId: string | number;
+};
+
 export interface SetUplineWithClaimPayload {
   deadline: number;
   tokenId: number;

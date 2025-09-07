@@ -13,13 +13,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useWalletIconWithAvatar } from "@/hooks/useWalletIconWithAvatar";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/modules/auth/hooks/useSession";
+import { useHandleSignout } from "@/modules/auth/hooks/useHandleSignout";
 
 export function Header() {
   const { status: sessionStatus } = useSession();
+  const { handleSignout } = useHandleSignout();
   const chainId = useChainId();
   const { address, status } = useWalletConnectionStatus();
-  const { disconnect } = useDisconnect();
 
   const { avatarUrl } = useWalletIconWithAvatar({
     walletAddress: address,
@@ -66,7 +67,7 @@ export function Header() {
               </a>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => disconnect()}
+              onClick={handleSignout}
               className="w-full focus:bg-transparent focus:border-none focus:outline-none flex items-center justify-start gap-x-[6px] px-4 py-[11px] text-[13px] leading-normal tracking-brand bg-disconnect text-[#F43131]"
             >
               <PowerIcon className="size-4 text-[#F43131]" />

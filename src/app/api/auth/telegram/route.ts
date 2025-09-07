@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { TelegramAuthResponse } from "@/types";
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_SECRET_KEY as string;
 
@@ -43,13 +44,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const user = {
-      id: data.id,
+    const user: TelegramAuthResponse = {
+      id: parseInt(data.id),
       username: data.username,
+      auth_date: parseInt(data.auth_date),
       first_name: data.first_name,
       last_name: data.last_name,
       photo_url: data.photo_url,
     };
+
+    console.log("user in telegram route", user);
     return NextResponse.json({ success: true, user });
   } catch (error) {
     console.error("Error processing Telegram login:", error);
