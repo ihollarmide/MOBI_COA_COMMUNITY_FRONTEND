@@ -4,7 +4,6 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { OnboardingNav } from "./onboarding-nav";
 import { AnimatePresence, m } from "motion/react";
 import { useEffect } from "react";
-import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import { useOnboardingUrlStates } from "../hooks/useOnboardingUrlStates";
 import { WalletConnected } from "./wallet-connected";
 import { JoinTelegramCommunity } from "./join-telegram-community";
@@ -13,13 +12,13 @@ import { ReferralCode } from "./referral-code";
 import { ClaimKeys } from "./claim-keys";
 import { JoinVMCCDao } from "./join-vmcc-dao";
 import { fade } from "@/lib/animation.utils";
-import { signOut, useSession } from "next-auth/react";
 import { useGetStepToRedirectTo } from "../hooks/useStepsCompletionStatus";
 import { canAccessStep } from "../lib/utils";
 import { OnboardingStepSlug } from "../types";
 import { useRouter } from "next/navigation";
 import { useGetIsClaimedKey } from "../usecases/GetIsClaimedKey.usecase";
 import { useGetUplineId } from "../usecases/GetUplineId.usecase";
+// import { PhoneVerification } from "./phone-verification";
 
 function StepWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -37,13 +36,11 @@ function StepWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export function MainScreen() {
-  useGetIsClaimedKey();
-  useGetUplineId();
   const router = useRouter();
   router.prefetch("/welcome");
+  useGetIsClaimedKey();
+  useGetUplineId();
 
-  const { data: session, status: sessionStatus } = useSession();
-  const { status: walletStatus, address } = useWalletConnectionStatus();
   const [{ step: stepSlug }, setOnboardingUrlStates] = useOnboardingUrlStates();
   const accessibleSlug = useGetStepToRedirectTo();
 
@@ -61,32 +58,6 @@ export function MainScreen() {
     }
   }, [stepSlug, accessibleSlug, isAccessible]);
 
-  useEffect(() => {
-    if (sessionStatus === "unauthenticated") {
-      router.replace("/welcome");
-    }
-  }, [sessionStatus]);
-
-  useEffect(() => {
-    if (walletStatus === "disconnected") {
-      signOut({
-        redirect: true,
-        redirectTo: "/welcome",
-      });
-    }
-  }, [walletStatus]);
-
-  useEffect(() => {
-    if (sessionStatus === "authenticated" && address) {
-      if (session.user.walletAddress.toLowerCase() !== address.toLowerCase()) {
-        signOut({
-          redirect: true,
-          redirectTo: "/welcome",
-        });
-      }
-    }
-  }, [sessionStatus, address, session?.user?.walletAddress]);
-
   return (
     <div className="w-full space-y-6 @sm:space-y-8 @container">
       <OnboardingNav />
@@ -98,6 +69,11 @@ export function MainScreen() {
                 <WalletConnected />
               </StepWrapper>
             )}
+            {/* {stepSlug === "verify-phone-number" && (
+              <StepWrapper key={stepSlug}>
+                <PhoneVerification />
+              </StepWrapper>
+            )} */}
             {stepSlug === "join-telegram" && (
               <StepWrapper key={stepSlug}>
                 <JoinTelegramCommunity />

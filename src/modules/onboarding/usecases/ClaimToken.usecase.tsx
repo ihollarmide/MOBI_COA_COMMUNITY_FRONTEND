@@ -9,26 +9,19 @@ import {
   updateIsClaimedKeyQuery,
 } from "./GetIsClaimedKey.usecase";
 import { useOnboardingUrlStates } from "../hooks/useOnboardingUrlStates";
-import { useChainId, useDisconnect } from "wagmi";
+import { useChainId } from "wagmi";
 import { ADDRESSES } from "@/common/constants/contracts";
 import { airdropAbi } from "@/common/contract-abis/airdropAbi";
-import { signOut, useSession } from "next-auth/react";
 import { useSequentialContractWrite } from "@/hooks/useSequentialContractWrite";
+import { useSession } from "@/modules/auth/hooks/useSession";
+import { useHandleSignout } from "@/modules/auth/hooks/useHandleSignout";
 
 const TOAST_ID = "claim-token";
 
 export const useClaimToken = () => {
-  const { data: session } = useSession();
-  const { disconnectAsync } = useDisconnect({
-    mutation: {
-      onSettled() {
-        signOut({
-          redirect: true,
-          redirectTo: "/welcome",
-        });
-      },
-    },
-  });
+  const { session } = useSession();
+
+  const { handleSignout } = useHandleSignout();
 
   const chainId = useChainId();
   const queryClient = useQueryClient();
@@ -119,19 +112,16 @@ export const useClaimToken = () => {
         id: TOAST_ID,
         description: "You will be redirected to the welcome page",
       });
-      signOut({
-        redirect: true,
-        redirectTo: "/welcome",
-      });
+      handleSignout();
       return;
     }
 
-    if (session?.user?.walletAddress.toLowerCase() !== address.toLowerCase()) {
+    if (session?.walletAddress.toLowerCase() !== address.toLowerCase()) {
       toast.error("Session mismatch with wallet address", {
         id: TOAST_ID,
         description: "Please reconnect your wallet and sign in again",
       });
-      await disconnectAsync();
+      handleSignout();
       return;
     }
 
@@ -161,10 +151,7 @@ export const useClaimToken = () => {
                           description:
                             "You will be redirected to the welcome page",
                         });
-                        signOut({
-                          redirect: true,
-                          redirectTo: "/welcome",
-                        });
+                        handleSignout();
                         return;
                       }
 
@@ -172,12 +159,12 @@ export const useClaimToken = () => {
                         toast.error("Please connect your wallet", {
                           id: TOAST_ID,
                         });
-                        await disconnectAsync();
+                        handleSignout();
                         return;
                       }
 
                       if (
-                        session?.user?.walletAddress.toLowerCase() !==
+                        session?.walletAddress.toLowerCase() !==
                         address.toLowerCase()
                       ) {
                         toast.error("Session mismatch with wallet address", {
@@ -185,7 +172,7 @@ export const useClaimToken = () => {
                           description:
                             "Please reconnect your wallet and sign in again",
                         });
-                        await disconnectAsync();
+                        handleSignout();
                         return;
                       }
 

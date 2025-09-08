@@ -7,8 +7,8 @@ import { isValidReferralCode } from "../lib/utils";
 import { SectionAction } from "./section-action";
 import Image from "next/image";
 import { ButtonsFooter } from "./buttons-footer";
-import { useGetUplineId } from "../usecases/GetUplineId.usecase";
-import { useSetUplineId } from "../usecases/SetUplineId.usecase";
+import { useGetUplineId } from "@/modules/onboarding/usecases/GetUplineId.usecase";
+import { useSetUplineId } from "@/modules/onboarding/usecases/SetUplineId.usecase";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import {
   useGetVmccDetailsByCoaUserId,

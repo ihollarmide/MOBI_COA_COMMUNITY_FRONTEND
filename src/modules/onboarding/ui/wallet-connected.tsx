@@ -7,12 +7,13 @@ import { truncateAddress } from "@/lib/utils";
 import { useDisconnect } from "wagmi";
 import { useOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboardingUrlStates";
 import { ButtonsFooter } from "./buttons-footer";
-import { signOut } from "next-auth/react";
 import { Loader } from "@/components/ui/loader";
 import { useGetUplineId } from "../usecases/GetUplineId.usecase";
+import { useSession } from "@/modules/auth/hooks/useSession";
 
 export function WalletConnected() {
   const { disconnect } = useDisconnect();
+  const { signOut } = useSession();
   const { address } = useWalletConnectionStatus();
   const [, setOnboardingUrlStates] = useOnboardingUrlStates();
 

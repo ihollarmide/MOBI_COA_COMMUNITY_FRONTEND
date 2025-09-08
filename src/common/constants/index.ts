@@ -3,7 +3,7 @@ import { Address } from "viem";
 export const CITY_OF_ATLANTUS_TELEGRAM_LINK = "https://t.me/atlantuscityhall";
 export const INSTAGRAM_LINK =
   "https://www.instagram.com/vmcc.dao?igsh=OHQ3YTZzcDZ1dXAy&utm_source=qr";
-export const TWITTER_LINK = "https://x.com/buildatlantus?s=21";
+export const TWITTER_LINK = "https://x.com/vmccdao";
 export const VMCC_DAO_LINK = "https://t.me/+X2m_dT9AMpZkOTI0";
 
 export const GIFS = {

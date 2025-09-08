@@ -5,6 +5,7 @@ import { Figtree, Inter, Montserrat } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { GlobalProvider } from "@/providers/global-provider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import Script from "next/script";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -42,6 +43,11 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${figtree.variable} ${montserrat.variable} overscroll-none font-sans antialiased noligatures h-full`}
       >
+        <Script
+          strategy="beforeInteractive"
+          src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_V3_SITE_KEY}`}
+        />
+
         <NuqsAdapter>
           <GlobalProvider>
             {children}

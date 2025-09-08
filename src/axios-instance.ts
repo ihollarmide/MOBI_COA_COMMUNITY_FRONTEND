@@ -1,6 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
-import { Session } from "next-auth";
-import { getSession, signOut } from "next-auth/react";
+import { SessionData } from "@/modules/auth/types";
 import { toast } from "sonner";
 import { disconnect } from "@wagmi/core";
 import { wagmiSSRConfig } from "./config/wagmi-ssr-config";
@@ -50,17 +49,15 @@ export const publicClient = (): AxiosInstance => {
 
 export const protectedClient = (): AxiosInstance => {
   const instance = createBaseInstance();
-  let lastSession: Session | null = null;
 
   instance.interceptors.request.use(
     async (request) => {
       try {
-        if (!lastSession || Date.now() > Date.parse(lastSession.expires)) {
-          lastSession = await getSession();
-        }
-
-        if (lastSession?.token) {
-          request.headers.Authorization = `Bearer ${lastSession.token}`;
+        const res: SessionData | null = await fetch("/api/auth/session").then(
+          (res) => res.json()
+        );
+        if (res?.accessToken) {
+          request.headers.Authorization = `Bearer ${res.accessToken}`;
         } else {
           request.headers.Authorization = undefined;
           toast.error("You have no active session, please re-authenticate", {
@@ -81,11 +78,14 @@ export const protectedClient = (): AxiosInstance => {
     (response) => response,
     async (error: AxiosError) => {
       if (error.response?.status === 401) {
-        lastSession = null; // Reset session on unauthorized
-        await disconnect(wagmiSSRConfig);
-        signOut({
-          redirect: true,
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
+        await disconnect(wagmiSSRConfig);
+        window.location.href = "/welcome";
         toast.error("Session expired, please re-authenticate", {
           id: "session-expired",
         });

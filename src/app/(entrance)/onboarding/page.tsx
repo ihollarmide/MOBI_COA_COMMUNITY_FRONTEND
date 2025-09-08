@@ -1,3 +1,4 @@
+import { HandleWalletSession } from "@/modules/auth/components/handle-wallet-session";
 import { MainScreen } from "@/modules/onboarding/ui/main-screen";
 import type { Metadata } from "next";
 
@@ -8,5 +9,10 @@ export const metadata: Metadata = {
 };
 
 export default function OnboardingPage() {
-  return <MainScreen />;
+  return (
+    <>
+      <HandleWalletSession />
+      <MainScreen />
+    </>
+  );
 }

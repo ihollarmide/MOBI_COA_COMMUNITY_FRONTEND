@@ -9,6 +9,18 @@ export type VerifySocialPayload = {
   username: string;
 };
 
+export type VerifyTelegramMembershipPayload = {
+  telegramJoined: boolean;
+  telegramUsername: string;
+  telegramId: string | number;
+};
+
+export type VerifyTwitterPayload = {
+  username: string;
+  twitterId: string | number;
+  tweetLink: string;
+};
+
 export interface SetUplineWithClaimPayload {
   deadline: number;
   tokenId: number;
@@ -31,3 +43,12 @@ export type GetClaimParametersResponse = ApiResponse<{
 export type VerifySocialResponse = ApiResponse<{
   success: boolean;
 }>;
+
+export type RequestPhoneVerificationPayload = {
+  phoneNumber: string;
+};
+
+export type VerifyPhoneVerificationPayload = {
+  phone: string;
+  code: string;
+};

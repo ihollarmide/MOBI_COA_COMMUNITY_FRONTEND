@@ -30,6 +30,119 @@ export const referralAbi = [
   {
     anonymous: false,
     inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+      { indexed: true, internalType: "address", name: "to", type: "address" },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "time",
+        type: "uint256",
+      },
+    ],
+    name: "FundsWithdrawn",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "uplineID",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "time",
+        type: "uint256",
+      },
+    ],
+    name: "GPRLZClaimed",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "uplineID",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "time",
+        type: "uint256",
+      },
+    ],
+    name: "GPRLZRewardUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "genKey",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "userID",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "currentTokenID",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint8",
+        name: "pointsUsed",
+        type: "uint8",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "timeClaimed",
+        type: "uint256",
+      },
+    ],
+    name: "GenesisKeyClaimedWithPoints",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
       { indexed: false, internalType: "uint8", name: "version", type: "uint8" },
     ],
     name: "Initialized",
@@ -309,6 +422,25 @@ export const referralAbi = [
     name: "UplineSet",
     type: "event",
   },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "userID",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "pointsToClaim",
+        type: "uint256",
+      },
+    ],
+    name: "UserPointsUpdated",
+    type: "event",
+  },
   { stateMutability: "payable", type: "fallback" },
   {
     inputs: [],
@@ -328,6 +460,37 @@ export const referralAbi = [
     inputs: [],
     name: "SIGNER_ROLE",
     outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum ReferralManager.GenesisKey",
+        name: "genKey",
+        type: "uint8",
+      },
+    ],
+    name: "amountOfKeysClaimed",
+    outputs: [
+      { internalType: "uint256", name: "amountClaimed", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum ReferralManager.GenesisKey",
+        name: "genKey",
+        type: "uint8",
+      },
+      { internalType: "uint256", name: "userID", type: "uint256" },
+    ],
+    name: "amountOfKeysClaimedByUser",
+    outputs: [
+      { internalType: "uint256", name: "amountClaimed", type: "uint256" },
+    ],
     stateMutability: "view",
     type: "function",
   },
@@ -458,6 +621,26 @@ export const referralAbi = [
   },
   {
     inputs: [],
+    name: "claimGPRLZEarning",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum ReferralManager.GenesisKey",
+        name: "genKeyToClaim",
+        type: "uint8",
+      },
+    ],
+    name: "claimGenesisKey",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "coaAuthAddress",
     outputs: [{ internalType: "address", name: "", type: "address" }],
     stateMutability: "view",
@@ -471,9 +654,58 @@ export const referralAbi = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "enum ReferralManager.GenesisKey",
+        name: "",
+        type: "uint8",
+      },
+    ],
+    name: "currentTokenIDs",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [{ internalType: "address", name: "downline", type: "address" }],
     name: "downlineToUplineId",
     outputs: [{ internalType: "uint256", name: "uplineId", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "gPRLZ",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "uplineID", type: "uint256" }],
+    name: "gPRLZClaimRecords",
+    outputs: [
+      { internalType: "uint256", name: "gPRLZAmount", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "uplineID", type: "uint256" }],
+    name: "gPRLZClaimedByUser",
+    outputs: [{ internalType: "uint256", name: "amount", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum ReferralManager.GenesisKey",
+        name: "",
+        type: "uint8",
+      },
+    ],
+    name: "genesisKeyAddresses",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
     stateMutability: "view",
     type: "function",
   },
@@ -520,9 +752,44 @@ export const referralAbi = [
     type: "function",
   },
   {
+    inputs: [{ internalType: "uint256", name: "userID", type: "uint256" }],
+    name: "getAvailablePoints",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [{ internalType: "bytes32", name: "role", type: "bytes32" }],
     name: "getRoleAdmin",
     outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum ReferralManager.GenesisKey",
+        name: "genKey",
+        type: "uint8",
+      },
+      { internalType: "uint256", name: "userID", type: "uint256" },
+    ],
+    name: "getTokenIDsClaimedByUser",
+    outputs: [{ internalType: "uint256[]", name: "", type: "uint256[]" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "userID", type: "uint256" }],
+    name: "getTotalPointsEarned",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "getUserUplineId",
+    outputs: [{ internalType: "uint256", name: "uplineId", type: "uint256" }],
     stateMutability: "view",
     type: "function",
   },
@@ -578,10 +845,54 @@ export const referralAbi = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "migrateReferrersToIDSystem",
-    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    inputs: [
+      { internalType: "address", name: "operator", type: "address" },
+      { internalType: "address", name: "from", type: "address" },
+      { internalType: "uint256", name: "tokenId", type: "uint256" },
+      { internalType: "bytes", name: "data", type: "bytes" },
+    ],
+    name: "onERC721Received",
+    outputs: [{ internalType: "bytes4", name: "", type: "bytes4" }],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "pause",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "paused",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "uplineID", type: "uint256" }],
+    name: "pointsClaimed",
+    outputs: [
+      { internalType: "uint256", name: "claimedPoints", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "uplineID", type: "uint256" }],
+    name: "pointsToClaim",
+    outputs: [
+      { internalType: "uint256", name: "unclaimedPoints", type: "uint256" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "uplineID", type: "uint256" }],
+    name: "pointsUsed",
+    outputs: [{ internalType: "uint256", name: "usedPoints", type: "uint256" }],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -598,7 +909,7 @@ export const referralAbi = [
     type: "function",
   },
   {
-    inputs: [{ internalType: "address", name: "", type: "address" }],
+    inputs: [{ internalType: "address", name: "referee", type: "address" }],
     name: "refereeRecords",
     outputs: [
       { internalType: "uint256", name: "rewardTokenEarned", type: "uint256" },
@@ -685,6 +996,19 @@ export const referralAbi = [
   },
   {
     inputs: [
+      {
+        internalType: "enum ReferralManager.GenesisKey",
+        name: "genKey",
+        type: "uint8",
+      },
+    ],
+    name: "requiredPoints",
+    outputs: [{ internalType: "uint8", name: "requiredPoints", type: "uint8" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
       { internalType: "bytes32", name: "role", type: "bytes32" },
       { internalType: "address", name: "account", type: "address" },
     ],
@@ -744,6 +1068,41 @@ export const referralAbi = [
     type: "function",
   },
   {
+    inputs: [{ internalType: "address", name: "_gprlz", type: "address" }],
+    name: "setGPRLZAddress",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum ReferralManager.GenesisKey[]",
+        name: "genKeys",
+        type: "uint8[]",
+      },
+      { internalType: "address[]", name: "genKeyAddresses", type: "address[]" },
+    ],
+    name: "setGenKeyAddresses",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "enum ReferralManager.GenesisKey[]",
+        name: "genKeys",
+        type: "uint8[]",
+      },
+      { internalType: "uint256[]", name: "tokenIDs", type: "uint256[]" },
+    ],
+    name: "setGenKeyCurrentTokenIDs",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [
       { internalType: "address", name: "_genesisKeyTreasury", type: "address" },
     ],
@@ -764,6 +1123,20 @@ export const referralAbi = [
   },
   {
     inputs: [
+      {
+        internalType: "enum ReferralManager.GenesisKey[]",
+        name: "genKeys",
+        type: "uint8[]",
+      },
+      { internalType: "uint8[]", name: "points", type: "uint8[]" },
+    ],
+    name: "setRequiredPoints",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
       { internalType: "address", name: "_rewardToken", type: "address" },
     ],
     name: "setRewardToken",
@@ -772,10 +1145,7 @@ export const referralAbi = [
     type: "function",
   },
   {
-    inputs: [
-      { internalType: "address", name: "_user", type: "address" },
-      { internalType: "uint256", name: "_uplineID", type: "uint256" },
-    ],
+    inputs: [{ internalType: "uint256", name: "_uplineID", type: "uint256" }],
     name: "setUplinePublic",
     outputs: [{ internalType: "bool", name: "", type: "bool" }],
     stateMutability: "nonpayable",
@@ -789,10 +1159,103 @@ export const referralAbi = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "enum ReferralManager.GenesisKey",
+        name: "genKey",
+        type: "uint8",
+      },
+      { internalType: "uint256", name: "userID", type: "uint256" },
+      { internalType: "uint256", name: "", type: "uint256" },
+    ],
+    name: "tokenIDsClaimedByUser",
+    outputs: [{ internalType: "uint256", name: "tokenIDs", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "unpause",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "updateAllUsersPoints",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "uplineId", type: "uint256" },
+      { internalType: "uint256", name: "amount", type: "uint256" },
+    ],
+    name: "updateGPRLZReward",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "userId", type: "uint256" },
+      { internalType: "uint256", name: "amount", type: "uint256" },
+      { internalType: "bool", name: "isAdd", type: "bool" },
+    ],
+    name: "updatePoints",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "userId", type: "uint256" },
+      { internalType: "uint256", name: "usdAmount", type: "uint256" },
+      { internalType: "bool", name: "isAdd", type: "bool" },
+    ],
+    name: "updateUserEarnings",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "uplineID", type: "uint256" },
+      { internalType: "uint256", name: "", type: "uint256" },
+    ],
+    name: "uplineToDownlines",
+    outputs: [{ internalType: "address", name: "downlines", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [{ internalType: "address", name: "", type: "address" }],
     name: "uplines",
     outputs: [{ internalType: "address", name: "", type: "address" }],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "nftAddress", type: "address" },
+      { internalType: "uint256[]", name: "tokenIds", type: "uint256[]" },
+      { internalType: "address", name: "to", type: "address" },
+    ],
+    name: "withdrawGenKeys",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "address", name: "_token", type: "address" },
+      { internalType: "uint256", name: "_amount", type: "uint256" },
+      { internalType: "address", name: "_to", type: "address" },
+    ],
+    name: "withdrawTokens",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "nonpayable",
     type: "function",
   },
   { stateMutability: "payable", type: "receive" },
