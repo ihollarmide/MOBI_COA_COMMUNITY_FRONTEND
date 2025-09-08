@@ -18,7 +18,7 @@ import { OnboardingStepSlug } from "../types";
 import { useRouter } from "next/navigation";
 import { useGetIsClaimedKey } from "../usecases/GetIsClaimedKey.usecase";
 import { useGetUplineId } from "../usecases/GetUplineId.usecase";
-import { PhoneVerification } from "./phone-verification";
+// import { PhoneVerification } from "./phone-verification";
 
 function StepWrapper({ children }: { children: React.ReactNode }) {
   return (

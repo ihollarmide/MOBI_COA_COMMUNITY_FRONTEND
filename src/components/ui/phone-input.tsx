@@ -89,15 +89,13 @@ const CountrySelect = ({
   const [searchValue, setSearchValue] = React.useState("");
   const [isOpen, setIsOpen] = React.useState(false);
 
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    open && setSearchValue("");
+  };
+
   return (
-    <Popover
-      open={isOpen}
-      modal
-      onOpenChange={(open) => {
-        setIsOpen(open);
-        open && setSearchValue("");
-      }}
-    >
+    <Popover open={isOpen} modal onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           type="button"
