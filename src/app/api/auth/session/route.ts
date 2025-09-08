@@ -46,15 +46,13 @@ export async function PATCH(req: Request) {
       throw createApiError("Failed to update session", 500);
     }
 
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+    const { accessToken, ...rest } = updatedSession;
+
     // Return success response with updated session data
     return NextResponse.json({
       success: true,
-      data: {
-        walletAddress: updatedSession.walletAddress,
-        isVmccSetup: updatedSession.isVmccSetup,
-        coaUserId: updatedSession.coaUserId,
-        // Don't return accessToken for security
-      },
+      data: rest,
       message: "Session updated successfully",
     });
   } catch (error) {

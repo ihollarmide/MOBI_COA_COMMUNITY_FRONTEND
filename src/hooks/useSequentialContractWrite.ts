@@ -246,7 +246,6 @@ export function useSequentialContractWrite({
       onSettled,
       fetchBlock,
       fetchBlockWithRetries,
-      traceTransactionReceiptError,
     ]
   );
 

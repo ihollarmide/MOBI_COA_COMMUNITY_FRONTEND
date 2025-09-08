@@ -148,7 +148,7 @@ export function PhoneVerification() {
       return "Verify OTP";
     }
     return "Next";
-  }, [isRequestingPhoneNumberVerification, isVerifyingPhoneNumber]);
+  }, [isRequestingPhoneNumberVerification, isVerifyingPhoneNumber, step]);
 
   return (
     <section className="w-full space-y-6 @container">

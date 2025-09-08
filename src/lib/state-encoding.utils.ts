@@ -35,6 +35,7 @@ export function decodeState(encodedState: string): OAuthState {
     );
     return decoded as OAuthState;
   } catch (error) {
+    console.error("Error decoding state:", error);
     throw new Error("Invalid state parameter format");
   }
 }
