@@ -1,9 +1,8 @@
 import { post } from "@/lib/api-client";
 import { RequestPhoneVerificationPayload } from "../types";
 import { API_ENDPOINTS } from "@/lib/api-endpoints";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useInvalidateQueries } from "@/hooks/useInvalidateQueries";
 
 export const requestPhoneNumberVerification = async (
   payload: RequestPhoneVerificationPayload
@@ -33,7 +32,7 @@ export const useRequestPhoneNumberVerification = () => {
         id: TOAST_ID,
       });
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success("OTP sent successfully", {
         description: "Please check your whatsapp for the OTP",
         id: TOAST_ID,

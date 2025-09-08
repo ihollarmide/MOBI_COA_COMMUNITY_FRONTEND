@@ -91,7 +91,9 @@ const CountrySelect = ({
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
-    open && setSearchValue("");
+    if (open) {
+      setSearchValue("");
+    }
   };
 
   return (
