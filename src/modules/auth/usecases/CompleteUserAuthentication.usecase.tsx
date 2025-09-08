@@ -70,13 +70,13 @@ export const useCompleteUserAuthentication = () => {
       });
       const onboardingRoute = "/onboarding";
       if (data.data.user.genesisClaimed) {
-        return (window.location.href = `onboardingRoute
+        return (window.location.href = `${onboardingRoute}
             ${serializeOnboardingUrlStates({
               step: "join-vmcc-dao",
             })}`);
       } else if (!!data.data.user.uplineId) {
         if (!data.data.user.telegramId || !data.data.user.telegramJoined) {
-          return (window.location.href = `onboardingRoute
+          return (window.location.href = `${onboardingRoute}
             ${serializeOnboardingUrlStates({
               step: "join-telegram",
             })}`);
@@ -86,13 +86,13 @@ export const useCompleteUserAuthentication = () => {
           !data.data.user.twitterUsername ||
           !data.data.user.twitterFollowed
         ) {
-          return (window.location.href = `onboardingRoute
+          return (window.location.href = `${onboardingRoute}
               ${serializeOnboardingUrlStates({
                 step: "follow-us",
               })}`);
         }
 
-        return (window.location.href = `onboardingRoute
+        return (window.location.href = `${onboardingRoute}
             ${serializeOnboardingUrlStates({
               step: "claim-genesis-key",
             })}`);
@@ -101,19 +101,19 @@ export const useCompleteUserAuthentication = () => {
         data.data.user.twitterFollowed
       ) {
         if (!data.data.user.telegramId || !data.data.user.telegramJoined) {
-          return (window.location.href = `onboardingRoute${serializeOnboardingUrlStates(
+          return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
             {
               step: "join-telegram",
             }
           )}`);
         }
 
-        return (window.location.href = `onboardingRoute
+        return (window.location.href = `${onboardingRoute}
             ${serializeOnboardingUrlStates({
               step: "enter-referral-code",
             })}`);
       } else if (data.data.user.telegramId && data.data.user.telegramJoined) {
-        return (window.location.href = `onboardingRoute${serializeOnboardingUrlStates(
+        return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
           {
             step: "follow-us",
           }

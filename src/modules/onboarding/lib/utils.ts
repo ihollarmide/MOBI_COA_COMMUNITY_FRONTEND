@@ -131,6 +131,55 @@ export const isValidUsernameWithAtSign = (
   return { isError: false, error: null };
 };
 
+export const isValidPostLink = (
+  postLink: string,
+  platform: "x" | "instagram"
+): { isError: boolean; error: string | null } => {
+  // Check if postLink is empty or undefined
+  if (!postLink || postLink.trim().length === 0) {
+    return {
+      isError: true,
+      error: `Valid ${platform === "x" ? "X tweet" : "Instagram post"} link is required`,
+    };
+  }
+
+  const trimmedLink = postLink.trim();
+
+  // Basic URL validation
+  try {
+    new URL(trimmedLink);
+  } catch {
+    return { isError: true, error: "Please enter a valid URL" };
+  }
+
+  // Platform-specific validation
+  if (platform === "x") {
+    // Validate X (Twitter) post link
+    const xPostRegex =
+      /^https?:\/\/(www\.)?(twitter\.com|x\.com)\/[a-zA-Z0-9_]+\/status\/\d+(\?.*)?$/;
+    if (!xPostRegex.test(trimmedLink)) {
+      return {
+        isError: true,
+        error:
+          "Please enter a valid X (Twitter) post link (e.g., https://x.com/username/status/1234567890)",
+      };
+    }
+  } else if (platform === "instagram") {
+    // Validate Instagram post link
+    const instagramPostRegex =
+      /^https?:\/\/(www\.)?instagram\.com\/p\/[a-zA-Z0-9_-]+\/?(\?.*)?$/;
+    if (!instagramPostRegex.test(trimmedLink)) {
+      return {
+        isError: true,
+        error:
+          "Please enter a valid Instagram post link (e.g., https://instagram.com/p/ABC123/)",
+      };
+    }
+  }
+
+  return { isError: false, error: null };
+};
+
 export const isValidReferralCode = (
   referralCode: string
 ): { isError: boolean; error: string | null } => {

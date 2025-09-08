@@ -22,20 +22,22 @@ export function SectionAction({
   inputValue,
   collapsibleContent,
   isInputReadOnly,
+  children,
 }: {
   title: string;
   description: string;
   icon: IconsNames;
   isSuccess: boolean;
   isCollapsibleOpen: boolean;
-  isError: boolean;
-  errorMessage: string | null;
+  isError?: boolean;
+  errorMessage?: string | null;
   isInputLoading?: boolean;
-  inputPlaceholder: string;
+  inputPlaceholder?: string;
   onInputChange?: (value: string) => void;
-  inputValue: string;
+  inputValue?: string;
   collapsibleContent?: ReactNode;
   isInputReadOnly?: boolean;
+  children?: ReactNode;
 }) {
   return (
     <GlassCard
@@ -65,9 +67,10 @@ export function SectionAction({
 
       <Collapsible isOpen={isCollapsibleOpen}>
         <div className="pt-4">
+          {children ? children : null}
           {collapsibleContent ? (
             collapsibleContent
-          ) : (
+          ) : inputValue !== undefined && onInputChange ? (
             <>
               <Input
                 aria-invalid={isError}
@@ -84,7 +87,7 @@ export function SectionAction({
                 </p>
               )}
             </>
-          )}
+          ) : null}
         </div>
       </Collapsible>
     </GlassCard>

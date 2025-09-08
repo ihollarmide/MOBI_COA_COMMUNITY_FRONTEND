@@ -64,6 +64,8 @@ export interface AuthUser {
   telegramJoined: boolean;
   twitterFollowed: boolean;
   twitterUsername?: string | null;
+  twitterId?: string | number | null | undefined;
+  tweetLink?: string | null | undefined;
   instagramUsername?: string | null;
   instagramFollowed: boolean;
   uplineId: number | null;

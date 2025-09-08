@@ -42,6 +42,7 @@ const JOIN_ACTION_LIST = [
 
 export function JoinTelegramCommunity() {
   const [username, setUsername] = useState("");
+  const [telegramId, setTelegramId] = useState<string | number | null>(null);
   const { data: authStatus } = useGetAuthStatus();
 
   const { mutate: verifyTelegram, isPending: isVerifyingMembership } =
@@ -107,9 +108,15 @@ export function JoinTelegramCommunity() {
       return;
     }
     setUsernameError({ isError: false, error: null });
+    if (!telegramId) {
+      setUsernameError({ isError: true, error: "Telegram ID is required" });
+      return;
+    }
     verifyTelegram(
       {
-        username: removeAtSign(username),
+        telegramJoined: true,
+        telegramUsername: removeAtSign(username),
+        telegramId: telegramId ?? "",
       },
       {
         onSuccess: () => {
@@ -125,15 +132,20 @@ export function JoinTelegramCommunity() {
   const onTelegramAuthSuccess = (data: TelegramAuthResponse) => {
     // console.log("data in auth success", data);
     setUsername(data.username);
+    setTelegramId(data.id);
     setPage("verify");
     // handleConfirmTelegramUsername(data.username);
   };
 
   useEffect(() => {
-    if (authStatus?.data?.telegramJoined && page !== "success") {
+    if (
+      authStatus?.data?.telegramJoined &&
+      authStatus?.data?.telegramId &&
+      page !== "success"
+    ) {
       setPage("success");
     }
-  }, [authStatus?.data?.telegramJoined, page]);
+  }, [authStatus?.data?.telegramJoined, authStatus?.data?.telegramId, page]);
 
   return (
     <section className="w-full space-y-6 @container">
@@ -150,12 +162,13 @@ export function JoinTelegramCommunity() {
         icon={IconsNames.TELEGRAM}
         isSuccess={page === "success"}
         isCollapsibleOpen={page === "verify"}
-        isError={usernameError.isError}
-        errorMessage={usernameError.error}
-        inputPlaceholder="Your Telegram @username"
         inputValue={username}
+        onInputChange={setUsername}
         isInputReadOnly={true}
         isInputLoading={isVerifyingMembership}
+        inputPlaceholder="Your Telegram @username"
+        isError={usernameError.isError}
+        errorMessage={usernameError.error}
       />
 
       <ButtonsFooter>

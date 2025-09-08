@@ -15,6 +15,12 @@ export type VerifyTelegramMembershipPayload = {
   telegramId: string | number;
 };
 
+export type VerifyTwitterPayload = {
+  username: string;
+  twitterId: string | number;
+  tweetLink: string;
+};
+
 export interface SetUplineWithClaimPayload {
   deadline: number;
   tokenId: number;
