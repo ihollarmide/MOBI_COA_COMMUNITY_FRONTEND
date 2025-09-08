@@ -34,8 +34,6 @@ jobs:
       - name: Set environment variables
         run: |
           if [ "${{ github.event.pull_request.base.ref }}" = "dev" ]; then
-            echo "NEXT_PUBLIC_PROJECT_ID=COA_COMMUNITY" >> .env.production
-            echo "NEXT_PUBLIC_SEPOLIA_ID=KjA-gsb0RjUcKh9uLmX--Aftl5X2nsPr" >> .env.production
             echo "NEXT_PUBLIC_ENVIRONMENT=local" >> .env.production
             echo "AUTH_TRUST_HOST=true" >> .env.production
             echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_DEV }}" >> .env.production
@@ -47,9 +45,19 @@ jobs:
             echo "BSC_RPC_URL=${{ secrets.BSC_RPC_URL }}" >> .env.production
             echo "BASE_SEPOLIA_FALLBACK_RPC_URL=${{ secrets.BASE_SEPOLIA_FALLBACK_RPC_URL }}" >> .env.production
             echo "BSC_FALLBACK_RPC_URL=${{ secrets.BSC_FALLBACK_RPC_URL }}" >> .env.production
+            echo "NEXT_PUBLIC_APP_SESSION_NAME=${{ secrets.NEXT_PUBLIC_APP_SESSION_NAME_DEV }}" >> .env.production
+            echo "SESSION_SECRET=${{ secrets.SESSION_SECRET_DEV }}" >> .env.production
+            echo "NEXT_PUBLIC_GOOGLE_RECAPTCHA_V3_SITE_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_RECAPTCHA_V3_SITE_KEY }}" >> .env.production
+            echo "GOOGLE_RECAPTCHA_V3_SECRET_KEY=${{ secrets.GOOGLE_RECAPTCHA_V3_SECRET_KEY }}" >> .env.production
+            echo "NEXT_PUBLIC_GOOGLE_RECAPTCHA_V2_SITE_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_RECAPTCHA_V2_SITE_KEY }}" >> .env.production
+            echo "GOOGLE_RECAPTCHA_V2_SECRET_KEY=${{ secrets.GOOGLE_RECAPTCHA_V2_SECRET_KEY }}" >> .env.production
+            echo "TELEGRAM_BOT_SECRET_KEY=${{ secrets.TELEGRAM_BOT_SECRET_KEY_DEV }}" >> .env.production
+            echo "NEXT_PUBLIC_TELEGRAM_BOT_ID=${{ secrets.NEXT_PUBLIC_TELEGRAM_BOT_ID_DEV }}" >> .env.production
+            echo "TWITTER_CLIENT_ID=${{ secrets.TWITTER_CLIENT_ID }}" >> .env.production
+            echo "TWITTER_CLIENT_SECRET=${{ secrets.TWITTER_CLIENT_SECRET }}" >> .env.production
+            echo "TWITTER_REDIRECT_URI=${{ secrets.TWITTER_REDIRECT_URI_DEV }}" >> .env.production
+            echo "FINGERPRINT_SECRET_KEY=${{ secrets.FINGERPRINT_SECRET_KEY }}" >> .env.production
           elif [ "${{ github.event.pull_request.base.ref }}" = "main" ]; then
-            echo "NEXT_PUBLIC_PROJECT_ID=COA_COMMUNITY" >> .env.production
-            echo "NEXT_PUBLIC_SEPOLIA_ID=KjA-gsb0RjUcKh9uLmX--Aftl5X2nsPr" >> .env.production
             echo "NEXT_PUBLIC_ENVIRONMENT=production" >> .env.production
             echo "AUTH_TRUST_HOST=true" >> .env.production
             echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_MAIN }}" >> .env.production
@@ -61,6 +69,18 @@ jobs:
             echo "BSC_RPC_URL=${{ secrets.BSC_RPC_URL }}" >> .env.production
             echo "BASE_SEPOLIA_FALLBACK_RPC_URL=${{ secrets.BASE_SEPOLIA_FALLBACK_RPC_URL }}" >> .env.production
             echo "BSC_FALLBACK_RPC_URL=${{ secrets.BSC_FALLBACK_RPC_URL }}" >> .env.production
+            echo "NEXT_PUBLIC_APP_SESSION_NAME=${{ secrets.NEXT_PUBLIC_APP_SESSION_NAME_MAIN }}" >> .env.production
+            echo "SESSION_SECRET=${{ secrets.SESSION_SECRET_MAIN }}" >> .env.production
+            echo "NEXT_PUBLIC_GOOGLE_RECAPTCHA_V3_SITE_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_RECAPTCHA_V3_SITE_KEY }}" >> .env.production
+            echo "GOOGLE_RECAPTCHA_V3_SECRET_KEY=${{ secrets.GOOGLE_RECAPTCHA_V3_SECRET_KEY }}" >> .env.production
+            echo "NEXT_PUBLIC_GOOGLE_RECAPTCHA_V2_SITE_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_RECAPTCHA_V2_SITE_KEY }}" >> .env.production
+            echo "GOOGLE_RECAPTCHA_V2_SECRET_KEY=${{ secrets.GOOGLE_RECAPTCHA_V2_SECRET_KEY }}" >> .env.production
+            echo "TELEGRAM_BOT_SECRET_KEY=${{ secrets.TELEGRAM_BOT_SECRET_KEY_MAIN }}" >> .env.production
+            echo "NEXT_PUBLIC_TELEGRAM_BOT_ID=${{ secrets.NEXT_PUBLIC_TELEGRAM_BOT_ID_MAIN }}" >> .env.production
+            echo "TWITTER_CLIENT_ID=${{ secrets.TWITTER_CLIENT_ID }}" >> .env.production
+            echo "TWITTER_CLIENT_SECRET=${{ secrets.TWITTER_CLIENT_SECRET }}" >> .env.production
+            echo "TWITTER_REDIRECT_URI=${{ secrets.TWITTER_REDIRECT_URI_MAIN }}" >> .env.production
+            echo "FINGERPRINT_SECRET_KEY=${{ secrets.FINGERPRINT_SECRET_KEY }}" >> .env.production
           fi
 
       - name: Build Next.js
