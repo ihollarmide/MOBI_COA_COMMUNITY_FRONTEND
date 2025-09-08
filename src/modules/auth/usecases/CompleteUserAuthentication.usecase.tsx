@@ -3,7 +3,7 @@ import {
   BaseCompleteAuthenticationPayload,
   CompleteAuthenticationPayload,
   CompleteUserAuthenticationResponse,
-} from "../types";
+} from "@/modules/auth/types";
 import { post } from "@/lib/api-client";
 import { useMutation } from "@tanstack/react-query";
 import { AUTH_TOAST_ID } from "@/modules/auth/constants";
@@ -70,21 +70,33 @@ export const useCompleteUserAuthentication = () => {
       });
       const onboardingRoute = "/onboarding";
       if (data.data.user.genesisClaimed) {
-        return (window.location.href = `${onboardingRoute}
-            ${serializeOnboardingUrlStates({
-              step: "join-vmcc-dao",
-            })}`);
+        return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
+          {
+            step: "join-vmcc-dao",
+          }
+        )}`);
       } else if (!!data.data.user.uplineId) {
+        // if (!data.data.user.phoneNumberVerified) {
+        //   return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
+        //     {
+        //       step: "verify-phone-number",
+        //     }
+        //   )}`);
+        // }
+
         if (!data.data.user.telegramId || !data.data.user.telegramJoined) {
-          return (window.location.href = `${onboardingRoute}
-            ${serializeOnboardingUrlStates({
+          return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
+            {
               step: "join-telegram",
-            })}`);
+            }
+          )}`);
         }
 
         if (
           !data.data.user.twitterUsername ||
-          !data.data.user.twitterFollowed
+          !data.data.user.twitterFollowed ||
+          !data.data.user.tweetLink ||
+          !data.data.user.twitterId
         ) {
           return (window.location.href = `${onboardingRoute}
               ${serializeOnboardingUrlStates({
@@ -92,10 +104,11 @@ export const useCompleteUserAuthentication = () => {
               })}`);
         }
 
-        return (window.location.href = `${onboardingRoute}
-            ${serializeOnboardingUrlStates({
-              step: "claim-genesis-key",
-            })}`);
+        return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
+          {
+            step: "claim-genesis-key",
+          }
+        )}`);
       } else if (
         data.data.user.twitterUsername &&
         data.data.user.twitterFollowed
@@ -108,10 +121,11 @@ export const useCompleteUserAuthentication = () => {
           )}`);
         }
 
-        return (window.location.href = `${onboardingRoute}
-            ${serializeOnboardingUrlStates({
-              step: "enter-referral-code",
-            })}`);
+        return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
+          {
+            step: "enter-referral-code",
+          }
+        )}`);
       } else if (data.data.user.telegramId && data.data.user.telegramJoined) {
         return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
           {
@@ -125,7 +139,7 @@ export const useCompleteUserAuthentication = () => {
       toast.error("Error completing authentication", {
         id: AUTH_TOAST_ID,
       });
-      console.error("Complete login error:", error);
+      console.error("Complete user authentication error:", error);
     },
   });
 

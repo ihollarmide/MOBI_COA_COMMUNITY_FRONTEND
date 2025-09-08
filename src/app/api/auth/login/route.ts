@@ -110,19 +110,30 @@ export async function POST(req: Request) {
       phoneNumber: validatedResponse.data.user.phoneNumber,
       isFlagged: validatedResponse.data.user.isFlagged,
       updatedAt: validatedResponse.data.user.updatedAt,
-      uplineId:
-        validatedPayload.extras.uplineId ??
-        validatedResponse.data.user.uplineId,
-      genesisClaimed:
-        validatedPayload.extras.isGenesisClaimed ??
-        validatedResponse.data.user.genesisClaimed,
+      uplineId: validatedPayload.extras.uplineId
+        ? validatedPayload.extras.uplineId
+        : validatedResponse.data.user.uplineId,
+      genesisClaimed: validatedPayload.extras.isGenesisClaimed
+        ? validatedPayload.extras.isGenesisClaimed
+        : validatedResponse.data.user.genesisClaimed,
       createdAt: validatedResponse.data.user.createdAt,
     });
 
     // Return success response with validated data
     return NextResponse.json({
       status: "success",
-      data: validatedResponse.data,
+      data: {
+        token: validatedResponse.data.token,
+        user: {
+          ...validatedResponse.data.user,
+          uplineId: validatedPayload.extras.uplineId
+            ? validatedPayload.extras.uplineId
+            : validatedResponse.data.user.uplineId,
+          genesisClaimed: validatedPayload.extras.isGenesisClaimed
+            ? validatedPayload.extras.isGenesisClaimed
+            : validatedResponse.data.user.genesisClaimed,
+        },
+      },
       message: "Authentication successful",
     });
   } catch (error) {

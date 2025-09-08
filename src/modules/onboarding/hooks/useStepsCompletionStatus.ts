@@ -23,11 +23,17 @@ export function useStepsCompletionStatus(): {
   return {
     result: {
       "wallet-connected": status === "connected",
+      // "verify-phone-number":
+      //   !!authStatus?.data.phoneNumberVerified &&
+      //   !!authStatus?.data.phoneNumber,
+      // "verify-phone-number": true,
       "join-telegram":
         !!authStatus?.data.telegramId && !!authStatus?.data.telegramJoined,
       "follow-us":
         !!authStatus?.data.twitterUsername &&
-        !!authStatus?.data.twitterFollowed,
+        !!authStatus?.data.twitterFollowed &&
+        !!authStatus?.data.tweetLink &&
+        !!authStatus?.data.twitterId,
       "enter-referral-code": !!uplineId,
       "claim-genesis-key": !!isClaimed,
       "join-vmcc-dao": !!isClaimed,
@@ -46,6 +52,7 @@ export function useGetStepToRedirectTo() {
   if (result["enter-referral-code"]) return "claim-genesis-key";
   if (result["follow-us"]) return "enter-referral-code";
   if (result["join-telegram"]) return "follow-us";
+  // if (result["verify-phone-number"]) return "join-telegram";
   if (result["wallet-connected"]) return "join-telegram";
 
   return null;

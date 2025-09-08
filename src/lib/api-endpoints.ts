@@ -17,6 +17,9 @@ export const API_ENDPOINTS = {
     INSTAGRAM: "/user/auth/verify/instagram",
     TWITTER: "/user/verify/twitter",
     TELEGRAM: "/user/auth/verify/telegram",
+
+    REQUEST_OTP: "/auth/send-otp",
+    VERIFY_OTP: "/auth/verify-otp",
   },
 
   LOG_TWITTER_HANDLE: "/user/log-twitter-handle",

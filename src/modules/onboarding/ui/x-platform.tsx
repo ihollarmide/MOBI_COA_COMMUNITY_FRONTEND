@@ -1,7 +1,7 @@
 import { TabsContent } from "@/components/ui/tabs";
 import { SectionMetaInfo } from "./section-meta-info";
 import { SectionAction } from "./section-action";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IconsNames } from "@/components/icons/icon.types";
 import { ButtonsFooter } from "./buttons-footer";
 import { Button } from "@/components/ui/button";
@@ -154,6 +154,12 @@ export function XPlatform({
             : "Next";
 
   const isBtnLoadiing = isCompletingTwitterOAuth || isVerifyXPending;
+
+  useEffect(() => {
+    if (isVerified && page !== "success") {
+      setPage("success");
+    }
+  }, [isVerified, page]);
 
   return (
     <TabsContent className="w-full mt-2 space-y-6" value="x">

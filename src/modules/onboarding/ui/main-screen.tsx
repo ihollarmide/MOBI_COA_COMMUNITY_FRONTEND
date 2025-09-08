@@ -18,6 +18,7 @@ import { OnboardingStepSlug } from "../types";
 import { useRouter } from "next/navigation";
 import { useGetIsClaimedKey } from "../usecases/GetIsClaimedKey.usecase";
 import { useGetUplineId } from "../usecases/GetUplineId.usecase";
+import { PhoneVerification } from "./phone-verification";
 
 function StepWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -68,6 +69,11 @@ export function MainScreen() {
                 <WalletConnected />
               </StepWrapper>
             )}
+            {/* {stepSlug === "verify-phone-number" && (
+              <StepWrapper key={stepSlug}>
+                <PhoneVerification />
+              </StepWrapper>
+            )} */}
             {stepSlug === "join-telegram" && (
               <StepWrapper key={stepSlug}>
                 <JoinTelegramCommunity />

@@ -12,6 +12,7 @@ import { useVerifyTelegramMembership } from "../usecases/VerifyTelegramMembershi
 import { useGetAuthStatus } from "@/modules/auth/usecases/GetAuthStatus.usecase";
 import { TelegramButton } from "./telegram-button";
 import { TelegramAuthResponse } from "@/types";
+import { toast } from "sonner";
 
 const TITLE_MAP = {
   join: {
@@ -67,40 +68,6 @@ export function JoinTelegramCommunity() {
     }));
   };
 
-  // const handleConfirm = (telegramUserName?: string) => {
-  //   if (page === "join") {
-  //     setPage("verify");
-  //   } else if (page === "verify") {
-  //     const { isError, error } = isValidUsernameWithAtSign(
-  //       telegramUserName ?? username,
-  //       "telegram"
-  //     );
-  //     if (isError) {
-  //       setUsernameError({ isError, error });
-  //       return;
-  //     }
-  //     setUsernameError({ isError: false, error: null });
-  //     verifyTelegram(
-  //       {
-  //         username: telegramUserName ? removeAtSign(telegramUserName) : removeAtSign(username),
-  //       },
-  //       {
-  //         onSuccess: () => {
-  //           setPage("success");
-  //         },
-  //         onError: (error) => {
-  //           setUsernameError({ isError: true, error: error.message });
-  //         },
-  //       }
-  //     );
-  //   } else if (page === "success") {
-  //     setOnboardingUrlStates((prev) => ({
-  //       ...prev,
-  //       step: "follow-us",
-  //     }));
-  //   }
-  // };
-
   const handleConfirmTelegramUsername = () => {
     const { isError, error } = isValidUsernameWithAtSign(username, "telegram");
     if (isError) {
@@ -130,11 +97,21 @@ export function JoinTelegramCommunity() {
   };
 
   const onTelegramAuthSuccess = (data: TelegramAuthResponse) => {
-    // console.log("data in auth success", data);
+    if (!data.username) {
+      toast.error("You do not have a Telegram username", {
+        description:
+          "Please go to your Telegram app and add a username and try again.",
+        id: "telegram-auth-success",
+      });
+      setUsernameError({
+        isError: true,
+        error: "You do not have a Telegram username",
+      });
+      return;
+    }
     setUsername(data.username);
     setTelegramId(data.id);
     setPage("verify");
-    // handleConfirmTelegramUsername(data.username);
   };
 
   useEffect(() => {

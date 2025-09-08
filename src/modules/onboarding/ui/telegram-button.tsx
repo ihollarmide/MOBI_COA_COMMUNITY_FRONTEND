@@ -97,14 +97,8 @@ export function TelegramButton({
     onSuccess: (data) => {
       onSuccess?.(data.user);
       showSuccess("Telegram authorization successful.");
-      // toast.success("Your Telegram account has been retrieved successfully", {
-      //   id: TOAST_ID,
-      // });
     },
     onError: (error) => {
-      // toast.error("Failed to get your Telegram account", {
-      //   id: TOAST_ID,
-      // });
       showError(`Telegram authorization failed: ${error.message}`);
     },
   });

@@ -43,3 +43,12 @@ export type GetClaimParametersResponse = ApiResponse<{
 export type VerifySocialResponse = ApiResponse<{
   success: boolean;
 }>;
+
+export type RequestPhoneVerificationPayload = {
+  phoneNumber: string;
+};
+
+export type VerifyPhoneVerificationPayload = {
+  phone: string;
+  code: string;
+};

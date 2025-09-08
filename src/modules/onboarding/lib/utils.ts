@@ -1,5 +1,6 @@
 import { ONBOARDING_STEPS } from "../data";
 import { OnboardingStepNumber, OnboardingStepSlug } from "../types";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 export const getStepNumberBySlug = (
   slug: OnboardingStepSlug
@@ -216,4 +217,19 @@ export const isValidReferralCode = (
 
 export const removeAtSign = (username: string) => {
   return username.replace("@", "").trim();
+};
+
+export const isPhoneNumberValid = (phoneNumber: string) => {
+  const isValid = isValidPhoneNumber(phoneNumber);
+  return {
+    isError: !isValid,
+    error: isValid ? null : "Invalid phone number",
+  };
+};
+
+export const isOtpValid = (otp: string) => {
+  return {
+    isError: otp.length !== 6,
+    error: otp.length !== 6 ? "Invalid OTP" : null,
+  };
 };

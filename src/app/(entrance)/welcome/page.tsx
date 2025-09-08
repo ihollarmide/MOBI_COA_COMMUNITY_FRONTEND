@@ -9,6 +9,6 @@ export const metadata: Metadata = {
 
 export default function MainPage() {
   const fingerPrintKey = process.env.FINGERPRINT_SECRET_KEY;
-  
+
   return <WelcomeScreen fingerPrintKey={fingerPrintKey} />;
 }

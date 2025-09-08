@@ -2,7 +2,6 @@
 
 import { verifyRecaptchaV2Token, verifyRecaptchaV3Token } from "@/lib/captcha";
 
-
 export const connectWalletAction = async ({
   v2Token,
   v3Token,

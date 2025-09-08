@@ -98,7 +98,7 @@ export const useSetUplineId = ({
               abi: referralAbi,
               address: ADDRESSES[chainId].REFERRAL,
               functionName: "setUplinePublic",
-              args: [address, BigInt(coaUserId)],
+              args: [BigInt(coaUserId)],
             });
           }
         },

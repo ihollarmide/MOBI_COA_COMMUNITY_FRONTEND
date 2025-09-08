@@ -143,11 +143,6 @@ export async function POST(req: Request) {
     }
     processedCodes.add(code);
 
-    console.log("Token exchange request:", {
-      code_length: code.length,
-      state_length: state.length,
-    });
-
     // Validate environment
     if (
       !process.env.TWITTER_CLIENT_ID ||

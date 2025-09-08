@@ -16,6 +16,7 @@ export enum IconsNames {
   DIRECTIONS = "directions",
   TELECAST = "telecast",
   PADLOCK = "padlock",
+  PHONE = "phone",
 }
 
 export interface IconProps extends SVGProps<SVGSVGElement> {
