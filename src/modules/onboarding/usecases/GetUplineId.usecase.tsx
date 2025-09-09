@@ -3,6 +3,7 @@ import { QUERY_KEYS } from "@/common/constants/query-keys";
 import { coaAuthContractAbi } from "@/common/contract-abis/coaAuthContractAbi";
 import { referralAbi } from "@/common/contract-abis/referralAbi";
 import { config } from "@/config/wagmi";
+import { getEthersProvider } from "@/providers/ethers-provider";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import { isZeroAddress } from "@/lib/utils";
 import {
@@ -11,7 +12,7 @@ import {
   useMutation,
   useQuery,
 } from "@tanstack/react-query";
-import { readContract } from "@wagmi/core";
+import { Contract } from "ethers";
 import { Address } from "viem";
 import { useChainId } from "wagmi";
 
@@ -22,38 +23,30 @@ export const getUplineId = async ({
   address: Address;
   chainId: number;
 }) => {
-  console.log("address", address);
-  console.log("chainId", chainId);
-  const clientChainId = config.getClient().chain;
-  console.log("clientChainId", clientChainId);
+  const provider = getEthersProvider(config, { chainId });
+  if (!provider) {
+    throw new Error(`No provider found for chainId: ${chainId}`);
+  }
+
   try {
-    const reffererAddress = await readContract(config, {
-      chainId,
-      address: ADDRESSES[chainId].REFERRAL,
-      abi: referralAbi,
-      functionName: "uplines",
-      args: [address],
-    });
+    const referralContract = new Contract(
+      ADDRESSES[chainId].REFERRAL,
+      referralAbi,
+      provider
+    );
+    const reffererAddress: Address = await referralContract.uplines(address);
 
     if (isZeroAddress(reffererAddress)) {
-      const res = await readContract(config, {
-        chainId,
-        address: ADDRESSES[chainId].REFERRAL,
-        abi: referralAbi,
-        functionName: "downlineToUplineId",
-        args: [address],
-      });
+      const res: bigint = await referralContract.downlineToUplineId(address);
       return parseInt(res.toString());
     }
 
-    const res = await readContract(config, {
-      chainId,
-      address: ADDRESSES[chainId].AUTH_CONTRACT,
-      abi: coaAuthContractAbi,
-      functionName: "walletToUserId",
-      args: [reffererAddress],
-    });
-
+    const authContract = new Contract(
+      ADDRESSES[chainId].AUTH_CONTRACT,
+      coaAuthContractAbi,
+      provider
+    );
+    const res: bigint = await authContract.walletToUserId(reffererAddress);
     return parseInt(res.toString());
   } catch (error) {
     console.log("error", error);

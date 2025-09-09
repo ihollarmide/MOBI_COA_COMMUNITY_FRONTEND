@@ -2,9 +2,10 @@ import { ADDRESSES } from "@/common/constants/contracts";
 import { QUERY_KEYS } from "@/common/constants/query-keys";
 import { airdropAbi } from "@/common/contract-abis/airdropAbi";
 import { config } from "@/config/wagmi";
+import { getEthersProvider } from "@/providers/ethers-provider";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import { QueryClient, skipToken, useQuery } from "@tanstack/react-query";
-import { readContract } from "@wagmi/core";
+import { Contract } from "ethers";
 import { Address } from "viem";
 import { useChainId } from "wagmi";
 
@@ -15,17 +16,17 @@ export const getIsClaimedKey = async ({
   address: Address;
   chainId: number;
 }) => {
-  console.log("address", address);
-  console.log("chainId", chainId);
-  const clientChainId = config.getClient().chain;
-  console.log("clientChainId", clientChainId);
-  const res = await readContract(config, {
-    chainId,
-    address: ADDRESSES[chainId].AIRDROP,
-    abi: airdropAbi,
-    functionName: "hasClaimed",
-    args: [address],
-  });
+  const provider = getEthersProvider(config, { chainId });
+  if (!provider) {
+    throw new Error(`No provider found for chainId: ${chainId}`);
+  }
+
+  const contract = new Contract(
+    ADDRESSES[chainId].AIRDROP,
+    airdropAbi,
+    provider
+  );
+  const res: boolean = await contract.hasClaimed(address);
   return res;
 };
 
