@@ -22,6 +22,8 @@ export const getUplineId = async ({
   address: Address;
   chainId: number;
 }) => {
+  console.log("address", address);
+  console.log("chainId", chainId);
   try {
     const reffererAddress = await readContract(config, {
       address: ADDRESSES[chainId].REFERRAL,
