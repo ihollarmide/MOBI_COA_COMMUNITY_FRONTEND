@@ -9,14 +9,16 @@ export const config = createConfig(
     walletConnectProjectId: "261725cb90fd1175d00f4e121e2fea37",
     chains: [bsc, baseSepolia],
     transports: {
-      // [bsc.id]: http("/api/rpc/bsc"),
-      // [baseSepolia.id]: http("/api/rpc/base-sepolia"),
-      [bsc.id]: http(
-        "https://bnb-mainnet.g.alchemy.com/v2/VZp21oJ4tRhkRpONwkRGs"
-      ),
+      [bsc.id]: http(`${process.env.NEXT_PUBLIC_APP_URL}/api/rpc/bsc`),
       [baseSepolia.id]: http(
-        "https://base-sepolia.g.alchemy.com/v2/ovLFyNjSpw-IizOBzpITg"
+        `${process.env.NEXT_PUBLIC_APP_URL}/api/rpc/base-sepolia`
       ),
+      // [bsc.id]: http(
+      //   "https://bnb-mainnet.g.alchemy.com/v2/VZp21oJ4tRhkRpONwkRGs"
+      // ),
+      // [baseSepolia.id]: http(
+      //   "https://base-sepolia.g.alchemy.com/v2/ovLFyNjSpw-IizOBzpITg"
+      // ),
     },
     ssr: true,
     storage: createStorage({
