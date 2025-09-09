@@ -20,6 +20,7 @@ export const getIsClaimedKey = async ({
   const clientChainId = config.getClient().chain;
   console.log("clientChainId", clientChainId);
   const res = await readContract(config, {
+    chainId,
     address: ADDRESSES[chainId].AIRDROP,
     abi: airdropAbi,
     functionName: "hasClaimed",

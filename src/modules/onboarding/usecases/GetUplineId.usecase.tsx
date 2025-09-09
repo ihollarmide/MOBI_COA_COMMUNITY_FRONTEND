@@ -28,6 +28,7 @@ export const getUplineId = async ({
   console.log("clientChainId", clientChainId);
   try {
     const reffererAddress = await readContract(config, {
+      chainId,
       address: ADDRESSES[chainId].REFERRAL,
       abi: referralAbi,
       functionName: "uplines",
@@ -36,6 +37,7 @@ export const getUplineId = async ({
 
     if (isZeroAddress(reffererAddress)) {
       const res = await readContract(config, {
+        chainId,
         address: ADDRESSES[chainId].REFERRAL,
         abi: referralAbi,
         functionName: "downlineToUplineId",
@@ -45,6 +47,7 @@ export const getUplineId = async ({
     }
 
     const res = await readContract(config, {
+      chainId,
       address: ADDRESSES[chainId].AUTH_CONTRACT,
       abi: coaAuthContractAbi,
       functionName: "walletToUserId",
