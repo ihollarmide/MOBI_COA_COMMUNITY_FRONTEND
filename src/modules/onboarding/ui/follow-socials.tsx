@@ -15,7 +15,7 @@ type Platform = "x" | "instagram";
 export function FollowSocials() {
   const [{ tab }, setOnboardingUrlStates] = useOnboardingUrlStates();
   const [isXVerfied, setIsXVerfied] = useState(false);
-  const [isInstagramVerfied, setIsInstagramVerfied] = useState(false);
+  const [isInstagramVerified, setIsInstagramVerified] = useState(false);
   const { data: authStatus } = useGetAuthStatus();
 
   const handlePrevStep = () => {
@@ -27,7 +27,7 @@ export function FollowSocials() {
 
   const handleNextStep = () => {
     if (tab === "instagram") {
-      if (!isInstagramVerfied) {
+      if (!isInstagramVerified) {
         toast.error("Verify your Instagram account", {
           description: "You need to verify your Instagram account to continue",
           id: "verify-instagram",
@@ -39,6 +39,10 @@ export function FollowSocials() {
           description: "You need to verify your X account to continue",
           id: "verify-x",
         });
+        setOnboardingUrlStates((prev) => ({
+          ...prev,
+          tab: "x",
+        }));
         return;
       }
     }
@@ -57,17 +61,35 @@ export function FollowSocials() {
     }));
   };
 
-  const isPlatformVerified =
+  const isXPlatformVerified =
     !!authStatus?.data?.twitterFollowed &&
     !!authStatus?.data?.twitterUsername &&
     !!authStatus?.data.twitterId &&
     !!authStatus?.data.tweetLink;
 
+  const isInstagramPlatformVerified =
+    !!authStatus?.data?.instagramFollowed &&
+    !!authStatus?.data?.instagramUsername;
+
   useEffect(() => {
-    if (isPlatformVerified && !isXVerfied) {
+    if (isXPlatformVerified && !isXVerfied) {
       setIsXVerfied(true);
+      setOnboardingUrlStates((prev) => ({
+        ...prev,
+        x: "success",
+      }));
     }
-  }, [isPlatformVerified, isXVerfied]);
+  }, [isXPlatformVerified, isXVerfied]);
+
+  useEffect(() => {
+    if (isInstagramPlatformVerified && !isInstagramVerified) {
+      setIsInstagramVerified(true);
+      setOnboardingUrlStates((prev) => ({
+        ...prev,
+        instagram: "success",
+      }));
+    }
+  }, [isInstagramPlatformVerified, isInstagramVerified]);
 
   return (
     <Tabs
@@ -84,7 +106,7 @@ export function FollowSocials() {
           <TabsList className="w-full flex items-center gap-2">
             <TabsTrigger value="x">
               X
-              {isPlatformVerified ? (
+              {isXPlatformVerified ? (
                 <>
                   <Icon
                     name={IconsNames.SUCCESS}
@@ -97,7 +119,7 @@ export function FollowSocials() {
             </TabsTrigger>
             <TabsTrigger value="instagram">
               Instagram
-              {authStatus?.data?.instagramFollowed ? (
+              {isInstagramPlatformVerified ? (
                 <>
                   <Icon
                     name={IconsNames.SUCCESS}
@@ -119,8 +141,8 @@ export function FollowSocials() {
         />
 
         <IGPlatform
-          setIsVerfied={setIsInstagramVerfied}
-          isVerified={isInstagramVerfied}
+          setIsVerfied={setIsInstagramVerified}
+          isVerified={isInstagramVerified}
           onPrevStep={handlePrevStep}
           onNextStep={handleNextStep}
         />

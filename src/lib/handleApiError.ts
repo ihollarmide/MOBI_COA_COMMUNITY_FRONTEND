@@ -10,11 +10,11 @@ export const handleApiError = (
     const apiError = error as AxiosError<ApiErrorResponse>;
     const message = apiError.response?.data?.data;
 
-    if (message) {
+    if (typeof message === "string") {
       return new Error(message);
     }
 
-    if (apiError.response?.data?.message) {
+    if (typeof apiError.response?.data?.message === "string") {
       return new Error(apiError.response?.data?.message);
     }
 

@@ -40,9 +40,26 @@ export function MainScreen() {
   router.prefetch("/welcome");
   useGetIsClaimedKey();
   useGetUplineId();
-
   const [{ step: stepSlug }, setOnboardingUrlStates] = useOnboardingUrlStates();
   const accessibleSlug = useGetStepToRedirectTo();
+
+  const isTwitterSigninStep =
+    window.location.search.includes("?error") ||
+    window.location.search.includes("error_description") ||
+    window.location.search.includes("?state") ||
+    window.location.search.includes("?code=") ||
+    window.location.search.includes("&code=");
+
+  // Fix malformed URLs with double question marks
+  useEffect(() => {
+    if (isTwitterSigninStep) {
+      setOnboardingUrlStates((prev) => ({
+        ...prev,
+        step: "follow-us",
+        x: "signin",
+      }));
+    }
+  }, [isTwitterSigninStep, setOnboardingUrlStates]);
 
   const isAccessible = (slug: OnboardingStepSlug) => {
     if (!accessibleSlug) return true;
@@ -64,40 +81,45 @@ export function MainScreen() {
       <GlassCard className="p-4 @sm:p-6 w-full">
         <div className="grid-parent-stack">
           <AnimatePresence mode="sync">
-            {stepSlug === "wallet-connected" && (
-              <StepWrapper key={stepSlug}>
-                <WalletConnected />
-              </StepWrapper>
-            )}
-            {/* {stepSlug === "verify-phone-number" && (
-              <StepWrapper key={stepSlug}>
-                <PhoneVerification />
-              </StepWrapper>
-            )} */}
-            {stepSlug === "join-telegram" && (
-              <StepWrapper key={stepSlug}>
-                <JoinTelegramCommunity />
-              </StepWrapper>
-            )}
-            {stepSlug === "follow-us" && (
-              <StepWrapper key={stepSlug}>
-                <FollowSocials />
-              </StepWrapper>
-            )}
-            {stepSlug === "enter-referral-code" && (
-              <StepWrapper key={stepSlug}>
-                <ReferralCode />
-              </StepWrapper>
-            )}
-            {stepSlug === "claim-genesis-key" && (
-              <StepWrapper key={stepSlug}>
-                <ClaimKeys />
-              </StepWrapper>
-            )}
-            {stepSlug === "join-vmcc-dao" && (
-              <StepWrapper key={stepSlug}>
-                <JoinVMCCDao />
-              </StepWrapper>
+            {isTwitterSigninStep || stepSlug === "follow-us" ? (
+              <>
+                <StepWrapper key={"follow-us"}>
+                  <FollowSocials />
+                </StepWrapper>
+              </>
+            ) : (
+              <>
+                {stepSlug === "wallet-connected" && (
+                  <StepWrapper key={stepSlug}>
+                    <WalletConnected />
+                  </StepWrapper>
+                )}
+                {/* {stepSlug === "verify-phone-number" && (
+                <StepWrapper key={stepSlug}>
+                  <PhoneVerification />
+                </StepWrapper>
+              )} */}
+                {stepSlug === "join-telegram" && (
+                  <StepWrapper key={stepSlug}>
+                    <JoinTelegramCommunity />
+                  </StepWrapper>
+                )}
+                {stepSlug === "enter-referral-code" && (
+                  <StepWrapper key={stepSlug}>
+                    <ReferralCode />
+                  </StepWrapper>
+                )}
+                {stepSlug === "claim-genesis-key" && (
+                  <StepWrapper key={stepSlug}>
+                    <ClaimKeys />
+                  </StepWrapper>
+                )}
+                {stepSlug === "join-vmcc-dao" && (
+                  <StepWrapper key={stepSlug}>
+                    <JoinVMCCDao />
+                  </StepWrapper>
+                )}
+              </>
             )}
           </AnimatePresence>
         </div>

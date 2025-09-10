@@ -13,6 +13,7 @@ import { useGetAuthStatus } from "@/modules/auth/usecases/GetAuthStatus.usecase"
 import { TelegramButton } from "./telegram-button";
 import { TelegramAuthResponse } from "@/types";
 import { toast } from "sonner";
+import { TelegramSteps } from "../types";
 
 const TITLE_MAP = {
   join: {
@@ -46,12 +47,14 @@ export function JoinTelegramCommunity() {
   const [telegramId, setTelegramId] = useState<string | number | null>(null);
   const { data: authStatus } = useGetAuthStatus();
 
+  const isTelegramVerified =
+    !!authStatus?.data?.telegramJoined &&
+    !!authStatus?.data?.telegramId &&
+    !!authStatus?.data?.telegramUsername;
+
   const { mutate: verifyTelegram, isPending: isVerifyingMembership } =
     useVerifyTelegramMembership();
 
-  const [page, setPage] = useState<"join" | "verify" | "signin" | "success">(
-    "join"
-  );
   const [usernameError, setUsernameError] = useState<{
     isError: boolean;
     error: string | null;
@@ -59,13 +62,31 @@ export function JoinTelegramCommunity() {
     isError: false,
     error: null,
   });
-  const [, setOnboardingUrlStates] = useOnboardingUrlStates();
+  const [{ telegram: telegramStep }, setOnboardingUrlStates] =
+    useOnboardingUrlStates();
 
-  const handleBack = () => {
+  const setTelegramStep = (step: TelegramSteps) => {
     setOnboardingUrlStates((prev) => ({
       ...prev,
-      step: "wallet-connected",
+      telegram: step,
     }));
+  };
+
+  const handleBack = () => {
+    if (
+      telegramStep === "success" ||
+      telegramStep === "join" ||
+      isTelegramVerified
+    ) {
+      setOnboardingUrlStates((prev) => ({
+        ...prev,
+        step: "wallet-connected",
+      }));
+    } else if (telegramStep === "verify") {
+      setTelegramStep("signin");
+    } else if (telegramStep === "signin") {
+      setTelegramStep("join");
+    }
   };
 
   const handleConfirmTelegramUsername = () => {
@@ -87,7 +108,7 @@ export function JoinTelegramCommunity() {
       },
       {
         onSuccess: () => {
-          setPage("success");
+          setTelegramStep("success");
         },
         onError: (error) => {
           setUsernameError({ isError: true, error: error.message });
@@ -109,20 +130,20 @@ export function JoinTelegramCommunity() {
       });
       return;
     }
+    setUsernameError({
+      isError: false,
+      error: null,
+    });
     setUsername(data.username);
     setTelegramId(data.id);
-    setPage("verify");
+    setTelegramStep("verify");
   };
 
   useEffect(() => {
-    if (
-      authStatus?.data?.telegramJoined &&
-      authStatus?.data?.telegramId &&
-      page !== "success"
-    ) {
-      setPage("success");
+    if (isTelegramVerified && telegramStep !== "success") {
+      setTelegramStep("success");
     }
-  }, [authStatus?.data?.telegramJoined, authStatus?.data?.telegramId, page]);
+  }, [isTelegramVerified, telegramStep]);
 
   return (
     <section className="w-full space-y-6 @container">
@@ -134,11 +155,11 @@ export function JoinTelegramCommunity() {
       </div>
 
       <SectionAction
-        title={TITLE_MAP[page].title}
-        description={TITLE_MAP[page].description}
+        title={TITLE_MAP[telegramStep].title}
+        description={TITLE_MAP[telegramStep].description}
         icon={IconsNames.TELEGRAM}
-        isSuccess={page === "success"}
-        isCollapsibleOpen={page === "verify"}
+        isSuccess={telegramStep === "success"}
+        isCollapsibleOpen={telegramStep === "verify"}
         inputValue={username}
         onInputChange={setUsername}
         isInputReadOnly={true}
@@ -156,10 +177,10 @@ export function JoinTelegramCommunity() {
         >
           Back
         </Button>
-        {page === "signin" ? (
+        {telegramStep === "signin" ? (
           <TelegramButton onSuccess={onTelegramAuthSuccess} />
         ) : null}
-        {page === "verify" ? (
+        {telegramStep === "verify" ? (
           <Button
             onClick={handleConfirmTelegramUsername}
             disabled={isVerifyingMembership}
@@ -167,7 +188,7 @@ export function JoinTelegramCommunity() {
             {isVerifyingMembership ? "Verifying Membership..." : "Verify"}
           </Button>
         ) : null}
-        {page === "success" ? (
+        {telegramStep === "success" ? (
           <Button
             onClick={() => {
               setOnboardingUrlStates((prev) => ({
@@ -179,10 +200,10 @@ export function JoinTelegramCommunity() {
             Next
           </Button>
         ) : null}
-        {page === "join" ? (
+        {telegramStep === "join" ? (
           <Button
             asChild={true}
-            onClick={() => setPage("signin")}
+            onClick={() => setTelegramStep("signin")}
             className="cursor-pointer"
           >
             <a

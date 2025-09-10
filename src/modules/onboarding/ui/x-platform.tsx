@@ -6,13 +6,17 @@ import { IconsNames } from "@/components/icons/icon.types";
 import { ButtonsFooter } from "./buttons-footer";
 import { Button } from "@/components/ui/button";
 import { TWITTER_LINK } from "@/common/constants";
-import { useVerifyTwitter } from "../usecases/VerifyTwitter.usecase";
-import { useCompleteTwitterOAuth } from "../hooks/useCompleteTwitterOAuth";
-import { isValidPostLink, isValidUsernameWithAtSign } from "../lib/utils";
+import { useVerifyTwitter } from "@/modules/onboarding/usecases/VerifyTwitter.usecase";
+import { useCompleteTwitterOAuth } from "@/modules/onboarding/hooks/useCompleteTwitterOAuth";
+import {
+  buildTweetPostLink,
+  isValidPostLink,
+  isValidUsernameWithAtSign,
+} from "@/modules/onboarding/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Loader } from "@/components/ui/loader";
-
-type XPageState = "follow" | "post" | "signin" | "verify" | "success";
+import { useOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboardingUrlStates";
+import { XSteps } from "@/modules/onboarding/types";
 
 export const TWITTER_POST =
   "'The VMCC Builder DAO is a global community of Virtual Mining & Construction Companies tokenizing residential, commercial & industrial assets. Get a free Genesis Key ($350 value) with Referral Code: MCL-000003 #VMCC #VMCCAirdrop #BuildersDAO #MOBIAutomation'";
@@ -58,6 +62,7 @@ export function XPlatform({
   onPrevStep: () => void;
   onNextStep: () => void;
 }) {
+  const [{ x: xStep }, setOnboardingUrlStates] = useOnboardingUrlStates();
   const [username, setUsername] = useState<string>("");
   const [tweetLink, setTweetLink] = useState<string>("");
   const [twitterId, setTwitterId] = useState<string | number | null>(null);
@@ -71,39 +76,54 @@ export function XPlatform({
   }>({ isError: false, error: null });
   const { mutate: verifyTwitter, isPending: isVerifyXPending } =
     useVerifyTwitter();
+
+  const setXStep = (step: XSteps) => {
+    setOnboardingUrlStates((prev) => ({
+      ...prev,
+      x: step,
+    }));
+  };
+
   const { isCompletingTwitterOAuth } = useCompleteTwitterOAuth({
     onSuccess: (data) => {
       setTwitterId(data.user.id);
       setUsername(data.user.username);
-      setPage("verify");
+      setXStep("verify");
     },
   });
-  const [page, setPage] = useState<XPageState>("follow");
+
+  // Example usage:
+  const tweetLinkToPost = buildTweetPostLink({
+    text: "The VMCC Builder DAO is a global community of Virtual Mining & Construction Companies tokenizing residential, commercial & industrial assets. Get a free Genesis Key ($350 value) with",
+    referralCode: "MCL000003",
+    hashtags: ["VMCC", "VMCCAirdrop", "BuildersDAO", "MOBIAutomation"],
+    url: "https://community.coa.build",
+  });
 
   const onBack = () => {
-    if (page === "follow" || page === "success" || isVerified) {
+    if (xStep === "follow" || xStep === "success" || isVerified) {
       onPrevStep();
-    } else if (page === "post") {
-      setPage("follow");
-    } else if (page === "signin") {
-      setPage("post");
-    } else if (page === "verify") {
-      setPage("signin");
+    } else if (xStep === "post") {
+      setXStep("follow");
+    } else if (xStep === "signin") {
+      setXStep("post");
+    } else if (xStep === "verify") {
+      setXStep("signin");
     }
   };
 
   const handleConfirm = () => {
-    if (page === "success" || isVerified) {
+    if (xStep === "success" || isVerified) {
       setIsVerfied(true);
       onNextStep();
-    } else if (page === "follow") {
-      setPage("post");
-    } else if (page === "post") {
-      setPage("signin");
-    } else if (page === "signin") {
+    } else if (xStep === "follow") {
+      setXStep("post");
+    } else if (xStep === "post") {
+      setXStep("signin");
+    } else if (xStep === "signin") {
       window.location.href = "/api/auth/twitter?action=initiate";
       return;
-    } else if (page === "verify") {
+    } else if (xStep === "verify") {
       const { isError: isPostLinkError, error: postLinkError } =
         isValidPostLink(tweetLink, "x");
       const { isError, error: validationError } = isValidUsernameWithAtSign(
@@ -130,7 +150,7 @@ export function XPlatform({
         },
         {
           onSuccess: () => {
-            setPage("success");
+            setXStep("success");
           },
           onError: (error) => {
             setTweetLinkError({ isError: true, error: error.message });
@@ -145,31 +165,31 @@ export function XPlatform({
     ? "Authenticating..."
     : isVerifyXPending
       ? "Verifying..."
-      : page === "post"
+      : xStep === "post"
         ? "Continue"
-        : page === "signin"
+        : xStep === "signin"
           ? "Sign in to X"
-          : page === "verify"
+          : xStep === "verify"
             ? "Verify"
             : "Next";
 
   const isBtnLoadiing = isCompletingTwitterOAuth || isVerifyXPending;
 
   useEffect(() => {
-    if (isVerified && page !== "success") {
-      setPage("success");
+    if (isVerified && xStep !== "success") {
+      setXStep("success");
     }
-  }, [isVerified, page]);
+  }, [isVerified, xStep]);
 
   return (
     <TabsContent className="w-full mt-2 space-y-6" value="x">
       <SectionMetaInfo items={Action_LIST} />
       <SectionAction
-        title={X_TITLE_MAP[page].title}
-        description={X_TITLE_MAP[page].description}
+        title={X_TITLE_MAP[xStep].title}
+        description={X_TITLE_MAP[xStep].description}
         icon={IconsNames.X_SOCIAL}
-        isSuccess={page === "success" || isVerified}
-        isCollapsibleOpen={page === "verify"}
+        isSuccess={xStep === "success" || isVerified}
+        isCollapsibleOpen={xStep === "verify"}
       >
         <div className="space-y-2.5">
           <div className="space-y-1">
@@ -211,14 +231,18 @@ export function XPlatform({
           Back
         </Button>
         <Button
-          asChild={page === "follow"}
+          asChild={xStep === "follow" || xStep === "post"}
           onClick={handleConfirm}
           className="cursor-pointer"
           disabled={isBtnLoadiing}
         >
-          {page === "follow" ? (
+          {xStep === "follow" ? (
             <a href={TWITTER_LINK} target="_blank" rel="noopener noreferrer">
               Follow
+            </a>
+          ) : xStep === "post" ? (
+            <a href={tweetLinkToPost} target="_blank" rel="noopener noreferrer">
+              Post
             </a>
           ) : (
             buttonContent

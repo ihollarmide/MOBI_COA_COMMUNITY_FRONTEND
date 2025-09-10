@@ -56,3 +56,16 @@ export const ONBOARDING_STEPS: {
     slug: "join-vmcc-dao",
   },
 ] as const;
+
+export const SOCIAL_PLATFORMS = ["x", "instagram"] as const;
+
+export const XSteps = [
+  "follow",
+  "post",
+  "signin",
+  "verify",
+  "success",
+] as const;
+export const InstagramSteps = ["follow", "verify", "success"] as const;
+
+export const TelegramSteps = ["join", "verify", "signin", "success"] as const;

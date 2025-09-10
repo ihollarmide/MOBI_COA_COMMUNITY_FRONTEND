@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { INSTAGRAM_LINK } from "@/common/constants";
 import { isValidUsernameWithAtSign } from "@/modules/onboarding/lib/utils";
 import { useVerifyInstagram } from "@/modules/onboarding/usecases/VerifyInstagram.usecase";
-
-type IgPageState = "follow" | "verify" | "success";
+import { useOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboardingUrlStates";
+import { InstagramSteps } from "@/modules/onboarding/types";
 
 export const IG_TITLE_MAP = {
   follow: {
@@ -44,6 +44,8 @@ export function IGPlatform({
   onPrevStep: () => void;
   onNextStep: () => void;
 }) {
+  const [{ instagram: instagramStep }, setOnboardingUrlStates] =
+    useOnboardingUrlStates();
   const [username, setUsername] = useState<string>("");
   const [usernameError, setUsernameError] = useState<{
     isError: boolean;
@@ -52,23 +54,32 @@ export function IGPlatform({
   const { mutate: verifyInstagram, isPending: isVerifyInstagramPending } =
     useVerifyInstagram();
 
-  const [page, setPage] = useState<IgPageState>("follow");
+  const setInstagramStep = (step: InstagramSteps) => {
+    setOnboardingUrlStates((prev) => ({
+      ...prev,
+      instagram: step,
+    }));
+  };
 
   const onBack = () => {
-    if (page === "follow" || page === "success" || isVerified) {
+    if (
+      instagramStep === "follow" ||
+      instagramStep === "success" ||
+      isVerified
+    ) {
       onPrevStep();
-    } else if (page === "verify") {
-      setPage("follow");
+    } else if (instagramStep === "verify") {
+      setInstagramStep("follow");
     }
   };
 
   const handleConfirm = () => {
-    if (page === "success" || isVerified) {
+    if (instagramStep === "success" || isVerified) {
       setIsVerfied(true);
       onNextStep();
-    } else if (page === "follow") {
-      setPage("verify");
-    } else if (page === "verify") {
+    } else if (instagramStep === "follow") {
+      setInstagramStep("verify");
+    } else if (instagramStep === "verify") {
       const { isError, error: validationError } = isValidUsernameWithAtSign(
         username,
         "instagram"
@@ -85,7 +96,7 @@ export function IGPlatform({
         },
         {
           onSuccess: () => {
-            setPage("success");
+            setInstagramStep("success");
           },
           onError: (error) => {
             setUsernameError({ isError: true, error: error.message });
@@ -98,7 +109,7 @@ export function IGPlatform({
 
   const buttonContent = isVerifyInstagramPending
     ? "Verifying..."
-    : page === "verify"
+    : instagramStep === "verify"
       ? "Verify"
       : "Next";
 
@@ -108,30 +119,30 @@ export function IGPlatform({
     <TabsContent className="w-full mt-2 space-y-6" value="instagram">
       <SectionMetaInfo items={Action_LIST} />
       <SectionAction
-        title={IG_TITLE_MAP[page].title}
-        description={IG_TITLE_MAP[page].description}
+        title={IG_TITLE_MAP[instagramStep].title}
+        description={IG_TITLE_MAP[instagramStep].description}
         icon={IconsNames.INSTAGRAM}
-        isSuccess={page === "success" || isVerified}
-        isCollapsibleOpen={page === "verify"}
+        isSuccess={instagramStep === "success" || isVerified}
+        isCollapsibleOpen={instagramStep === "verify"}
         inputPlaceholder="Your instagram username"
         inputValue={username}
         onInputChange={setUsername}
         isError={usernameError.isError}
         errorMessage={usernameError.error}
         isInputLoading={isVerifyInstagramPending}
-        isInputReadOnly={page === "success"}
+        isInputReadOnly={instagramStep === "success"}
       />
       <ButtonsFooter>
         <Button variant="secondary" onClick={onBack} className="cursor-pointer">
           Back
         </Button>
         <Button
-          asChild={page === "follow"}
+          asChild={instagramStep === "follow"}
           onClick={handleConfirm}
           className="cursor-pointer"
           disabled={isBtnLoadiing}
         >
-          {page === "follow" ? (
+          {instagramStep === "follow" ? (
             <a href={INSTAGRAM_LINK} target="_blank" rel="noopener noreferrer">
               Follow
             </a>

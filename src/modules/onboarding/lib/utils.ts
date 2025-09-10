@@ -233,3 +233,35 @@ export const isOtpValid = (otp: string) => {
     error: otp.length !== 6 ? "Invalid OTP" : null,
   };
 };
+
+export function buildTweetPostLink({
+  text,
+  referralCode,
+  hashtags = [],
+  url,
+}: {
+  text: string;
+  referralCode: string;
+  hashtags: string[];
+  url?: string;
+}) {
+  // Append referral code to text if provided
+  let fullText = text;
+  if (referralCode) {
+    fullText += ` Referral Code: ${referralCode}`;
+  }
+
+  const params = new URLSearchParams({
+    text: fullText,
+  });
+
+  if (hashtags.length > 0) {
+    params.set("hashtags", hashtags.join(","));
+  }
+
+  if (url) {
+    params.set("url", url);
+  }
+
+  return `https://x.com/intent/tweet?${params.toString()}`;
+}

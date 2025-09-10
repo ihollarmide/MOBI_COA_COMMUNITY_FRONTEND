@@ -19,7 +19,7 @@ export const initiateUserAuthentication = async (
       InitiateUserAuthenticationPayload
     >({
       url: API_ENDPOINTS.AUTH.INITIATE_USER_AUTHENTICATION,
-      payload: payload,
+      payload,
       isProtected: false,
     });
     return data;
