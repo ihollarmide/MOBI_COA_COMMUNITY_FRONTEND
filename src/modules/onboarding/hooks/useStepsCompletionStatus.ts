@@ -9,8 +9,8 @@ export function useStepsCompletionStatus(): {
   result: Record<OnboardingStepSlug, boolean>;
   isLoading: boolean;
 } {
-  const { status: sessionStatus } = useSession();
-  const { status } = useWalletConnectionStatus();
+  const { status: sessionStatus, isLoading: isSessionLoading } = useSession();
+  const { status, isConnecting, isReconnecting } = useWalletConnectionStatus();
   const { data: authStatus, isPending: isAuthStatusPending } = useGetAuthStatus(
     {
       isEnabled: sessionStatus === "authenticated",
@@ -39,7 +39,12 @@ export function useStepsCompletionStatus(): {
       "join-vmcc-dao": !!isClaimed,
     },
     isLoading:
-      isAuthStatusPending || isGettingUplineId || isGettingClaimedStatus,
+      isAuthStatusPending ||
+      isGettingUplineId ||
+      isGettingClaimedStatus ||
+      isSessionLoading ||
+      isConnecting ||
+      isReconnecting,
   };
 }
 

@@ -1,18 +1,30 @@
 import { createSerializer, parseAsStringLiteral, useQueryStates } from "nuqs";
-import { ONBOARDING_STEPS } from "@/modules/onboarding/data";
+import {
+  InstagramSteps,
+  ONBOARDING_STEPS,
+  SOCIAL_PLATFORMS,
+  TelegramSteps,
+  XSteps,
+} from "@/modules/onboarding/data";
 
 export function useOnboardingUrlStates() {
   return useQueryStates({
     step: parseAsStringLiteral(
       ONBOARDING_STEPS.map((step) => step.slug)
     ).withDefault(ONBOARDING_STEPS[0].slug),
-    tab: parseAsStringLiteral(["x", "instagram"]).withDefault("x"),
+    tab: parseAsStringLiteral(SOCIAL_PLATFORMS).withDefault("x"),
+    x: parseAsStringLiteral(XSteps).withDefault("follow"),
+    instagram: parseAsStringLiteral(InstagramSteps).withDefault("follow"),
+    telegram: parseAsStringLiteral(TelegramSteps).withDefault("join"),
   });
 }
 
 const onboardingUrlStates = {
   step: parseAsStringLiteral(ONBOARDING_STEPS.map((step) => step.slug)),
-  tab: parseAsStringLiteral(["x", "instagram"]),
+  tab: parseAsStringLiteral(SOCIAL_PLATFORMS),
+  x: parseAsStringLiteral(XSteps),
+  instagram: parseAsStringLiteral(InstagramSteps),
+  telegram: parseAsStringLiteral(TelegramSteps),
 };
 
 export const serializeOnboardingUrlStates =

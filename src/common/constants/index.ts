@@ -6,6 +6,9 @@ export const INSTAGRAM_LINK =
 export const TWITTER_LINK = "https://x.com/vmccdao";
 export const VMCC_DAO_LINK = "https://t.me/+X2m_dT9AMpZkOTI0";
 
+export const TWITTER_POST_LINK =
+  "https://x.com/intent/tweet?text=The VMCC Builder DAO is a global community of Virtual Mining & Construction Companies tokenizing residential, commercial & industrial assets. Get a free Genesis Key ($350 value) with Referral Code: MCL-000003 #VMCC #VMCCAirdrop #BuildersDAO #MOBIAutomation";
+
 export const GIFS = {
   ACRE: "https://res.cloudinary.com/djhkn5moz/image/upload/v1753183442/acre_gp3ook.gif",
   PLOT: "https://res.cloudinary.com/djhkn5moz/image/upload/v1753183443/plot_idwxxs.gif",

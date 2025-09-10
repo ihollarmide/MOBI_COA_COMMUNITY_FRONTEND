@@ -71,15 +71,9 @@ export const userAuthResponseSchema = z.object({
 
 // Validation schema for API error responses
 export const apiErrorResponseSchema = z.object({
-  success: z.boolean(),
-  error: z.object({
-    code: z.number(),
-    message: z.array(z.string()),
-    type: z.string(),
-    timestamp: z.string(),
-    path: z.string(),
-    method: z.enum(["GET", "POST", "PUT", "DELETE", "PATCH"]),
-  }),
+  data: z.string(),
+  message: z.string(),
+  status: z.boolean(),
 });
 
 // Validation schema for updating session data
