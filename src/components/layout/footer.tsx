@@ -5,14 +5,14 @@ import { IconsNames } from "@/components/icons/icon.types";
 import { Icon } from "@/components/icons/icon";
 import {
   INSTAGRAM_LINK,
-  TWITTER_LINK,
+  X_VMCC_DAO_PAGE_LINK,
   VMCC_DAO_LINK,
 } from "@/common/constants";
 
 const socialLinks = [
   {
     name: "X",
-    href: TWITTER_LINK,
+    href: X_VMCC_DAO_PAGE_LINK,
     icon: IconsNames.X_SOCIAL,
   },
   {
