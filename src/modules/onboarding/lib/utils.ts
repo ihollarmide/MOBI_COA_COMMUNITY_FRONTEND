@@ -241,8 +241,8 @@ export function buildTweetPostLink({
   url,
 }: {
   text: string;
-  referralCode: string;
-  hashtags: string[];
+  referralCode?: string;
+  hashtags?: string[];
   url?: string;
 }) {
   // Append referral code to text if provided
@@ -251,8 +251,11 @@ export function buildTweetPostLink({
     fullText += ` Referral Code: ${referralCode}`;
   }
 
+  // Encode newlines properly for Twitter intent URL
+  const encodedText = fullText.replace(/\n/g, "%0A");
+
   const params = new URLSearchParams({
-    text: fullText,
+    text: encodedText,
   });
 
   if (hashtags.length > 0) {

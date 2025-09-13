@@ -1,18 +1,18 @@
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 import Link from "next/link";
-import { IconsNames } from "../icons/icon.types";
-import { Icon } from "../icons/icon";
+import { IconsNames } from "@/components/icons/icon.types";
+import { Icon } from "@/components/icons/icon";
 import {
   INSTAGRAM_LINK,
-  TWITTER_LINK,
+  X_VMCC_DAO_PAGE_LINK,
   VMCC_DAO_LINK,
 } from "@/common/constants";
 
 const socialLinks = [
   {
     name: "X",
-    href: TWITTER_LINK,
+    href: X_VMCC_DAO_PAGE_LINK,
     icon: IconsNames.X_SOCIAL,
   },
   {
@@ -176,8 +176,8 @@ export function Footer() {
       <Separator className="my-6" />
       <div className="font-montserrat text-xs leading-[1.4] text-white flex justify-between items-center flex-wrap gap-x-2">
         <div className="flex flex-wrap gap-x-2">
-          <p>Copyright &copy; VMCC Builder DAO. All rights reserved</p>|
-          <p>Designed and developed by MOBI AUTOMATION</p>
+          <p>Copyright &copy; VMCC Builder DAO. All Rights Reserved</p>|
+          <p>Designed and Developed by MOBI AUTOMATION</p>
         </div>
 
         <Image
