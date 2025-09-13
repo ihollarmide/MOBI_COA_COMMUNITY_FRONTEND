@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { IconsNames } from "@/components/icons/icon.types";
 import { ButtonsFooter } from "./buttons-footer";
 import { Button } from "@/components/ui/button";
-import { TWITTER_LINK } from "@/common/constants";
+import { X_POST_LINK, X_VMCC_DAO_PAGE_LINK } from "@/common/constants";
 import { useVerifyTwitter } from "@/modules/onboarding/usecases/VerifyTwitter.usecase";
 import { useCompleteTwitterOAuth } from "@/modules/onboarding/hooks/useCompleteTwitterOAuth";
 import {
@@ -45,9 +45,9 @@ export const X_TITLE_MAP = {
 };
 
 export const Action_LIST = [
-  `Click the "Follow" button to access X. This button redirects you to the X app on your device and enables you to join the community.`,
-  "After following, post a tweet and copy the link to the tweet and paste it in the input box",
-  `Click "Verify" to confirm you've followed the page and posted the tweet`,
+  `Click the "Follow" button to access X. This button redirects you to the X app on your device and enables you to join the VMCC community.`,
+  "After following, post the provided  tweet, copy and paste its link in the designated input box.",
+  `Click "Verify" to confirm you have done the above.`,
   `Click "Next" to proceed to the next action.`,
 ];
 
@@ -90,14 +90,6 @@ export function XPlatform({
       setUsername(data.user.username);
       setXStep("verify");
     },
-  });
-
-  // Example usage:
-  const tweetLinkToPost = buildTweetPostLink({
-    text: "The VMCC Builder DAO is a global community of Virtual Mining & Construction Companies tokenizing residential, commercial & industrial assets. Get a free Genesis Key ($350 value) with",
-    referralCode: "MCL000003",
-    hashtags: ["VMCC", "VMCCAirdrop", "BuildersDAO", "MOBIAutomation"],
-    url: "https://community.coa.build",
   });
 
   const onBack = () => {
@@ -237,11 +229,21 @@ export function XPlatform({
           disabled={isBtnLoadiing}
         >
           {xStep === "follow" ? (
-            <a href={TWITTER_LINK} target="_blank" rel="noopener noreferrer">
+            <a
+              key="follow"
+              href={X_VMCC_DAO_PAGE_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Follow
             </a>
           ) : xStep === "post" ? (
-            <a href={tweetLinkToPost} target="_blank" rel="noopener noreferrer">
+            <a
+              key="post"
+              href={X_POST_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Post
             </a>
           ) : (

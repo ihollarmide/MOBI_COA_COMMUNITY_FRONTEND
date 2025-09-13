@@ -23,20 +23,20 @@ const TITLE_MAP = {
   },
   signin: {
     title: "Confirm Atlantus City Hall Membership by signing in with Telegram",
-    description: "Login to your Telegram account to get your telegram details.",
+    description: "Login to your Telegram account to get your profile details.",
   },
   verify: {
     title: "Verify Atlantus City Hall Membership",
     description: "Confirm your Telegram username to verify your membership.",
   },
   success: {
-    title: "Your telegram account has been verified!",
+    title: "Your Telegram account has been verified!",
     description: "Click “Next” to continue.",
   },
 };
 
 const JOIN_ACTION_LIST = [
-  "Click the “Join” button to access the Atlantus City Hall Telegram community. This button redirects you to the Telegram app on your device and enables you to join the community.",
+  "Click the “Join” button to access the Atlantus City Hall Telegram community. This button redirects you to the Telegram app on your device and enables you to join Atlantus City Hall",
   "After joining, come back to this window and Click “Sign in with Telegram” to login to your Telegram account.",
   "Click “Verify” to confirm your membership.",
   "Click “Next” to proceed to the next action.",

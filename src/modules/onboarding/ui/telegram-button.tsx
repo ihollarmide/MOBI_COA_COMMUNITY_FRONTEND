@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Script from "next/script";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -44,29 +44,6 @@ export const processTelegramAuth = async (payload: TelegramResponseData) => {
     throw new Error(message);
   }
 };
-
-// export const useProcessTelegramAuth = () => {
-//   const mutation = useMutation({
-//     mutationFn: processTelegramAuth,
-//     onMutate: () => {
-//       toast.loading("Getting your Telegram account...", {
-//         id: TOAST_ID,
-//       });
-//     },
-//     onSuccess: () => {
-//       toast.success("Your Telegram account has been retrieved successfully", {
-//         id: TOAST_ID,
-//       });
-//     },
-//     onError: () => {
-//       toast.error("Failed to get your Telegram account", {
-//         id: TOAST_ID,
-//       });
-//     },
-//   });
-
-//   return mutation;
-// };
 
 // Telegram Widget API types
 interface TelegramButtonProps {
@@ -132,39 +109,6 @@ export function TelegramButton({
     []
   );
 
-  // const handleApiResponse = useCallback(
-  //   async (response: TelegramResponseData) => {
-  //     try {
-  //       const apiResponse = await fetch("/api/telegram", {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify(response),
-  //       });
-
-  //       console.log(apiResponse);
-
-  //       if (!apiResponse.ok) {
-  //         throw new Error(
-  //           `API response failed with status: ${apiResponse.status}`
-  //         );
-  //       }
-
-  //       const data: TelegramAuthApiResponse = await apiResponse.json();
-  //       console.log("data in handleApiResponse", data);
-  //       showSuccess("Telegram authorization successful.");
-  //       onSuccess?.(data.user);
-  //     } catch (error) {
-  //       console.log("error in handleApiResponse", error);
-  //       const errorMessage =
-  //         error instanceof Error ? error.message : "Unknown error occurred";
-  //       showError(`Telegram authorization failed: ${errorMessage}`);
-  //     }
-  //   },
-  //   [onSuccess, showError, showSuccess]
-  // );
-
   const handleSignInWithTelegram = useCallback(() => {
     if (!BOT_ID) {
       showError("Telegram bot ID is not configured.");
@@ -204,6 +148,15 @@ export function TelegramButton({
     setIsScriptLoaded(true);
   }, []);
 
+  // --- START FIX ---
+  // Add this useEffect to handle cached scripts
+  useEffect(() => {
+    if (window.Telegram) {
+      handleScriptLoad();
+    }
+  }, [handleScriptLoad]);
+  // --- END FIX ---
+
   const isButtonDisabled = disabled || !isScriptLoaded || isLoading;
   const buttonText = isLoading
     ? "Authenticating..."
@@ -216,7 +169,10 @@ export function TelegramButton({
       <Script
         src={TELEGRAM_SCRIPT_URL}
         strategy="afterInteractive"
-        onLoad={handleScriptLoad}
+        onReady={handleScriptLoad}
+        onError={() => {
+          showError("Failed to load Telegram script. Please try again.");
+        }}
       />
       <Button
         onClick={handleSignInWithTelegram}
