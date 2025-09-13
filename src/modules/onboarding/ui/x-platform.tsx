@@ -9,7 +9,6 @@ import { X_POST_LINK, X_VMCC_DAO_PAGE_LINK } from "@/common/constants";
 import { useVerifyTwitter } from "@/modules/onboarding/usecases/VerifyTwitter.usecase";
 import { useCompleteTwitterOAuth } from "@/modules/onboarding/hooks/useCompleteTwitterOAuth";
 import {
-  buildTweetPostLink,
   isValidPostLink,
   isValidUsernameWithAtSign,
 } from "@/modules/onboarding/lib/utils";
