@@ -16,11 +16,16 @@ import { Input } from "@/components/ui/input";
 import { Loader } from "@/components/ui/loader";
 import { useOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboardingUrlStates";
 import { XSteps } from "@/modules/onboarding/types";
+import { useXStore } from "../store/x.store";
 
 export const TWITTER_POST =
   "'The VMCC Builder DAO is a global community of Virtual Mining & Construction Companies tokenizing residential, commercial & industrial assets. Get a free Genesis Key ($350 value) with Referral Code: MCL-000003 #VMCC #VMCCAirdrop #BuildersDAO #MOBIAutomation'";
 
 export const X_TITLE_MAP = {
+  signin: {
+    title: "Sign in to X",
+    description: "Sign in to your X account.",
+  },
   follow: {
     title: "Follow us on X",
     description: `Click "Follow" to join our X community`,
@@ -28,10 +33,6 @@ export const X_TITLE_MAP = {
   post: {
     title: "Post this tweet and copy the link",
     description: `Post this tweet: ${TWITTER_POST}`,
-  },
-  signin: {
-    title: "Sign in to X",
-    description: "Sign in to your X account to confirm your follow and tweet.",
   },
   verify: {
     title: `Confirm X Username and Paste Tweet Link`,
@@ -44,6 +45,7 @@ export const X_TITLE_MAP = {
 };
 
 export const Action_LIST = [
+  `Click the "Sign in" button to authenticate your X account`,
   `Click the "Follow" button to access X. This button redirects you to the X app on your device and enables you to join the VMCC community.`,
   "After following, post the provided  tweet, copy and paste its link in the designated input box.",
   `Click "Verify" to confirm you have done the above.`,
@@ -62,9 +64,9 @@ export function XPlatform({
   onNextStep: () => void;
 }) {
   const [{ x: xStep }, setOnboardingUrlStates] = useOnboardingUrlStates();
-  const [username, setUsername] = useState<string>("");
+  const xData = useXStore((state) => state.xData);
+  const setXData = useXStore((state) => state.setXData);
   const [tweetLink, setTweetLink] = useState<string>("");
-  const [twitterId, setTwitterId] = useState<string | number | null>(null);
   const [tweetLinkError, setTweetLinkError] = useState<{
     isError: boolean;
     error: string | null;
@@ -85,20 +87,19 @@ export function XPlatform({
 
   const { isCompletingTwitterOAuth } = useCompleteTwitterOAuth({
     onSuccess: (data) => {
-      setTwitterId(data.user.id);
-      setUsername(data.user.username);
-      setXStep("verify");
+      setXData({ id: data.user.id, username: data.user.username });
+      setXStep("follow");
     },
   });
 
   const onBack = () => {
-    if (xStep === "follow" || xStep === "success" || isVerified) {
+    if (xStep === "signin" || xStep === "success" || isVerified) {
       onPrevStep();
     } else if (xStep === "post") {
       setXStep("follow");
-    } else if (xStep === "signin") {
-      setXStep("post");
     } else if (xStep === "verify") {
+      setXStep("post");
+    } else if (xStep === "follow") {
       setXStep("signin");
     }
   };
@@ -110,7 +111,7 @@ export function XPlatform({
     } else if (xStep === "follow") {
       setXStep("post");
     } else if (xStep === "post") {
-      setXStep("signin");
+      setXStep("verify");
     } else if (xStep === "signin") {
       window.location.href = "/api/auth/twitter?action=initiate";
       return;
@@ -118,7 +119,7 @@ export function XPlatform({
       const { isError: isPostLinkError, error: postLinkError } =
         isValidPostLink(tweetLink, "x");
       const { isError, error: validationError } = isValidUsernameWithAtSign(
-        username,
+        xData?.username || "",
         "x"
       );
 
@@ -128,19 +129,25 @@ export function XPlatform({
         return;
       }
 
-      if (!twitterId) {
+      if (!xData?.id) {
         setUsernameError({ isError: true, error: "Twitter ID is required" });
+        return;
+      }
+
+      if (!xData?.username) {
+        setUsernameError({ isError: true, error: "X username is required" });
         return;
       }
 
       verifyTwitter(
         {
-          username: username,
-          twitterId: twitterId,
+          username: xData.username,
+          twitterId: xData.id,
           tweetLink: tweetLink,
         },
         {
           onSuccess: () => {
+            setXData(null);
             setXStep("success");
           },
           onError: (error) => {
@@ -186,8 +193,7 @@ export function XPlatform({
           <div className="space-y-1">
             <Input
               aria-invalid={usernameError.isError}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={xData?.username || ""}
               placeholder="Your x username"
               disabled={isVerifyXPending}
               readOnly={true}

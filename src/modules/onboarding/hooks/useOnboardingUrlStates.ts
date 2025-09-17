@@ -13,7 +13,7 @@ export function useOnboardingUrlStates() {
       ONBOARDING_STEPS.map((step) => step.slug)
     ).withDefault(ONBOARDING_STEPS[0].slug),
     tab: parseAsStringLiteral(SOCIAL_PLATFORMS).withDefault("x"),
-    x: parseAsStringLiteral(XSteps).withDefault("follow"),
+    x: parseAsStringLiteral(XSteps).withDefault("signin"),
     instagram: parseAsStringLiteral(InstagramSteps).withDefault("follow"),
     telegram: parseAsStringLiteral(TelegramSteps).withDefault("join"),
   });
