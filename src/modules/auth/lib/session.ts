@@ -19,10 +19,10 @@ export async function createSession(
 
   (await cookies()).set(SESSION_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: process.env.NEXT_PUBLIC_ENVIRONMENT === "local" ? false : true,
+    sameSite: "none",
     path: "/",
-    expires: newSession ? new Date(Date.now() + SESSION_MAX_AGE) : undefined,
+    expires: new Date(Date.now() + SESSION_MAX_AGE),
   });
 }
 
