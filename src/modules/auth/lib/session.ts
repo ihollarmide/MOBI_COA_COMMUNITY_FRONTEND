@@ -7,10 +7,7 @@ import { SESSION_MAX_AGE } from "@/modules/auth/constants";
 const SESSION_NAME = process.env.NEXT_PUBLIC_APP_SESSION_NAME as string;
 const secret = new TextEncoder().encode(process.env.SESSION_SECRET! as string);
 
-export async function createSession(
-  data: SessionData,
-  newSession: boolean = true
-) {
+export async function createSession(data: SessionData) {
   const token = await new EncryptJWT({ data })
     .setProtectedHeader({ alg: "dir", enc: "A256GCM" })
     .setIssuedAt()
@@ -42,7 +39,7 @@ export async function updateSession(partial: Partial<SessionData>) {
   const current = await getSession();
   if (!current) return null;
   const updated = { ...current, ...partial };
-  await createSession(updated, false);
+  await createSession(updated);
   return updated;
 }
 
