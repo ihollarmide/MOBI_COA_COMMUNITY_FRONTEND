@@ -6,17 +6,14 @@ import { IconsNames } from "@/components/icons/icon.types";
 import { ButtonsFooter } from "./buttons-footer";
 import { Button } from "@/components/ui/button";
 import { X_POST_LINK, X_VMCC_DAO_PAGE_LINK } from "@/common/constants";
-import { useVerifyTwitter } from "@/modules/onboarding/usecases/VerifyTwitter.usecase";
+import { useVerifyTweet } from "@/modules/onboarding/usecases/VerifyTweet.usecase";
 import { useCompleteTwitterOAuth } from "@/modules/onboarding/hooks/useCompleteTwitterOAuth";
-import {
-  isValidPostLink,
-  isValidUsernameWithAtSign,
-} from "@/modules/onboarding/lib/utils";
+import { isValidPostLink } from "@/modules/onboarding/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Loader } from "@/components/ui/loader";
 import { useOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboardingUrlStates";
 import { XSteps } from "@/modules/onboarding/types";
-import { useXStore } from "../store/x.store";
+import { useGetAuthStatus } from "@/modules/auth/usecases/GetAuthStatus.usecase";
 
 export const TWITTER_POST =
   "'The VMCC Builder DAO is a global community of Virtual Mining & Construction Companies tokenizing residential, commercial & industrial assets. Get a free Genesis Key ($350 value) with Referral Code: MCL-000003 #VMCC #VMCCAirdrop #BuildersDAO #MOBIAutomation'";
@@ -63,20 +60,15 @@ export function XPlatform({
   onPrevStep: () => void;
   onNextStep: () => void;
 }) {
+  const { data: userStatus } = useGetAuthStatus();
   const [{ x: xStep }, setOnboardingUrlStates] = useOnboardingUrlStates();
-  const xData = useXStore((state) => state.xData);
-  const setXData = useXStore((state) => state.setXData);
   const [tweetLink, setTweetLink] = useState<string>("");
   const [tweetLinkError, setTweetLinkError] = useState<{
     isError: boolean;
     error: string | null;
   }>({ isError: false, error: null });
-  const [usernameError, setUsernameError] = useState<{
-    isError: boolean;
-    error: string | null;
-  }>({ isError: false, error: null });
-  const { mutate: verifyTwitter, isPending: isVerifyXPending } =
-    useVerifyTwitter();
+
+  const { mutate: verifyTweet, isPending: isVerifyingTweet } = useVerifyTweet();
 
   const setXStep = (step: XSteps) => {
     setOnboardingUrlStates((prev) => ({
@@ -86,8 +78,7 @@ export function XPlatform({
   };
 
   const { isCompletingTwitterOAuth } = useCompleteTwitterOAuth({
-    onSuccess: (data) => {
-      setXData({ id: data.user.id, username: data.user.username });
+    onSuccess: () => {
       setXStep("follow");
     },
   });
@@ -118,36 +109,18 @@ export function XPlatform({
     } else if (xStep === "verify") {
       const { isError: isPostLinkError, error: postLinkError } =
         isValidPostLink(tweetLink, "x");
-      const { isError, error: validationError } = isValidUsernameWithAtSign(
-        xData?.username || "",
-        "x"
-      );
 
-      if (isPostLinkError || isError) {
+      if (isPostLinkError) {
         setTweetLinkError({ isError: isPostLinkError, error: postLinkError });
-        setUsernameError({ isError, error: validationError });
         return;
       }
 
-      if (!xData?.id) {
-        setUsernameError({ isError: true, error: "Twitter ID is required" });
-        return;
-      }
-
-      if (!xData?.username) {
-        setUsernameError({ isError: true, error: "X username is required" });
-        return;
-      }
-
-      verifyTwitter(
+      verifyTweet(
         {
-          username: xData.username,
-          twitterId: xData.id,
           tweetLink: tweetLink,
         },
         {
           onSuccess: () => {
-            setXData(null);
             setXStep("success");
           },
           onError: (error) => {
@@ -161,7 +134,7 @@ export function XPlatform({
 
   const buttonContent = isCompletingTwitterOAuth
     ? "Authenticating..."
-    : isVerifyXPending
+    : isVerifyingTweet
       ? "Verifying..."
       : xStep === "post"
         ? "Continue"
@@ -171,13 +144,23 @@ export function XPlatform({
             ? "Verify"
             : "Next";
 
-  const isBtnLoadiing = isCompletingTwitterOAuth || isVerifyXPending;
+  const isBtnLoadiing = isCompletingTwitterOAuth || isVerifyingTweet;
 
   useEffect(() => {
     if (isVerified && xStep !== "success") {
       setXStep("success");
     }
   }, [isVerified, xStep]);
+
+  useEffect(() => {
+    if (
+      userStatus?.data?.twitterUsername &&
+      userStatus?.data?.twitterId &&
+      xStep === "signin"
+    ) {
+      setXStep("follow");
+    }
+  }, [userStatus?.data?.twitterUsername, userStatus?.data?.twitterId, xStep]);
 
   return (
     <TabsContent className="w-full mt-2 space-y-6" value="x">
@@ -189,38 +172,21 @@ export function XPlatform({
         isSuccess={xStep === "success" || isVerified}
         isCollapsibleOpen={xStep === "verify"}
       >
-        <div className="space-y-2.5">
-          <div className="space-y-1">
-            <Input
-              aria-invalid={usernameError.isError}
-              value={xData?.username || ""}
-              placeholder="Your x username"
-              disabled={isVerifyXPending}
-              readOnly={true}
-              endContent={isVerifyXPending ? <Loader loaderSize={16} /> : null}
-            />
-            {usernameError.isError && usernameError.error && (
-              <p className="text-destructive mt-1 text-xs font-normal leading-[1.5] tracking-xxs line-clamp-1">
-                {usernameError.error}
-              </p>
-            )}
-          </div>
-          <div className="space-y-1">
-            <Input
-              aria-invalid={tweetLinkError.isError}
-              value={tweetLink}
-              onChange={(e) => setTweetLink(e.target.value)}
-              placeholder="Your x tweet link"
-              disabled={isVerifyXPending}
-              readOnly={false}
-              endContent={isVerifyXPending ? <Loader loaderSize={16} /> : null}
-            />
-            {tweetLinkError.isError && tweetLinkError.error && (
-              <p className="text-destructive mt-1 text-xs font-normal leading-[1.5] tracking-xxs line-clamp-1">
-                {tweetLinkError.error}
-              </p>
-            )}
-          </div>
+        <div className="space-y-1">
+          <Input
+            aria-invalid={tweetLinkError.isError}
+            value={tweetLink}
+            onChange={(e) => setTweetLink(e.target.value)}
+            placeholder="Your x tweet link"
+            disabled={isVerifyingTweet}
+            readOnly={false}
+            endContent={isVerifyingTweet ? <Loader loaderSize={16} /> : null}
+          />
+          {tweetLinkError.isError && tweetLinkError.error && (
+            <p className="text-destructive mt-1 text-xs font-normal leading-[1.5] tracking-xxs line-clamp-1">
+              {tweetLinkError.error}
+            </p>
+          )}
         </div>
       </SectionAction>
       <ButtonsFooter>

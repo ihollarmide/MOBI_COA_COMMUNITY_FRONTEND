@@ -23,6 +23,9 @@ export type VerifyTelegramMembershipPayload = {
 export type VerifyTwitterPayload = {
   username: string;
   twitterId: string | number;
+};
+
+export type VerifyTweetPayload = {
   tweetLink: string;
 };
 
@@ -46,6 +49,15 @@ export type GetClaimParametersResponse = ApiResponse<{
 }>;
 
 export type VerifySocialResponse = ApiResponse<{
+  success: boolean;
+}>;
+
+export type VerifyTwitterResponse = ApiResponse<{
+  twitterUsername: string;
+  twitterId: string | number;
+}>;
+
+export type VerifyTweetResponse = ApiResponse<{
   success: boolean;
 }>;
 

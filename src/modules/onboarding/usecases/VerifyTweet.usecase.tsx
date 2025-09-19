@@ -1,8 +1,5 @@
 import { post } from "@/lib/api-client";
-import {
-  VerifyTwitterPayload,
-  VerifyTwitterResponse,
-} from "@/modules/onboarding/types";
+import { VerifySocialResponse, VerifyTweetPayload } from "../types";
 import { API_ENDPOINTS } from "@/lib/api-endpoints";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -10,43 +7,42 @@ import { useInvalidateQueries } from "@/hooks/useInvalidateQueries";
 import { QUERY_KEYS } from "@/common/constants/query-keys";
 import { updateAuthStatusQuery } from "@/modules/auth/lib/update-auth-query.lib";
 
-export const verifyTwitter = async (payload: VerifyTwitterPayload) => {
+export const verifyTweet = async (payload: VerifyTweetPayload) => {
   try {
-    const data = await post<VerifyTwitterResponse, VerifyTwitterPayload>({
-      url: API_ENDPOINTS.VERIFY.TWITTER,
+    const data = await post<VerifySocialResponse, VerifyTweetPayload>({
+      url: API_ENDPOINTS.VERIFY.TWEET,
       payload: payload,
     });
     return data;
   } catch (error: unknown) {
-    console.error(`Twitter verification error:`, error);
+    console.error(`Tweet verification error:`, error);
     const message =
-      error instanceof Error ? error.message : `Twitter verification failed`;
+      error instanceof Error ? error.message : `Tweet verification failed`;
     throw new Error(message);
   }
 };
 
-const TOAST_ID = "verify-twitter";
+const TOAST_ID = "verify-tweet";
 
-export const useVerifyTwitter = () => {
+export const useVerifyTweet = () => {
   const queryClient = useQueryClient();
   const invalidateQueries = useInvalidateQueries();
   const mutation = useMutation({
-    mutationFn: verifyTwitter,
+    mutationFn: verifyTweet,
     onMutate: () => {
       toast.loading("Verifying your Twitter account...", {
         id: TOAST_ID,
       });
     },
     onSuccess: (data, payload) => {
-      toast.success("Your Twitter account has been verified successfully", {
-        description: "",
+      toast.success("Your Tweet has been verified successfully", {
         id: TOAST_ID,
+        description: "",
       });
       updateAuthStatusQuery({
         queryClient,
         payload: {
-          twitterUsername: payload.username,
-          twitterId: payload.twitterId,
+          tweetLink: payload.tweetLink,
         },
       });
       invalidateQueries({
@@ -54,7 +50,7 @@ export const useVerifyTwitter = () => {
       });
     },
     onError: (error) => {
-      toast.error("Failed to verify your Twitter account", {
+      toast.error("Failed to verify your Tweet", {
         description: error.message,
         id: TOAST_ID,
         duration: 15000,

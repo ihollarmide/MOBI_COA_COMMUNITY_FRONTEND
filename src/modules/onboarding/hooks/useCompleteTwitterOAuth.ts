@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { AUTH_TOAST_ID } from "@/modules/auth/constants";
 import { useOnboardingUrlStates } from "./useOnboardingUrlStates";
+import { useVerifyTwitter } from "@/modules/onboarding/usecases/VerifyTwitter.usecase";
 
 const TWITTER_ERROR_CODES: Record<string, string> = {
   access_denied: "User denied access to the application",
@@ -36,6 +37,11 @@ export function useCompleteTwitterOAuth({
   onSuccess?: (data: TwitterOAuthData) => void;
   onError?: (error: Error) => void;
 }) {
+  const {
+    mutate: verifyTwitter,
+    isPending: isVerifyTwitterPending,
+    isSuccess: isVerifyTwitterSuccess,
+  } = useVerifyTwitter();
   const [{ x: xStep, step: pageStep }] = useOnboardingUrlStates();
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
@@ -108,7 +114,17 @@ export function useCompleteTwitterOAuth({
         url.searchParams.delete(p)
       );
       window.history.replaceState({}, "", url.toString());
-      onSuccess?.(data);
+      verifyTwitter(
+        { username: data.user.username, twitterId: data.user.id },
+        {
+          onSuccess: () => {
+            onSuccess?.(data);
+          },
+          onError: (error) => {
+            onError?.(error);
+          },
+        }
+      );
     },
     onError: (error: Error) => {
       console.error("OAuth callback error:", error);
@@ -170,8 +186,9 @@ export function useCompleteTwitterOAuth({
   }, [code, state, reset, isPending]);
 
   return {
-    isCompletingTwitterOAuth: isPending,
-    isCompleteTwitterOAuthSuccess,
+    isCompletingTwitterOAuth: isPending || isVerifyTwitterPending,
+    isCompleteTwitterOAuthSuccess:
+      isCompleteTwitterOAuthSuccess && isVerifyTwitterSuccess,
     resetTwitterOAuth: reset,
   };
 }
