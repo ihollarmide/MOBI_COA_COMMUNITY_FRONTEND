@@ -21,14 +21,10 @@ export const completeUserAuthentication = async (
       chainId: payload.body.chainId,
     });
 
-    console.log("uplineId", uplineId);
-
     const isGenesisClaimed = await getIsClaimedKey({
       address: payload.body.walletAddress,
       chainId: payload.body.chainId,
     });
-
-    console.log("isGenesisClaimed", isGenesisClaimed);
 
     const data = await post<
       CompleteUserAuthenticationResponse,

@@ -62,10 +62,9 @@ export function FollowSocials() {
   };
 
   const isXPlatformVerified =
-    !!authStatus?.data?.twitterFollowed &&
     !!authStatus?.data?.twitterUsername &&
-    !!authStatus?.data.twitterId &&
-    !!authStatus?.data.tweetLink;
+    !!authStatus?.data?.twitterId &&
+    !!authStatus?.data?.tweetLink;
 
   const isInstagramPlatformVerified =
     !!authStatus?.data?.instagramFollowed &&

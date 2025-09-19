@@ -16,8 +16,8 @@ export async function createSession(data: SessionData) {
 
   (await cookies()).set(SESSION_NAME, token, {
     httpOnly: true,
-    secure: process.env.NEXT_PUBLIC_ENVIRONMENT === "local" ? false : true,
-    sameSite: "none",
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    sameSite: "lax",
     path: "/",
     expires: new Date(Date.now() + SESSION_MAX_AGE),
   });
