@@ -2,7 +2,6 @@
 import { SessionData } from "@/modules/auth/types";
 import { EncryptJWT, jwtDecrypt } from "jose";
 import { cookies } from "next/headers";
-import { SESSION_MAX_AGE } from "@/modules/auth/constants";
 
 const SESSION_NAME = process.env.NEXT_PUBLIC_APP_SESSION_NAME as string;
 const secret = new TextEncoder().encode(process.env.SESSION_SECRET! as string);
@@ -11,7 +10,7 @@ export async function createSession(data: SessionData) {
   const token = await new EncryptJWT({ data })
     .setProtectedHeader({ alg: "dir", enc: "A256GCM" })
     .setIssuedAt()
-    .setExpirationTime("30d")
+    .setExpirationTime("20 years")
     .encrypt(secret);
 
   (await cookies()).set(SESSION_NAME, token, {
@@ -19,7 +18,7 @@ export async function createSession(data: SessionData) {
     secure: process.env.NODE_ENV === "production" ? true : false,
     sameSite: "lax",
     path: "/",
-    expires: new Date(Date.now() + SESSION_MAX_AGE),
+    maxAge: 60 * 60 * 24 * 365 * 20,
   });
 }
 
