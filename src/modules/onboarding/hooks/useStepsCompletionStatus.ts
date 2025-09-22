@@ -36,15 +36,10 @@ export function useStepsCompletionStatus(): {
   return {
     result: {
       "wallet-connected": isWalletConnected,
-      // "verify-phone-number":
-      //   !!authStatus?.data.phoneNumberVerified &&
-      //   !!authStatus?.data.phoneNumber,
-      // "verify-phone-number": true,
       "join-telegram":
         !!authStatus?.data.telegramId && !!authStatus?.data.telegramJoined,
       "follow-us":
         !!authStatus?.data.twitterUsername &&
-        !!authStatus?.data.twitterFollowed &&
         !!authStatus?.data.tweetLink &&
         !!authStatus?.data.twitterId,
       "enter-referral-code": !!uplineId,
