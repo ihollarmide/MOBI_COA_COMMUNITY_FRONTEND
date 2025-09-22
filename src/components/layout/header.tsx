@@ -13,11 +13,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useWalletIconWithAvatar } from "@/hooks/useWalletIconWithAvatar";
-import { useSession } from "@/modules/auth/hooks/useSession";
 import { useHandleSignout } from "@/modules/auth/hooks/useHandleSignout";
+import { useSessionStorage } from "@/modules/auth/hooks/useSessionStorage";
 
 export function Header() {
-  const { status: sessionStatus } = useSession();
+  const { status: sessionStatus } = useSessionStorage();
   const { handleSignout } = useHandleSignout();
   const chainId = useChainId();
   const { address, status } = useWalletConnectionStatus();
@@ -30,6 +30,8 @@ export function Header() {
     chainId === 84532
       ? `https://sepolia.basescan.org/address/${address}`
       : `https://bscscan.com/address/${address}`;
+
+  // console.log("session status: ", sessionStatus);
 
   if (sessionStatus !== "authenticated") {
     return null;

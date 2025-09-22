@@ -33,11 +33,12 @@ export const metadata: Metadata = {
   description: "VMCC DAO | Community Airdrop",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const sessionSecret = process.env.SESSION_SECRET;
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
       <body
@@ -49,7 +50,7 @@ export default function RootLayout({
         />
 
         <NuqsAdapter>
-          <GlobalProvider>
+          <GlobalProvider sessionSecret={sessionSecret}>
             {children}
             <Toaster
               position="top-center"

@@ -49,6 +49,7 @@ export interface CompleteAuthenticationExtras {
 export interface BaseCompleteAuthenticationPayload {
   xApiHeaders: CompleteSignatureVerificationHeaders;
   body: CompleteSignatureVerificationBody;
+  sessionSecret: string | null;
 }
 
 export interface CompleteAuthenticationPayload

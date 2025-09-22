@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useInvalidateQueries } from "@/hooks/useInvalidateQueries";
 import { QUERY_KEYS } from "@/common/constants/query-keys";
 import { updateAuthStatusQuery } from "@/modules/auth/lib/update-auth-query.lib";
-import { useSession } from "@/modules/auth/hooks/useSession";
+import { useSessionStorage } from "@/modules/auth/hooks/useSessionStorage";
 
 export const verifyTelegram = async (
   payload: VerifyTelegramMembershipPayload
@@ -35,7 +35,7 @@ const TOAST_ID = "verify-telegram-membership";
 
 export const useVerifyTelegramMembership = () => {
   const invalidateQueries = useInvalidateQueries();
-  const { update } = useSession();
+  const { update } = useSessionStorage();
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: verifyTelegram,
