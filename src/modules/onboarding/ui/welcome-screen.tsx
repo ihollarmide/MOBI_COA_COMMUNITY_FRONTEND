@@ -16,7 +16,10 @@ import { toast } from "sonner";
 import ReCAPTCHA from "react-google-recaptcha";
 import { getRecaptchaV3Token } from "@/lib/captcha";
 import { connectWalletAction } from "@/app/actions";
-import { FpjsProvider } from "@fingerprintjs/fingerprintjs-pro-react";
+import {
+  FingerprintJSPro,
+  FpjsProvider,
+} from "@fingerprintjs/fingerprintjs-pro-react";
 import { useVisitorData } from "@fingerprintjs/fingerprintjs-pro-react";
 import { SIGNIN_APP_NAME } from "@/modules/auth/constants";
 
@@ -27,7 +30,14 @@ export function WelcomeScreen({ fingerPrintKey }: { fingerPrintKey: string }) {
     <FpjsProvider
       loadOptions={{
         apiKey: fingerPrintKey,
-        region: "eu",
+        endpoint: [
+          "https://coa.build/73m1VCzNAzVUBpAV/aqRK0DiVNN1rcQcs",
+          FingerprintJSPro.defaultEndpoint,
+        ],
+        scriptUrlPattern: [
+          "https://coa.build/73m1VCzNAzVUBpAV/8kBRPgy1iMYUkkOh?apiKey=<apiKey>&version=<version>&loaderVersion=<loaderVersion>",
+          FingerprintJSPro.defaultScriptUrlPattern,
+        ],
       }}
     >
       <WelcomeScreenContent />

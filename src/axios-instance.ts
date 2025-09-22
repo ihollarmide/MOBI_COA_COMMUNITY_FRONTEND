@@ -1,8 +1,12 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
-import { SessionData } from "@/modules/auth/types";
 import { toast } from "sonner";
 import { disconnect } from "@wagmi/core";
 import { wagmiSSRConfig } from "./config/wagmi-ssr-config";
+import {
+  destroySessionInStorage,
+  getSessionFromStorage,
+} from "./modules/auth/lib/session.client";
+import { getSecretKey } from "./modules/auth/store/secret.store";
 
 // Constants
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -53,9 +57,17 @@ export const protectedClient = (): AxiosInstance => {
   instance.interceptors.request.use(
     async (request) => {
       try {
-        const res: SessionData | null = await fetch("/api/auth/session").then(
-          (res) => res.json()
-        );
+        const sessionSecret = getSecretKey();
+
+        if (!sessionSecret) {
+          toast.error("No session secret available", { id: "no-secret" });
+          return Promise.reject(new Error("No session secret available"));
+        }
+
+        const res = await getSessionFromStorage({
+          sessionSecret: sessionSecret,
+        });
+
         if (res?.accessToken) {
           request.headers.Authorization = `Bearer ${res.accessToken}`;
         } else {
@@ -78,12 +90,7 @@ export const protectedClient = (): AxiosInstance => {
     (response) => response,
     async (error: AxiosError) => {
       if (error.response?.status === 401) {
-        await fetch("/api/auth/logout", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        await destroySessionInStorage();
         await disconnect(wagmiSSRConfig);
         window.location.href = "/welcome";
         toast.error("Session expired, please re-authenticate", {

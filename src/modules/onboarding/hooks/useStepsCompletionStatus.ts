@@ -3,26 +3,39 @@ import { OnboardingStepSlug } from "../types";
 import { useGetIsClaimedKey } from "@/modules/onboarding/usecases/GetIsClaimedKey.usecase";
 import { useGetAuthStatus } from "@/modules/auth/usecases/GetAuthStatus.usecase";
 import { useGetUplineId } from "../usecases/GetUplineId.usecase";
-import { useSession } from "@/modules/auth/hooks/useSession";
+import { useSessionStorage } from "@/modules/auth/hooks/useSessionStorage";
 
 export function useStepsCompletionStatus(): {
   result: Record<OnboardingStepSlug, boolean>;
   isLoading: boolean;
 } {
-  const { status: sessionStatus, isLoading: isSessionLoading } = useSession();
-  const { status, isConnecting, isReconnecting } = useWalletConnectionStatus();
+  const {
+    status: sessionStatus,
+    session: sessionData,
+    isLoading: isSessionLoading,
+  } = useSessionStorage();
+  const {
+    status,
+    isLoading: isWalletLoading,
+    address: walletAddress,
+  } = useWalletConnectionStatus();
   const { data: authStatus, isPending: isAuthStatusPending } = useGetAuthStatus(
     {
-      isEnabled: sessionStatus === "authenticated",
+      isEnabled: sessionStatus === "authenticated" && !isWalletLoading,
     }
   );
   const { data: isClaimed, isPending: isGettingClaimedStatus } =
     useGetIsClaimedKey();
   const { data: uplineId, isPending: isGettingUplineId } = useGetUplineId();
 
+  const isWalletConnected =
+    status === "connected" &&
+    !!walletAddress &&
+    walletAddress.toLowerCase() === sessionData?.walletAddress?.toLowerCase();
+
   return {
     result: {
-      "wallet-connected": status === "connected",
+      "wallet-connected": isWalletConnected,
       // "verify-phone-number":
       //   !!authStatus?.data.phoneNumberVerified &&
       //   !!authStatus?.data.phoneNumber,
@@ -43,8 +56,8 @@ export function useStepsCompletionStatus(): {
       isGettingUplineId ||
       isGettingClaimedStatus ||
       isSessionLoading ||
-      isConnecting ||
-      isReconnecting,
+      isWalletLoading ||
+      isWalletLoading,
   };
 }
 

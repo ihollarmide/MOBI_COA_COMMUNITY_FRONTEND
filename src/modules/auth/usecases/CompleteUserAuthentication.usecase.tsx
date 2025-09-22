@@ -1,7 +1,7 @@
 import { API_ENDPOINTS } from "@/lib/api-endpoints";
 import {
   BaseCompleteAuthenticationPayload,
-  CompleteAuthenticationPayload,
+  CompleteSignatureVerificationBody,
   CompleteUserAuthenticationResponse,
 } from "@/modules/auth/types";
 import { post } from "@/lib/api-client";
@@ -11,6 +11,9 @@ import { toast } from "sonner";
 import { serializeOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboardingUrlStates";
 import { getUplineId } from "@/modules/onboarding/usecases/GetUplineId.usecase";
 import { getIsClaimedKey } from "@/modules/onboarding/usecases/GetIsClaimedKey.usecase";
+import { useSecretContext } from "@/modules/auth/context";
+import { createSessionInStorage } from "@/modules/auth/lib/session.client";
+import { useSessionClientMutation } from "../hooks/useSessionStorage";
 
 export const completeUserAuthentication = async (
   payload: BaseCompleteAuthenticationPayload
@@ -26,24 +29,61 @@ export const completeUserAuthentication = async (
       chainId: payload.body.chainId,
     });
 
-    const data = await post<
+    const response = await post<
       CompleteUserAuthenticationResponse,
-      CompleteAuthenticationPayload
+      CompleteSignatureVerificationBody
     >({
-      url: API_ENDPOINTS.AUTH.COMPLETE_USER_AUTHENTICATION,
-      payload: {
-        ...payload,
-        extras: {
-          uplineId,
-          isGenesisClaimed,
-        },
-      },
+      url: API_ENDPOINTS.AUTH.COMPLETE_SIGNATURE_VERIFICATION,
+      payload: payload.body,
       isProtected: false,
       config: {
-        baseURL: process.env.NEXT_PUBLIC_APP_URL,
+        headers: {
+          ...payload.xApiHeaders,
+        },
       },
     });
-    return data;
+
+    const restructuredResponse = {
+      ...response,
+      data: {
+        ...response.data,
+        user: {
+          ...response.data.user,
+          uplineId,
+          genesisClaimed: isGenesisClaimed,
+        },
+      },
+    };
+
+    const sessionData = {
+      walletAddress: payload.body.walletAddress,
+      accessToken: restructuredResponse.data.token,
+      telegramId: restructuredResponse.data.user.telegramId,
+      telegramJoined: restructuredResponse.data.user.telegramJoined,
+      telegramUsername: restructuredResponse.data.user.telegramUsername,
+      twitterUsername: restructuredResponse.data.user.twitterUsername,
+      twitterFollowed: restructuredResponse.data.user.twitterFollowed,
+      instagramUsername: restructuredResponse.data.user.instagramUsername,
+      instagramFollowed: restructuredResponse.data.user.instagramFollowed,
+      phoneNumberVerified: restructuredResponse.data.user.phoneNumberVerified,
+      phoneNumber: restructuredResponse.data.user.phoneNumber,
+      isFlagged: restructuredResponse.data.user.isFlagged,
+      uplineId: restructuredResponse.data.user.uplineId,
+      genesisClaimed: restructuredResponse.data.user.genesisClaimed,
+      createdAt: restructuredResponse.data.user.createdAt,
+      updatedAt: restructuredResponse.data.user.updatedAt,
+    };
+
+    if (!payload.sessionSecret) {
+      throw new Error("Session secret is required");
+    }
+
+    await createSessionInStorage({
+      data: sessionData,
+      sessionSecret: payload.sessionSecret,
+    });
+
+    return restructuredResponse;
   } catch (error: unknown) {
     console.error(`Complete user authentication error:`, error);
     const message =
@@ -55,8 +95,18 @@ export const completeUserAuthentication = async (
 };
 
 export const useCompleteUserAuthentication = () => {
+  const { secretKey: sessionSecret } = useSecretContext();
+  const { mutate: getSessionNow, isPending: isGettingSession } =
+    useSessionClientMutation();
+
   const mutation = useMutation({
-    mutationFn: completeUserAuthentication,
+    mutationFn: (
+      payload: Omit<BaseCompleteAuthenticationPayload, "sessionSecret">
+    ) =>
+      completeUserAuthentication({
+        ...payload,
+        sessionSecret: sessionSecret,
+      }),
     onMutate: () => {
       toast.loading("Completing User Authentication", {
         description: "",
@@ -64,76 +114,94 @@ export const useCompleteUserAuthentication = () => {
       });
     },
     onSuccess: (data) => {
-      toast.success(`User authentication successful`, {
-        description: "Redirecting...",
+      toast.loading("Completing User Authentication", {
+        description: "",
         id: AUTH_TOAST_ID,
       });
-      const onboardingRoute = "/onboarding";
-      if (data.data.user.genesisClaimed) {
-        return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
-          {
-            step: "join-vmcc-dao",
-          }
-        )}`);
-      } else if (!!data.data.user.uplineId) {
-        // if (!data.data.user.phoneNumberVerified) {
-        //   return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
-        //     {
-        //       step: "verify-phone-number",
-        //     }
-        //   )}`);
-        // }
+      getSessionNow(
+        { address: data.data.user.walletAddress },
+        {
+          onSuccess: (sessionCreated) => {
+            toast.success(`User authentication successful`, {
+              description: "Redirecting...",
+              id: AUTH_TOAST_ID,
+            });
+            // console.log("sessionCreated: ", sessionCreated);
+            const onboardingRoute = "/onboarding";
+            if (data.data.user.genesisClaimed) {
+              return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
+                {
+                  step: "join-vmcc-dao",
+                }
+              )}`);
+            } else if (!!data.data.user.uplineId) {
+              if (
+                !data.data.user.telegramId ||
+                !data.data.user.telegramJoined
+              ) {
+                return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
+                  {
+                    step: "join-telegram",
+                  }
+                )}`);
+              }
 
-        if (!data.data.user.telegramId || !data.data.user.telegramJoined) {
-          return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
-            {
-              step: "join-telegram",
+              if (
+                !data.data.user.twitterUsername ||
+                !data.data.user.twitterFollowed ||
+                !data.data.user.tweetLink ||
+                !data.data.user.twitterId
+              ) {
+                return (window.location.href = `${onboardingRoute}
+                  ${serializeOnboardingUrlStates({
+                    step: "follow-us",
+                  })}`);
+              }
+
+              return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
+                {
+                  step: "claim-genesis-key",
+                }
+              )}`);
+            } else if (
+              data.data.user.twitterUsername &&
+              data.data.user.twitterFollowed
+            ) {
+              if (
+                !data.data.user.telegramId ||
+                !data.data.user.telegramJoined
+              ) {
+                return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
+                  {
+                    step: "join-telegram",
+                  }
+                )}`);
+              }
+
+              return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
+                {
+                  step: "enter-referral-code",
+                }
+              )}`);
+            } else if (
+              data.data.user.telegramId &&
+              data.data.user.telegramJoined
+            ) {
+              return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
+                {
+                  step: "follow-us",
+                }
+              )}`);
             }
-          )}`);
+            window.location.href = onboardingRoute;
+          },
+          onError: (error) => {
+            toast.error("Unable to create session", {
+              id: AUTH_TOAST_ID,
+            });
+          },
         }
-
-        if (
-          !data.data.user.twitterUsername ||
-          !data.data.user.twitterFollowed ||
-          !data.data.user.tweetLink ||
-          !data.data.user.twitterId
-        ) {
-          return (window.location.href = `${onboardingRoute}
-              ${serializeOnboardingUrlStates({
-                step: "follow-us",
-              })}`);
-        }
-
-        return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
-          {
-            step: "claim-genesis-key",
-          }
-        )}`);
-      } else if (
-        data.data.user.twitterUsername &&
-        data.data.user.twitterFollowed
-      ) {
-        if (!data.data.user.telegramId || !data.data.user.telegramJoined) {
-          return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
-            {
-              step: "join-telegram",
-            }
-          )}`);
-        }
-
-        return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
-          {
-            step: "enter-referral-code",
-          }
-        )}`);
-      } else if (data.data.user.telegramId && data.data.user.telegramJoined) {
-        return (window.location.href = `${onboardingRoute}${serializeOnboardingUrlStates(
-          {
-            step: "follow-us",
-          }
-        )}`);
-      }
-      window.location.href = onboardingRoute;
+      );
     },
     onError: (error) => {
       toast.error("Error completing authentication", {
@@ -143,5 +211,8 @@ export const useCompleteUserAuthentication = () => {
     },
   });
 
-  return mutation;
+  return {
+    ...mutation,
+    isPending: isGettingSession || mutation.isPending,
+  };
 };

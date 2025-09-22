@@ -61,24 +61,43 @@ export function FollowSocials() {
     }));
   };
 
-  const isXPlatformVerified =
-    !!authStatus?.data?.twitterUsername &&
-    !!authStatus?.data?.twitterId &&
-    !!authStatus?.data?.tweetLink;
+  const isXPlatformVerified = authStatus?.data
+    ? !!authStatus?.data?.twitterUsername &&
+      !!authStatus?.data?.twitterId &&
+      !!authStatus?.data?.tweetLink
+    : false;
+
+  const isXUserNameAndIdVerified = authStatus?.data
+    ? !!authStatus?.data?.twitterUsername && !!authStatus?.data?.twitterId
+    : false;
 
   const isInstagramPlatformVerified =
     !!authStatus?.data?.instagramFollowed &&
     !!authStatus?.data?.instagramUsername;
 
   useEffect(() => {
-    if (isXPlatformVerified && !isXVerfied) {
-      setIsXVerfied(true);
-      setOnboardingUrlStates((prev) => ({
-        ...prev,
-        x: "success",
-      }));
+    if (!isXVerfied) {
+      if (isXPlatformVerified) {
+        setIsXVerfied(true);
+        setOnboardingUrlStates((prev) => ({
+          ...prev,
+          x: "success",
+        }));
+      } else if (isXUserNameAndIdVerified) {
+        setIsXVerfied(false);
+        setOnboardingUrlStates((prev) => ({
+          ...prev,
+          x: "follow",
+        }));
+      } else {
+        setIsXVerfied(false);
+        setOnboardingUrlStates((prev) => ({
+          ...prev,
+          x: "signin",
+        }));
+      }
     }
-  }, [isXPlatformVerified, isXVerfied]);
+  }, [isXPlatformVerified, isXVerfied, isXUserNameAndIdVerified]);
 
   useEffect(() => {
     if (isInstagramPlatformVerified && !isInstagramVerified) {
@@ -86,6 +105,12 @@ export function FollowSocials() {
       setOnboardingUrlStates((prev) => ({
         ...prev,
         instagram: "success",
+      }));
+    } else {
+      setIsInstagramVerified(false);
+      setOnboardingUrlStates((prev) => ({
+        ...prev,
+        instagram: "follow",
       }));
     }
   }, [isInstagramPlatformVerified, isInstagramVerified]);

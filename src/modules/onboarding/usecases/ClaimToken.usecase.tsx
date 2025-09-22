@@ -13,13 +13,13 @@ import { useChainId } from "wagmi";
 import { ADDRESSES } from "@/common/constants/contracts";
 import { airdropAbi } from "@/common/contract-abis/airdropAbi";
 import { useSequentialContractWrite } from "@/hooks/useSequentialContractWrite";
-import { useSession } from "@/modules/auth/hooks/useSession";
+import { useSessionStorage } from "@/modules/auth/hooks/useSessionStorage";
 import { useHandleSignout } from "@/modules/auth/hooks/useHandleSignout";
 
 const TOAST_ID = "claim-token";
 
 export const useClaimToken = () => {
-  const { session } = useSession();
+  const { session } = useSessionStorage();
 
   const { handleSignout } = useHandleSignout();
 

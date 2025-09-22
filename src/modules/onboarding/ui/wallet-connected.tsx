@@ -9,11 +9,11 @@ import { useOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboarding
 import { ButtonsFooter } from "./buttons-footer";
 import { Loader } from "@/components/ui/loader";
 import { useGetUplineId } from "../usecases/GetUplineId.usecase";
-import { useSession } from "@/modules/auth/hooks/useSession";
+import { useSessionStorage } from "@/modules/auth/hooks/useSessionStorage";
 
 export function WalletConnected() {
   const { disconnect } = useDisconnect();
-  const { signOut } = useSession();
+  const { signOut } = useSessionStorage();
   const { address } = useWalletConnectionStatus();
   const [, setOnboardingUrlStates] = useOnboardingUrlStates();
 
