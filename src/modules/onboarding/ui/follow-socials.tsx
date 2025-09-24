@@ -100,18 +100,20 @@ export function FollowSocials() {
   }, [isXPlatformVerified, isXVerfied, isXUserNameAndIdVerified]);
 
   useEffect(() => {
-    if (isInstagramPlatformVerified && !isInstagramVerified) {
-      setIsInstagramVerified(true);
-      setOnboardingUrlStates((prev) => ({
-        ...prev,
-        instagram: "success",
-      }));
-    } else {
-      setIsInstagramVerified(false);
-      setOnboardingUrlStates((prev) => ({
-        ...prev,
-        instagram: "follow",
-      }));
+    if (!isInstagramVerified) {
+      if (isInstagramPlatformVerified) {
+        setIsInstagramVerified(true);
+        setOnboardingUrlStates((prev) => ({
+          ...prev,
+          instagram: "success",
+        }));
+      } else {
+        setIsInstagramVerified(false);
+        setOnboardingUrlStates((prev) => ({
+          ...prev,
+          instagram: "follow",
+        }));
+      }
     }
   }, [isInstagramPlatformVerified, isInstagramVerified]);
 

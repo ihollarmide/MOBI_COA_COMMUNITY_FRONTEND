@@ -1,19 +1,15 @@
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
-import { OnboardingStepSlug } from "../types";
+import { OnboardingStepSlug } from "@/modules/onboarding/types";
 import { useGetIsClaimedKey } from "@/modules/onboarding/usecases/GetIsClaimedKey.usecase";
 import { useGetAuthStatus } from "@/modules/auth/usecases/GetAuthStatus.usecase";
-import { useGetUplineId } from "../usecases/GetUplineId.usecase";
-import { useSessionStorage } from "@/modules/auth/hooks/useSessionStorage";
+import { useGetUplineId } from "@/modules/onboarding/usecases/GetUplineId.usecase";
+import { useSession } from "next-auth/react";
 
 export function useStepsCompletionStatus(): {
   result: Record<OnboardingStepSlug, boolean>;
   isLoading: boolean;
 } {
-  const {
-    status: sessionStatus,
-    session: sessionData,
-    isLoading: isSessionLoading,
-  } = useSessionStorage();
+  const { status: sessionStatus, data: sessionData } = useSession();
   const {
     status,
     isLoading: isWalletLoading,
@@ -21,7 +17,7 @@ export function useStepsCompletionStatus(): {
   } = useWalletConnectionStatus();
   const { data: authStatus, isPending: isAuthStatusPending } = useGetAuthStatus(
     {
-      isEnabled: sessionStatus === "authenticated" && !isWalletLoading,
+      isEnabled: sessionStatus === "authenticated",
     }
   );
   const { data: isClaimed, isPending: isGettingClaimedStatus } =
@@ -31,7 +27,8 @@ export function useStepsCompletionStatus(): {
   const isWalletConnected =
     status === "connected" &&
     !!walletAddress &&
-    walletAddress.toLowerCase() === sessionData?.walletAddress?.toLowerCase();
+    walletAddress.toLowerCase() ===
+      sessionData?.user?.walletAddress?.toLowerCase();
 
   return {
     result: {
@@ -50,8 +47,7 @@ export function useStepsCompletionStatus(): {
       isAuthStatusPending ||
       isGettingUplineId ||
       isGettingClaimedStatus ||
-      isSessionLoading ||
-      isWalletLoading ||
+      sessionStatus === "loading" ||
       isWalletLoading,
   };
 }

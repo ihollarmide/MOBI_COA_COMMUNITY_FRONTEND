@@ -3,7 +3,7 @@ import { Footer } from "@/components/layout/footer";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Header } from "@/components/layout/header";
-import { HandleWalletSession } from "@/modules/auth/components/handle-wallet-session";
+import { AuthListener } from "@/modules/auth/components/auth-listener";
 
 export default function MainLayout({
   children,
@@ -12,7 +12,7 @@ export default function MainLayout({
 }) {
   return (
     <>
-      <HandleWalletSession />
+      <AuthListener />
       <div className="relative h-full w-full">
         <video
           src="https://res.cloudinary.com/djhkn5moz/video/upload/v1752218990/vecteezy_underwater-ocean-waves-ripples-flowing-with-the-light_48233203_nfesix.mov"

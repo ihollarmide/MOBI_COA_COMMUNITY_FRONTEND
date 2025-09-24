@@ -4,30 +4,21 @@ import { Button } from "@/components/ui/button";
 import { SectionTitle } from "@/components/ui/section-title";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import { truncateAddress } from "@/lib/utils";
-import { useDisconnect } from "wagmi";
 import { useOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboardingUrlStates";
 import { ButtonsFooter } from "./buttons-footer";
 import { Loader } from "@/components/ui/loader";
 import { useGetUplineId } from "../usecases/GetUplineId.usecase";
-import { useSessionStorage } from "@/modules/auth/hooks/useSessionStorage";
+import { useHandleSignout } from "@/modules/auth/hooks/useHandleSignout";
 
 export function WalletConnected() {
-  const { disconnect } = useDisconnect();
-  const { signOut } = useSessionStorage();
+  const { handleSignout } = useHandleSignout();
   const { address } = useWalletConnectionStatus();
   const [, setOnboardingUrlStates] = useOnboardingUrlStates();
 
   useGetUplineId();
 
   const handleChangeWallet = () => {
-    disconnect(
-      {},
-      {
-        onSuccess: () => {
-          signOut();
-        },
-      }
-    );
+    handleSignout();
   };
 
   const handleConfirm = () => {

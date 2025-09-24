@@ -3,7 +3,6 @@ export const API_ENDPOINTS = {
   AUTH: {
     INITIATE_USER_AUTHENTICATION: "/user/auth/initiate-login",
     COMPLETE_SIGNATURE_VERIFICATION: "/user/auth/verify-signature",
-    // COMPLETE_USER_AUTHENTICATION: "/api/auth/login",
     STATUS: "/user/status",
   },
 
