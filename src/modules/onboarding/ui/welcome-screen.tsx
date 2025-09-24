@@ -16,10 +16,7 @@ import { toast } from "sonner";
 import ReCAPTCHA from "react-google-recaptcha";
 import { getRecaptchaV3Token } from "@/lib/captcha";
 import { connectWalletAction } from "@/app/actions";
-import {
-  FingerprintJSPro,
-  FpjsProvider,
-} from "@fingerprintjs/fingerprintjs-pro-react";
+import { FpjsProvider } from "@fingerprintjs/fingerprintjs-pro-react";
 import { useVisitorData } from "@fingerprintjs/fingerprintjs-pro-react";
 import { AUTH_TOAST_ID, SIGNIN_APP_NAME } from "@/modules/auth/constants";
 
@@ -34,7 +31,7 @@ export function WelcomeScreen({ fingerPrintKey }: { fingerPrintKey: string }) {
   // ?error=CredentialsSignin&code=credentials
 
   useEffect(() => {
-    if (!!error && !!code) {
+    if (!!error || !!code) {
       toast.error("There was an error signing in. Please try again.", {
         description: "",
         id: AUTH_TOAST_ID,

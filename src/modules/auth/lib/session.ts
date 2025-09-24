@@ -11,9 +11,12 @@ export const getRedirectRouteOnSignin = (
     })}`;
   } else if (!!data.data.user.uplineId) {
     if (!data.data.user.telegramId || !data.data.user.telegramJoined) {
-      return `${onboardingRoute}${serializeOnboardingUrlStates({
-        step: "join-telegram",
-      })}`;
+      return (
+        onboardingRoute +
+        serializeOnboardingUrlStates({
+          step: "join-telegram",
+        })
+      );
     }
 
     if (
@@ -22,30 +25,45 @@ export const getRedirectRouteOnSignin = (
       !data.data.user.tweetLink ||
       !data.data.user.twitterId
     ) {
-      return `${onboardingRoute}
-                  ${serializeOnboardingUrlStates({
-                    step: "follow-us",
-                  })}`;
+      return (
+        onboardingRoute +
+        serializeOnboardingUrlStates({
+          step: "follow-us",
+        })
+      );
     }
 
-    return `${onboardingRoute}${serializeOnboardingUrlStates({
-      step: "claim-genesis-key",
-    })}`;
+    return (
+      onboardingRoute +
+      serializeOnboardingUrlStates({
+        step: "claim-genesis-key",
+      })
+    );
   } else if (data.data.user.twitterUsername && data.data.user.twitterFollowed) {
     if (!data.data.user.telegramId || !data.data.user.telegramJoined) {
-      return `${onboardingRoute}${serializeOnboardingUrlStates({
-        step: "join-telegram",
-      })}`;
+      return (
+        onboardingRoute +
+        serializeOnboardingUrlStates({
+          step: "join-telegram",
+        })
+      );
     }
 
-    return `${onboardingRoute}${serializeOnboardingUrlStates({
-      step: "enter-referral-code",
-    })}`;
+    return (
+      onboardingRoute +
+      serializeOnboardingUrlStates({
+        step: "enter-referral-code",
+      })
+    );
   } else if (data.data.user.telegramId && data.data.user.telegramJoined) {
-    return `${onboardingRoute}${serializeOnboardingUrlStates({
-      step: "follow-us",
-    })}`;
+    return (
+      onboardingRoute +
+      serializeOnboardingUrlStates({
+        step: "follow-us",
+      })
+    );
   }
+
   return onboardingRoute;
 };
 

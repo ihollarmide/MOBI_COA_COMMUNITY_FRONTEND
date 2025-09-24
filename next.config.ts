@@ -40,7 +40,7 @@ const nextConfig: NextConfig = {
       test: /\.svg$/i,
       use: ["@svgr/webpack"],
     });
-
+    config.externals.push("pino-pretty", "lokijs", "encoding");
     return config;
   },
   turbopack: {

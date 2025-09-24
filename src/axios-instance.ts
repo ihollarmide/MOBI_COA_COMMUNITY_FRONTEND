@@ -77,6 +77,7 @@ export const protectedClient = (): AxiosInstance => {
     (response) => response,
     async (error: AxiosError) => {
       if (error.response?.status === 401) {
+        console.log("session expired, signing out");
         await signOut({
           redirectTo: "/welcome",
         });
