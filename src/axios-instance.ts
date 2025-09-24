@@ -2,12 +2,8 @@ import axios, { AxiosInstance, AxiosError } from "axios";
 import { toast } from "sonner";
 import { disconnect } from "@wagmi/core";
 import { wagmiSSRConfig } from "./config/wagmi-ssr-config";
-import {
-  destroySessionInStorage,
-  getSessionFromStorage,
-} from "./modules/auth/lib/session.client";
-import { getSecretKey } from "./modules/auth/store/secret.store";
-
+import { getSession } from "next-auth/react";
+import { signOut } from "./lib/auth";
 // Constants
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -57,19 +53,10 @@ export const protectedClient = (): AxiosInstance => {
   instance.interceptors.request.use(
     async (request) => {
       try {
-        const sessionSecret = getSecretKey();
+        const session = await getSession();
 
-        if (!sessionSecret) {
-          toast.error("No session secret available", { id: "no-secret" });
-          return Promise.reject(new Error("No session secret available"));
-        }
-
-        const res = await getSessionFromStorage({
-          sessionSecret: sessionSecret,
-        });
-
-        if (res?.accessToken) {
-          request.headers.Authorization = `Bearer ${res.accessToken}`;
+        if (session?.user?.accessToken) {
+          request.headers.Authorization = `Bearer ${session.user.accessToken}`;
         } else {
           request.headers.Authorization = undefined;
           toast.error("You have no active session, please re-authenticate", {
@@ -90,9 +77,11 @@ export const protectedClient = (): AxiosInstance => {
     (response) => response,
     async (error: AxiosError) => {
       if (error.response?.status === 401) {
-        await destroySessionInStorage();
+        console.log("session expired, signing out");
+        await signOut({
+          redirectTo: "/welcome",
+        });
         await disconnect(wagmiSSRConfig);
-        window.location.href = "/welcome";
         toast.error("Session expired, please re-authenticate", {
           id: "session-expired",
         });

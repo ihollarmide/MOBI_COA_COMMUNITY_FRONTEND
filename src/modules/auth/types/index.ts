@@ -49,7 +49,6 @@ export interface CompleteAuthenticationExtras {
 export interface BaseCompleteAuthenticationPayload {
   xApiHeaders: CompleteSignatureVerificationHeaders;
   body: CompleteSignatureVerificationBody;
-  sessionSecret: string | null;
 }
 
 export interface CompleteAuthenticationPayload
@@ -91,3 +90,15 @@ export type GetVmccDetailsByCoaUserIdResponse = ApiResponse<{
   companyLogo: string | null;
   companyBio: string | null;
 }>;
+
+export type UserSession = {
+  id: string;
+  walletAddress: string;
+  accessToken: string;
+  isGenesisClaimed: boolean;
+  isFlagged: boolean;
+  isTelegramVerified: boolean;
+  isInstagramVerified: boolean;
+  uplineId: number | null;
+  isTwitterVerified: boolean;
+};

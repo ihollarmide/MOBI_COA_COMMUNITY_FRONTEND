@@ -13,13 +13,13 @@ import { useChainId } from "wagmi";
 import { ADDRESSES } from "@/common/constants/contracts";
 import { airdropAbi } from "@/common/contract-abis/airdropAbi";
 import { useSequentialContractWrite } from "@/hooks/useSequentialContractWrite";
-import { useSessionStorage } from "@/modules/auth/hooks/useSessionStorage";
+import { useSession } from "next-auth/react";
 import { useHandleSignout } from "@/modules/auth/hooks/useHandleSignout";
 
 const TOAST_ID = "claim-token";
 
 export const useClaimToken = () => {
-  const { session } = useSessionStorage();
+  const { data: session } = useSession();
 
   const { handleSignout } = useHandleSignout();
 
@@ -116,7 +116,7 @@ export const useClaimToken = () => {
       return;
     }
 
-    if (session?.walletAddress.toLowerCase() !== address.toLowerCase()) {
+    if (session?.user?.walletAddress.toLowerCase() !== address.toLowerCase()) {
       toast.error("Session mismatch with wallet address", {
         id: TOAST_ID,
         description: "Please reconnect your wallet and sign in again",
@@ -164,7 +164,7 @@ export const useClaimToken = () => {
                       }
 
                       if (
-                        session?.walletAddress.toLowerCase() !==
+                        session?.user?.walletAddress.toLowerCase() !==
                         address.toLowerCase()
                       ) {
                         toast.error("Session mismatch with wallet address", {

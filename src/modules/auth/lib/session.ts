@@ -1,47 +1,90 @@
-// lib/session.ts
-import { SessionData } from "@/modules/auth/types";
-import { EncryptJWT, jwtDecrypt } from "jose";
-import { cookies } from "next/headers";
+import { serializeOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboardingUrlStates";
+import { CompleteUserAuthenticationResponse, UserSession } from "../types";
 
-const SESSION_NAME = process.env.NEXT_PUBLIC_APP_SESSION_NAME as string;
-const secret = new TextEncoder().encode(process.env.SESSION_SECRET! as string);
+export const getRedirectRouteOnSignin = (
+  data: CompleteUserAuthenticationResponse
+): string => {
+  const onboardingRoute = "/onboarding";
+  if (data.data.user.genesisClaimed) {
+    return `${onboardingRoute}${serializeOnboardingUrlStates({
+      step: "join-vmcc-dao",
+    })}`;
+  } else if (!!data.data.user.uplineId) {
+    if (!data.data.user.telegramId || !data.data.user.telegramJoined) {
+      return (
+        onboardingRoute +
+        serializeOnboardingUrlStates({
+          step: "join-telegram",
+        })
+      );
+    }
 
-export async function createSession(data: SessionData) {
-  const token = await new EncryptJWT({ data })
-    .setProtectedHeader({ alg: "dir", enc: "A256GCM" })
-    .setIssuedAt()
-    .setExpirationTime("20 years")
-    .encrypt(secret);
+    if (
+      !data.data.user.twitterUsername ||
+      !data.data.user.twitterFollowed ||
+      !data.data.user.tweetLink ||
+      !data.data.user.twitterId
+    ) {
+      return (
+        onboardingRoute +
+        serializeOnboardingUrlStates({
+          step: "follow-us",
+        })
+      );
+    }
 
-  (await cookies()).set(SESSION_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production" ? true : false,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 365 * 20,
-  });
-}
+    return (
+      onboardingRoute +
+      serializeOnboardingUrlStates({
+        step: "claim-genesis-key",
+      })
+    );
+  } else if (data.data.user.twitterUsername && data.data.user.twitterFollowed) {
+    if (!data.data.user.telegramId || !data.data.user.telegramJoined) {
+      return (
+        onboardingRoute +
+        serializeOnboardingUrlStates({
+          step: "join-telegram",
+        })
+      );
+    }
 
-export async function getSession(): Promise<SessionData | null> {
-  const cookie = (await cookies()).get(SESSION_NAME)?.value;
-  if (!cookie) return null;
-
-  try {
-    const { payload } = await jwtDecrypt(cookie, secret);
-    return payload.data as SessionData;
-  } catch {
-    return null;
+    return (
+      onboardingRoute +
+      serializeOnboardingUrlStates({
+        step: "enter-referral-code",
+      })
+    );
+  } else if (data.data.user.telegramId && data.data.user.telegramJoined) {
+    return (
+      onboardingRoute +
+      serializeOnboardingUrlStates({
+        step: "follow-us",
+      })
+    );
   }
-}
 
-export async function updateSession(partial: Partial<SessionData>) {
-  const current = await getSession();
-  if (!current) return null;
-  const updated = { ...current, ...partial };
-  await createSession(updated);
-  return updated;
-}
+  return onboardingRoute;
+};
 
-export async function destroySession() {
-  (await cookies()).delete(SESSION_NAME);
-}
+export const getCompleteSignPayloadFromAuthResponse = (
+  data: CompleteUserAuthenticationResponse
+): UserSession => {
+  return {
+    id: data?.data?.user?.id ? data?.data?.user?.id.toString() : "",
+    walletAddress: data.data.user.walletAddress,
+    accessToken: data.data.token,
+    isGenesisClaimed: data.data.user.genesisClaimed,
+    isFlagged: data.data.user.isFlagged,
+    isTelegramVerified:
+      !!data.data.user.telegramId &&
+      !!data.data.user.telegramUsername &&
+      !!data.data.user.telegramJoined,
+    isInstagramVerified: !!data.data.user.instagramUsername,
+    uplineId: data.data.user.uplineId,
+    isTwitterVerified:
+      !!data.data.user.tweetLink &&
+      !!data.data.user.twitterUsername &&
+      !!data.data.user.twitterId,
+  };
+};

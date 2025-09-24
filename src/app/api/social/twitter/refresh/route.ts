@@ -1,4 +1,4 @@
-// app/api/auth/twitter/refresh/route.ts
+// app/api/social/twitter/refresh/route.ts
 
 import { NextResponse } from "next/server";
 

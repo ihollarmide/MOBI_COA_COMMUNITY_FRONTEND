@@ -104,7 +104,7 @@ export function XPlatform({
     } else if (xStep === "post") {
       setXStep("verify");
     } else if (xStep === "signin") {
-      window.location.href = "/api/auth/twitter?action=initiate";
+      window.location.href = "/api/social/twitter?action=initiate";
       return;
     } else if (xStep === "verify") {
       const { isError: isPostLinkError, error: postLinkError } =

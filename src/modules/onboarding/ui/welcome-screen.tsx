@@ -9,35 +9,49 @@ import { useModal } from "connectkit";
 import { ONBOARDING_STEPS } from "@/modules/onboarding/data";
 import { useInitiateUserAuthentication } from "@/modules/auth/usecases/InitiateUserAuthentication.usecase";
 import { Address } from "viem";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useDisconnect } from "wagmi";
 import { toast } from "sonner";
 import ReCAPTCHA from "react-google-recaptcha";
 import { getRecaptchaV3Token } from "@/lib/captcha";
 import { connectWalletAction } from "@/app/actions";
-import {
-  FingerprintJSPro,
-  FpjsProvider,
-} from "@fingerprintjs/fingerprintjs-pro-react";
+import { FpjsProvider } from "@fingerprintjs/fingerprintjs-pro-react";
 import { useVisitorData } from "@fingerprintjs/fingerprintjs-pro-react";
-import { SIGNIN_APP_NAME } from "@/modules/auth/constants";
+import { AUTH_TOAST_ID, SIGNIN_APP_NAME } from "@/modules/auth/constants";
 
 const TOAST_ID = "onboarding-toast";
 
 export function WelcomeScreen({ fingerPrintKey }: { fingerPrintKey: string }) {
+  const params = useSearchParams();
+
+  const error = params.get("error");
+  const code = params.get("code");
+
+  // ?error=CredentialsSignin&code=credentials
+
+  useEffect(() => {
+    if (!!error || !!code) {
+      toast.error("There was an error signing in. Please try again.", {
+        description: "",
+        id: AUTH_TOAST_ID,
+      });
+    }
+  }, [error, code]);
+
   return (
     <FpjsProvider
       loadOptions={{
         apiKey: fingerPrintKey,
-        endpoint: [
-          "https://coa.build/73m1VCzNAzVUBpAV/aqRK0DiVNN1rcQcs",
-          FingerprintJSPro.defaultEndpoint,
-        ],
-        scriptUrlPattern: [
-          "https://coa.build/73m1VCzNAzVUBpAV/8kBRPgy1iMYUkkOh?apiKey=<apiKey>&version=<version>&loaderVersion=<loaderVersion>",
-          FingerprintJSPro.defaultScriptUrlPattern,
-        ],
+        region: "us",
+        // endpoint: [
+        //   "https://metrics.coa.build/73m1VCzNAzVUBpAV/aqRK0DiVNN1rcQcs",
+        //   FingerprintJSPro.defaultEndpoint,
+        // ],
+        // scriptUrlPattern: [
+        //   "https://metrics.coa.build/73m1VCzNAzVUBpAV/8kBRPgy1iMYUkkOh?apiKey=<apiKey>&version=<version>&loaderVersion=<loaderVersion>",
+        //   FingerprintJSPro.defaultScriptUrlPattern,
+        // ],
       }}
     >
       <WelcomeScreenContent />

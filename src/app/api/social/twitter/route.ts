@@ -1,4 +1,4 @@
-// app/api/auth/twitter/route.ts
+// app/api/social/twitter/route.ts
 
 import { NextResponse } from "next/server";
 import crypto from "crypto";

@@ -1,13 +1,21 @@
 "use client";
 
+import { signOut } from "next-auth/react";
 import { useDisconnect } from "wagmi";
-import { useSessionStorage } from "@/modules/auth/hooks/useSessionStorage";
-import { toast } from "sonner";
 
 export function useHandleSignout() {
-  const { signOut } = useSessionStorage();
-
+  const { disconnectAsync } = useDisconnect({
+    mutation: {
+      onSettled: () => {
+        signOut({
+          redirectTo: `/welcome`,
+        });
+      },
+    },
+  });
   return {
-    handleSignout: () => signOut(),
+    handleSignout: () => {
+      disconnectAsync();
+    },
   };
 }

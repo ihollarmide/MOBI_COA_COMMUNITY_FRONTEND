@@ -1,4 +1,4 @@
-import { ONBOARDING_STEPS } from "../data";
+import { ONBOARDING_STEPS } from "@/modules/onboarding/data";
 import { OnboardingStepNumber, OnboardingStepSlug } from "../types";
 import { isValidPhoneNumber } from "react-phone-number-input";
 

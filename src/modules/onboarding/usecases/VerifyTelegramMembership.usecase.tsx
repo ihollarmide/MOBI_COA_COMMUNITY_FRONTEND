@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useInvalidateQueries } from "@/hooks/useInvalidateQueries";
 import { QUERY_KEYS } from "@/common/constants/query-keys";
 import { updateAuthStatusQuery } from "@/modules/auth/lib/update-auth-query.lib";
-import { useSessionStorage } from "@/modules/auth/hooks/useSessionStorage";
+import { useSession } from "next-auth/react";
 
 export const verifyTelegram = async (
   payload: VerifyTelegramMembershipPayload
@@ -35,7 +35,8 @@ const TOAST_ID = "verify-telegram-membership";
 
 export const useVerifyTelegramMembership = () => {
   const invalidateQueries = useInvalidateQueries();
-  const { update } = useSessionStorage();
+  const { data: session } = useSession();
+  const { update } = useSession();
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: verifyTelegram,
@@ -54,9 +55,11 @@ export const useVerifyTelegramMembership = () => {
           payload,
         });
         update({
-          telegramJoined: true,
-          telegramUsername: payload.telegramUsername,
-          telegramId: payload.telegramId,
+          ...session,
+          user: {
+            ...session?.user,
+            isTelegramVerified: true,
+          },
         });
       } else {
         toast.error("Failed to verify your telegram membership", {
