@@ -25,7 +25,7 @@ const TELEGRAM_SCRIPT_URL = "https://telegram.org/js/telegram-widget.js?2";
 export const processTelegramAuth = async (payload: TelegramResponseData) => {
   try {
     const data = await post<TelegramAuthApiResponse, TelegramResponseData>({
-      url: "/api/auth/telegram",
+      url: "/api/social/telegram",
       isProtected: false,
       config: {
         headers: {

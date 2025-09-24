@@ -38,7 +38,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const sessionSecret = process.env.SESSION_SECRET;
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
       <body
@@ -50,7 +49,7 @@ export default async function RootLayout({
         />
 
         <NuqsAdapter>
-          <GlobalProvider sessionSecret={sessionSecret}>
+          <GlobalProvider>
             {children}
             <Toaster
               position="top-center"

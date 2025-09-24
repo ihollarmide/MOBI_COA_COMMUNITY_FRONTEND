@@ -4,15 +4,8 @@ import { ThemeProvider } from "next-themes";
 import { AnimationProvider } from "./animation-provider";
 import { Web3Provider } from "./web3-provider";
 import { ChainAlertProvider } from "./chain-alert-provider";
-import { SecretProvider } from "@/modules/auth/context";
 
-export function GlobalProvider({
-  children,
-  sessionSecret,
-}: {
-  children: React.ReactNode;
-  sessionSecret: string | null;
-}) {
+export function GlobalProvider({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider
       attribute="class"
@@ -20,12 +13,10 @@ export function GlobalProvider({
       enableSystem={false}
       disableTransitionOnChange={true}
     >
-      <SecretProvider secretKey={sessionSecret}>
-        <Web3Provider>
-          <ChainAlertProvider />
-          <AnimationProvider>{children}</AnimationProvider>
-        </Web3Provider>
-      </SecretProvider>
+      <Web3Provider>
+        <ChainAlertProvider />
+        <AnimationProvider>{children}</AnimationProvider>
+      </Web3Provider>
     </ThemeProvider>
   );
 }

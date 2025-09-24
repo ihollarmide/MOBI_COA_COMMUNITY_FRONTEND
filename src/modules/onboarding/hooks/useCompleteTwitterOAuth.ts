@@ -67,7 +67,7 @@ export function useCompleteTwitterOAuth({
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-        const response = await fetch("/api/auth/twitter", {
+        const response = await fetch("/api/social/twitter", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(params),
