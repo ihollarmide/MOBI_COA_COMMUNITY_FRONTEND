@@ -15,7 +15,6 @@ import {
   getCompleteSignPayloadFromAuthResponse,
   getRedirectRouteOnSignin,
 } from "../lib/session";
-import { useEffect } from "react";
 
 export const completeUserAuthentication = async (
   payload: BaseCompleteAuthenticationPayload
