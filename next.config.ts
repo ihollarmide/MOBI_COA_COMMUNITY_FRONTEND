@@ -35,7 +35,14 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
   },
   /* config options here */
-  webpack(config) {
+  webpack(config, { dev, isServer }) {
+    // ✅ Fix unsafe-eval by changing source maps
+    if (dev) {
+      config.devtool = "source-map";
+      // alternatives: "cheap-module-source-map", "inline-source-map"
+      // all avoid "eval" usage
+    }
+
     config.module.rules.push({
       test: /\.svg$/i,
       use: ["@svgr/webpack"],

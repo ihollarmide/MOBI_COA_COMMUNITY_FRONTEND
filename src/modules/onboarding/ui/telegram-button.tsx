@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import Script from "next/script";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -13,6 +12,7 @@ import {
 import { post } from "@/lib/api-client";
 import { useMutation } from "@tanstack/react-query";
 
+// Extend the global Window interface
 declare global {
   interface Window {
     Telegram?: TelegramWidget;
@@ -20,7 +20,8 @@ declare global {
 }
 
 const TOAST_ID = "telegram-button";
-const TELEGRAM_SCRIPT_URL = "https://telegram.org/js/telegram-widget.js?2";
+const TELEGRAM_SCRIPT_ID = "telegram-login-script";
+const TELEGRAM_SCRIPT_URL = "https://telegram.org/js/telegram-widget.js?22";
 
 export const processTelegramAuth = async (payload: TelegramResponseData) => {
   try {
@@ -31,7 +32,6 @@ export const processTelegramAuth = async (payload: TelegramResponseData) => {
         headers: {
           "Content-Type": "application/json",
         },
-
         baseURL: process.env.NEXT_PUBLIC_APP_URL,
       },
       payload: payload,
@@ -45,7 +45,6 @@ export const processTelegramAuth = async (payload: TelegramResponseData) => {
   }
 };
 
-// Telegram Widget API types
 interface TelegramButtonProps {
   onClick?: () => void;
   onSuccess?: (data: TelegramAuthResponse) => void;
@@ -67,16 +66,21 @@ export function TelegramButton({
   const { mutateAsync: processTelegramAuthAsync } = useMutation({
     mutationFn: processTelegramAuth,
     onMutate: () => {
+      setIsLoading(true);
       toast.loading("Getting your Telegram account...", {
         id: TOAST_ID,
       });
     },
     onSuccess: (data) => {
       onSuccess?.(data.user);
-      showSuccess("Telegram authorization successful.");
+      toast.success("Telegram authorization successful.", { id: TOAST_ID });
     },
     onError: (error) => {
-      showError(`Telegram authorization failed: ${error.message}`);
+      // The showError callback handles the UI update
+      onError?.(error.message);
+    },
+    onSettled: () => {
+      setIsLoading(false);
     },
   });
 
@@ -89,10 +93,6 @@ export function TelegramButton({
     },
     [onError]
   );
-
-  const showSuccess = useCallback((message: string) => {
-    toast.success(message, { id: TOAST_ID });
-  }, []);
 
   const validateTelegramResponse = useCallback(
     (
@@ -109,6 +109,58 @@ export function TelegramButton({
     []
   );
 
+  // --- START: Comprehensive Script Loading Logic ---
+  useEffect(() => {
+    // If script is already loaded (e.g., from cache or another instance), we're good to go.
+    if (window.Telegram) {
+      setIsScriptLoaded(true);
+      return;
+    }
+
+    // Get nonce from meta tag for CSP compliance
+    const nonce = document
+      .querySelector('meta[name="nonce"]')
+      ?.getAttribute("content");
+
+    const script = document.createElement("script");
+    script.id = TELEGRAM_SCRIPT_ID;
+    script.src = TELEGRAM_SCRIPT_URL;
+    script.async = true;
+
+    // Add nonce to script for CSP compliance
+    if (nonce) {
+      script.setAttribute("nonce", nonce);
+    }
+
+    const handleLoad = () => {
+      console.log("Telegram script loaded successfully.");
+      setIsScriptLoaded(true);
+    };
+
+    const handleError = (event: Event | string) => {
+      console.error("Failed to load Telegram script:", event);
+      showError("Failed to load Telegram script. Please try again.");
+      // Clean up the failed script tag
+      document.getElementById(TELEGRAM_SCRIPT_ID)?.remove();
+    };
+
+    script.onload = handleLoad;
+    script.onerror = handleError;
+
+    // Append the script to the body to start loading.
+    // We check if it's already there to avoid duplicates in case of fast re-renders.
+    if (!document.getElementById(TELEGRAM_SCRIPT_ID)) {
+      document.body.appendChild(script);
+    }
+
+    // Cleanup function to remove event listeners when the component unmounts.
+    return () => {
+      script.removeEventListener("load", handleLoad);
+      script.removeEventListener("error", handleError);
+    };
+  }, [showError]);
+  // --- END: Comprehensive Script Loading Logic ---
+
   const handleSignInWithTelegram = useCallback(() => {
     if (!BOT_ID) {
       showError("Telegram bot ID is not configured.");
@@ -116,20 +168,18 @@ export function TelegramButton({
     }
 
     if (!window.Telegram?.Login?.auth) {
-      showError("Telegram script not loaded or auth function not found.");
+      showError("Telegram script not ready or auth function not found.");
       return;
     }
 
     onClick?.();
-    setIsLoading(true);
 
     window.Telegram.Login.auth(
       { bot_id: BOT_ID, request_access: true },
       (response: TelegramResponseData | false | null) => {
-        setIsLoading(false);
-
         if (!validateTelegramResponse(response)) {
           showError("Telegram authorization failed or was cancelled.");
+          setIsLoading(false); // Manually reset loading state on cancellation
           return;
         }
 
@@ -144,19 +194,6 @@ export function TelegramButton({
     processTelegramAuthAsync,
   ]);
 
-  const handleScriptLoad = useCallback(() => {
-    setIsScriptLoaded(true);
-  }, []);
-
-  // --- START FIX ---
-  // Add this useEffect to handle cached scripts
-  useEffect(() => {
-    if (window.Telegram) {
-      handleScriptLoad();
-    }
-  }, [handleScriptLoad]);
-  // --- END FIX ---
-
   const isButtonDisabled = disabled || !isScriptLoaded || isLoading;
   const buttonText = isLoading
     ? "Authenticating..."
@@ -165,23 +202,13 @@ export function TelegramButton({
       : "Loading Telegram...";
 
   return (
-    <>
-      <Script
-        src={TELEGRAM_SCRIPT_URL}
-        strategy="afterInteractive"
-        onReady={handleScriptLoad}
-        onError={() => {
-          showError("Failed to load Telegram script. Please try again.");
-        }}
-      />
-      <Button
-        onClick={handleSignInWithTelegram}
-        className={className}
-        disabled={isButtonDisabled}
-        type="button"
-      >
-        {buttonText}
-      </Button>
-    </>
+    <Button
+      onClick={handleSignInWithTelegram}
+      className={className}
+      disabled={isButtonDisabled}
+      type="button"
+    >
+      {buttonText}
+    </Button>
   );
 }
