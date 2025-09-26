@@ -47,14 +47,14 @@ export function WelcomeScreen({ fingerPrintKey }: { fingerPrintKey: string }) {
       loadOptions={{
         apiKey: fingerPrintKey,
         region: "us",
-        endpoint: [
-          "https://metrics.coa.build/73m1VCzNAzVUBpAV/aqRK0DiVNN1rcQcs",
-          FingerprintJSPro.defaultEndpoint,
-        ],
-        scriptUrlPattern: [
-          "https://metrics.coa.build/73m1VCzNAzVUBpAV/8kBRPgy1iMYUkkOh?apiKey=<apiKey>&version=<version>&loaderVersion=<loaderVersion>",
-          FingerprintJSPro.defaultScriptUrlPattern,
-        ],
+        // endpoint: [
+        //   "https://metrics.coa.build/73m1VCzNAzVUBpAV/aqRK0DiVNN1rcQcs",
+        //   FingerprintJSPro.defaultEndpoint,
+        // ],
+        // scriptUrlPattern: [
+        //   "https://metrics.coa.build/73m1VCzNAzVUBpAV/8kBRPgy1iMYUkkOh?apiKey=<apiKey>&version=<version>&loaderVersion=<loaderVersion>",
+        //   FingerprintJSPro.defaultScriptUrlPattern,
+        // ],
       }}
     >
       <WelcomeScreenContent />

@@ -39,20 +39,20 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headersList = await headers();
-  const nonce = headersList.get("x-nonce") || "";
+  // const headersList = await headers();
+  // const nonce = headersList.get("x-nonce") || "";
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
-      <head>
+      {/* <head>
         <meta name="nonce" content={nonce} />
-      </head>
+      </head> */}
       <body
         className={`${inter.variable} ${figtree.variable} ${montserrat.variable} overscroll-none font-sans antialiased noligatures h-full`}
       >
         <Script
           strategy="afterInteractive"
           src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_V3_SITE_KEY}`}
-          nonce={nonce}
+          // nonce={nonce}
         />
 
         <NuqsAdapter>

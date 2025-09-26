@@ -117,10 +117,10 @@ export function TelegramButton({
       return;
     }
 
-    // Get nonce from meta tag for CSP compliance
-    const nonce = document
-      .querySelector('meta[name="nonce"]')
-      ?.getAttribute("content");
+    // // Get nonce from meta tag for CSP compliance
+    // const nonce = document
+    //   .querySelector('meta[name="nonce"]')
+    //   ?.getAttribute("content");
 
     const script = document.createElement("script");
     script.id = TELEGRAM_SCRIPT_ID;
@@ -128,9 +128,9 @@ export function TelegramButton({
     script.async = true;
 
     // Add nonce to script for CSP compliance
-    if (nonce) {
-      script.setAttribute("nonce", nonce);
-    }
+    // if (nonce) {
+    //   script.setAttribute("nonce", nonce);
+    // }
 
     const handleLoad = () => {
       console.log("Telegram script loaded successfully.");
