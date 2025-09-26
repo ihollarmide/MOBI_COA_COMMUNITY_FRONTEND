@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { GlobalProvider } from "@/providers/global-provider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import Script from "next/script";
+import { headers } from "next/headers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,14 +39,20 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const nonce = headersList.get("x-nonce") || "";
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
+      <head>
+        <meta name="nonce" content={nonce} />
+      </head>
       <body
         className={`${inter.variable} ${figtree.variable} ${montserrat.variable} overscroll-none font-sans antialiased noligatures h-full`}
       >
         <Script
-          strategy="beforeInteractive"
+          strategy="afterInteractive"
           src={`https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_V3_SITE_KEY}`}
+          nonce={nonce}
         />
 
         <NuqsAdapter>
