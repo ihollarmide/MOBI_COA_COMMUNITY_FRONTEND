@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { GlobalProvider } from "@/providers/global-provider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import Script from "next/script";
-import { headers } from "next/headers";
+// import { headers } from "next/headers";
 
 const inter = Inter({
   subsets: ["latin"],

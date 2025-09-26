@@ -17,7 +17,7 @@ import ReCAPTCHA from "react-google-recaptcha";
 import { getRecaptchaV3Token } from "@/lib/captcha";
 import { connectWalletAction } from "@/app/actions";
 import {
-  FingerprintJSPro,
+  // FingerprintJSPro,
   FpjsProvider,
 } from "@fingerprintjs/fingerprintjs-pro-react";
 import { useVisitorData } from "@fingerprintjs/fingerprintjs-pro-react";
