@@ -23,6 +23,8 @@ export function SectionAction({
   collapsibleContent,
   isInputReadOnly,
   children,
+  onInputFocus,
+  onInputBlur,
 }: {
   title: string;
   description: string;
@@ -38,6 +40,8 @@ export function SectionAction({
   collapsibleContent?: ReactNode;
   isInputReadOnly?: boolean;
   children?: ReactNode;
+  onInputFocus?: () => void;
+  onInputBlur?: () => void;
 }) {
   return (
     <GlassCard
@@ -80,6 +84,8 @@ export function SectionAction({
                 disabled={isInputLoading || isInputReadOnly}
                 readOnly={isInputReadOnly}
                 endContent={isInputLoading ? <Loader loaderSize={16} /> : null}
+                onFocus={onInputFocus}
+                onBlur={onInputBlur}
               />
               {isError && errorMessage && (
                 <p className="text-destructive mt-1 text-xs font-normal leading-[1.5] tracking-xxs line-clamp-1">

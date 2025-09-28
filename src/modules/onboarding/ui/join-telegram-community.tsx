@@ -8,11 +8,18 @@ import { CITY_OF_ATLANTUS_TELEGRAM_LINK } from "@/common/constants";
 import { SectionAction } from "./section-action";
 import { SectionMetaInfo } from "./section-meta-info";
 import { ButtonsFooter } from "./buttons-footer";
-import { useConfirmTelegramMembership } from "../usecases/ConfirmTelegramMembership.usecase";
-import { useGetAuthStatus } from "@/modules/auth/usecases/GetAuthStatus.usecase";
+import {
+  TELEGRAM_TOAST_ID,
+  useConfirmTelegramMembership,
+} from "../usecases/ConfirmTelegramMembership.usecase";
+import {
+  useGetAuthStatus,
+  useRetrieveAuthStatus,
+} from "@/modules/auth/usecases/GetAuthStatus.usecase";
 import { TelegramSteps } from "../types";
 import { useGetTelegramBotLink } from "../usecases/GetTelegramBotLink.usecase";
 import { useAddTelegramUsername } from "../usecases/AddTelegramUsername.usecase";
+import { toast } from "sonner";
 
 const TITLE_MAP = {
   join: {
@@ -51,12 +58,20 @@ const JOIN_ACTION_LIST = [
 export function JoinTelegramCommunity() {
   const [username, setUsername] = useState("");
   const { data: authStatus } = useGetAuthStatus();
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const { mutate: retrieveAuthStatus, isPending: isRetrievingAuthStatus } =
+    useRetrieveAuthStatus();
 
   const { data: telegramBotLink, isPending: isGettingTelegramBotLink } =
     useGetTelegramBotLink();
 
-  const isTelegramVerified =
+  const isTelegramJoined =
     !!authStatus?.data?.telegramJoined &&
+    !!authStatus?.data?.telegramId &&
+    !!authStatus?.data?.telegramUsername;
+
+  const isTelegramVerified =
+    !!authStatus?.data?.telegramVerified &&
     !!authStatus?.data?.telegramId &&
     !!authStatus?.data?.telegramUsername;
 
@@ -89,7 +104,7 @@ export function JoinTelegramCommunity() {
     if (
       telegramStep === "success" ||
       telegramStep === "join" ||
-      isTelegramVerified
+      isTelegramJoined
     ) {
       setOnboardingUrlStates((prev) => ({
         ...prev,
@@ -105,12 +120,33 @@ export function JoinTelegramCommunity() {
   };
 
   const handleConfirmTelegramMembership = () => {
-    confirmTelegramMembership(undefined, {
-      onSuccess: () => {
-        setTelegramStep("success");
+    retrieveAuthStatus(undefined, {
+      onSuccess: (data) => {
+        if (data.data.telegramVerified) {
+          confirmTelegramMembership(undefined, {
+            onSuccess: () => {
+              setTelegramStep("success");
+            },
+            onError: (error) => {
+              setUsernameError({ isError: true, error: error.message });
+            },
+          });
+        } else {
+          toast.error(
+            "Your ownership of the telegram account has not been verified",
+            {
+              id: TELEGRAM_TOAST_ID,
+            }
+          );
+        }
       },
       onError: (error) => {
-        setUsernameError({ isError: true, error: error.message });
+        toast.error(
+          "We were unable to verify your ownership of the telegram account",
+          {
+            id: TELEGRAM_TOAST_ID,
+          }
+        );
       },
     });
   };
@@ -136,20 +172,38 @@ export function JoinTelegramCommunity() {
     );
   };
 
+  const onInputFocus = () => {
+    setIsInputFocused(true);
+  };
+
+  const onInputBlur = () => {
+    setIsInputFocused(false);
+  };
+
   useEffect(() => {
     if (
-      authStatus?.data?.telegramUsername &&
-      (!username || username === "" || username.length === 0)
+      !!authStatus?.data?.telegramUsername &&
+      (!username || username === "" || username.length === 0) &&
+      !isInputFocused
     ) {
       setUsername(authStatus?.data?.telegramUsername);
     }
-  }, [authStatus?.data?.telegramUsername, username]);
+  }, [authStatus?.data?.telegramUsername, username, isInputFocused]);
 
   useEffect(() => {
-    if (isTelegramVerified && telegramStep !== "success") {
+    if (isTelegramJoined && telegramStep !== "success") {
       setTelegramStep("success");
+      return;
     }
-  }, [isTelegramVerified, telegramStep]);
+
+    if (
+      isTelegramVerified &&
+      telegramStep !== "confirm" &&
+      telegramStep !== "success"
+    ) {
+      setTelegramStep("confirm");
+    }
+  }, [isTelegramJoined, isTelegramVerified, telegramStep]);
 
   return (
     <section className="w-full space-y-6 @container">
@@ -170,8 +224,10 @@ export function JoinTelegramCommunity() {
           telegramStep === "confirm" ||
           telegramStep === "submit"
         }
-        inputValue={username || authStatus?.data?.telegramUsername || ""}
+        inputValue={username}
         onInputChange={setUsername}
+        onInputFocus={onInputFocus}
+        onInputBlur={onInputBlur}
         isInputReadOnly={telegramStep !== "submit"}
         isInputLoading={isConfirmingMembership || isAddingTelegramUsername}
         inputPlaceholder="Your Telegram @username"

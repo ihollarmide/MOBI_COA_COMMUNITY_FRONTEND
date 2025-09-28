@@ -24,7 +24,7 @@ export const confirmTelegramMembership = async () => {
   }
 };
 
-const TOAST_ID = "confirm-telegram-membership";
+export const TELEGRAM_TOAST_ID = "confirm-telegram-membership";
 
 export const useConfirmTelegramMembership = () => {
   const invalidateQueries = useInvalidateQueries();
@@ -35,13 +35,15 @@ export const useConfirmTelegramMembership = () => {
     mutationFn: confirmTelegramMembership,
     onMutate: () => {
       toast.loading("Confirming your membership...", {
-        id: TOAST_ID,
+        id: TELEGRAM_TOAST_ID,
+        description: "",
       });
     },
     onSuccess: (data) => {
       if (data.data.success) {
         toast.success("Your membership has been confirmed successfully", {
-          id: TOAST_ID,
+          id: TELEGRAM_TOAST_ID,
+          description: "",
         });
         updateAuthStatusQuery({
           queryClient,
@@ -57,9 +59,13 @@ export const useConfirmTelegramMembership = () => {
           },
         });
       } else {
-        toast.error("Failed to confirm your telegram membership", {
-          id: TOAST_ID,
-        });
+        toast.error(
+          "Please Join the City of Atlantus Hall Community on Telegram and try again",
+          {
+            id: TELEGRAM_TOAST_ID,
+            description: "",
+          }
+        );
       }
       invalidateQueries({
         queryKeys: [QUERY_KEYS.AUTH_STATUS.all],
@@ -67,7 +73,9 @@ export const useConfirmTelegramMembership = () => {
     },
     onError: () => {
       toast.error("Failed to confirm your membership", {
-        id: TOAST_ID,
+        description:
+          "We were unable to confirm if you are a member of the City of Atlantus Hall Community on Telegram",
+        id: TELEGRAM_TOAST_ID,
       });
     },
   });

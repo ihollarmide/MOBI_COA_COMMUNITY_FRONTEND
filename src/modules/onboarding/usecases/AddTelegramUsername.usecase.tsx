@@ -42,6 +42,7 @@ export const useAddTelegramUsername = () => {
     onSuccess: (data, payload) => {
       if (data.data.success) {
         toast.success("Your Telegram username has been added successfully", {
+          description: "",
           id: TOAST_ID,
         });
         updateAuthStatusQuery({
@@ -59,6 +60,7 @@ export const useAddTelegramUsername = () => {
         });
       } else {
         toast.error("Failed to add your Telegram username", {
+          description: "",
           id: TOAST_ID,
         });
       }
@@ -68,6 +70,7 @@ export const useAddTelegramUsername = () => {
     },
     onError: () => {
       toast.error("Failed to add your Telegram username", {
+        description: "",
         id: TOAST_ID,
       });
     },
