@@ -18,6 +18,7 @@ import { OnboardingStepSlug } from "../types";
 import { useRouter } from "next/navigation";
 import { useGetIsClaimedKey } from "../usecases/GetIsClaimedKey.usecase";
 import { useGetUplineId } from "../usecases/GetUplineId.usecase";
+import { useGetTelegramBotLink } from "../usecases/GetTelegramBotLink.usecase";
 // import { PhoneVerification } from "./phone-verification";
 
 function StepWrapper({ children }: { children: React.ReactNode }) {
@@ -42,6 +43,7 @@ export function MainScreen() {
   useGetUplineId();
   const [{ step: stepSlug }, setOnboardingUrlStates] = useOnboardingUrlStates();
   const accessibleSlug = useGetStepToRedirectTo();
+  useGetTelegramBotLink();
 
   const isTwitterSigninStep =
     window.location.search.includes("?error") ||

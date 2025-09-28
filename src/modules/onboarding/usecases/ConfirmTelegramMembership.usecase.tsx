@@ -1,9 +1,5 @@
 import { post } from "@/lib/api-client";
-import {
-  VerifySocialPayload,
-  VerifySocialResponse,
-  VerifyTelegramMembershipPayload,
-} from "../types";
+import { VerifySocialResponse } from "../types";
 import { API_ENDPOINTS } from "@/lib/api-endpoints";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -11,48 +7,47 @@ import { useInvalidateQueries } from "@/hooks/useInvalidateQueries";
 import { QUERY_KEYS } from "@/common/constants/query-keys";
 import { updateAuthStatusQuery } from "@/modules/auth/lib/update-auth-query.lib";
 import { useSession } from "next-auth/react";
+import { EmptyObject } from "react-hook-form";
 
-export const verifyTelegram = async (
-  payload: VerifyTelegramMembershipPayload
-) => {
+export const confirmTelegramMembership = async () => {
   try {
-    const data = await post<VerifySocialResponse, VerifySocialPayload>({
+    const data = await post<VerifySocialResponse, EmptyObject>({
       url: API_ENDPOINTS.VERIFY.TELEGRAM,
-      payload: {
-        username: payload.telegramUsername,
-      },
+      payload: {},
     });
     return data;
   } catch (error: unknown) {
-    console.error(`Verify Telegram error:`, error);
+    console.error(`Confirm Telegram membership error:`, error);
     const message =
       error instanceof Error ? error.message : `Verify Telegram failed`;
     throw new Error(message);
   }
 };
 
-const TOAST_ID = "verify-telegram-membership";
+const TOAST_ID = "confirm-telegram-membership";
 
-export const useVerifyTelegramMembership = () => {
+export const useConfirmTelegramMembership = () => {
   const invalidateQueries = useInvalidateQueries();
   const { data: session } = useSession();
   const { update } = useSession();
   const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: verifyTelegram,
+    mutationFn: confirmTelegramMembership,
     onMutate: () => {
-      toast.loading("Verifying your membership...", {
+      toast.loading("Confirming your membership...", {
         id: TOAST_ID,
       });
     },
-    onSuccess: (data, payload) => {
+    onSuccess: (data) => {
       if (data.data.success) {
-        toast.success("Your membership has been verified successfully", {
+        toast.success("Your membership has been confirmed successfully", {
           id: TOAST_ID,
         });
         updateAuthStatusQuery({
           queryClient,
-          payload,
+          payload: {
+            telegramJoined: true,
+          },
         });
         update({
           ...session,
@@ -62,7 +57,7 @@ export const useVerifyTelegramMembership = () => {
           },
         });
       } else {
-        toast.error("Failed to verify your telegram membership", {
+        toast.error("Failed to confirm your telegram membership", {
           id: TOAST_ID,
         });
       }
@@ -71,7 +66,7 @@ export const useVerifyTelegramMembership = () => {
       });
     },
     onError: () => {
-      toast.error("Failed to verify your membership", {
+      toast.error("Failed to confirm your membership", {
         id: TOAST_ID,
       });
     },

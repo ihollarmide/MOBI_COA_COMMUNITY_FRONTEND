@@ -47,4 +47,5 @@ export const QUERY_KEYS = {
   UPLINE_ID: createQueryKeys<{ address?: Address; chainId?: number }>(
     "upline-id"
   ),
+  GET_TELEGRAM_BOT_LINK: createQueryKeys("get-telegram-bot-link"),
 };

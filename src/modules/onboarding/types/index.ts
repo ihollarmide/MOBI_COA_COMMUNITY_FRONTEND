@@ -10,7 +10,7 @@ export type OnboardingStepSlug = (typeof ONBOARDING_STEPS)[number]["slug"];
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 export type OnboardingStepNumber = (typeof ONBOARDING_STEPS)[number]["step"];
 
-export type VerifySocialPayload = {
+export type AddUsernamePayload = {
   username: string;
 };
 
@@ -73,3 +73,8 @@ export type VerifyPhoneVerificationPayload = {
 export type TelegramSteps = (typeof TelegramSteps)[number];
 export type InstagramSteps = (typeof InstagramSteps)[number];
 export type XSteps = (typeof XSteps)[number];
+
+export interface GetTelegramBotLinkResponse {
+  botLink: string;
+  instructions: string;
+}

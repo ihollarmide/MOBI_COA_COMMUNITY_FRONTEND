@@ -6,48 +6,59 @@ import { toast } from "sonner";
 import { useInvalidateQueries } from "@/hooks/useInvalidateQueries";
 import { QUERY_KEYS } from "@/common/constants/query-keys";
 import { updateAuthStatusQuery } from "@/modules/auth/lib/update-auth-query.lib";
+import { useSession } from "next-auth/react";
 
-export const verifyInstagram = async (payload: AddUsernamePayload) => {
+export const addTelegramUsername = async (payload: AddUsernamePayload) => {
   try {
     const data = await post<VerifySocialResponse, AddUsernamePayload>({
-      url: API_ENDPOINTS.VERIFY.INSTAGRAM,
-      payload: payload,
+      url: API_ENDPOINTS.VERIFY.ADD_TELEGRAM_USERNAME,
+      payload: {
+        username: payload.username,
+      },
     });
     return data;
   } catch (error: unknown) {
-    console.error(`Verify Instagram error:`, error);
+    console.error(`Add Telegram username error:`, error);
     const message =
-      error instanceof Error ? error.message : `Verify Instagram failed`;
+      error instanceof Error ? error.message : `Add Telegram username failed`;
     throw new Error(message);
   }
 };
 
-const TOAST_ID = "verify-instagram";
+const TOAST_ID = "add-telegram-username";
 
-export const useVerifyInstagram = () => {
-  const queryClient = useQueryClient();
+export const useAddTelegramUsername = () => {
   const invalidateQueries = useInvalidateQueries();
+  const { data: session } = useSession();
+  const { update } = useSession();
+  const queryClient = useQueryClient();
   const mutation = useMutation({
-    mutationFn: verifyInstagram,
+    mutationFn: addTelegramUsername,
     onMutate: () => {
-      toast.loading("Verifying your Instagram account...", {
+      toast.loading("Adding your Telegram username...", {
         id: TOAST_ID,
       });
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data, payload) => {
       if (data.data.success) {
-        toast.success("Your Instagram account has been verified successfully", {
+        toast.success("Your Telegram username has been added successfully", {
           id: TOAST_ID,
         });
         updateAuthStatusQuery({
           queryClient,
           payload: {
-            instagramFollowed: true,
-            instagramUsername: variables.username,
+            telegramUsername: payload.username,
+          },
+        });
+        update({
+          ...session,
+          user: {
+            ...session?.user,
+            telegramUsername: payload.username,
           },
         });
       } else {
-        toast.error("Failed to verify your Instagram account", {
+        toast.error("Failed to add your Telegram username", {
           id: TOAST_ID,
         });
       }
@@ -56,7 +67,7 @@ export const useVerifyInstagram = () => {
       });
     },
     onError: () => {
-      toast.error("Failed to verify your Instagram account", {
+      toast.error("Failed to add your Telegram username", {
         id: TOAST_ID,
       });
     },

@@ -55,6 +55,8 @@ export const protectedClient = (): AxiosInstance => {
       try {
         const session = await getSession();
 
+        console.log("session", session);
+
         if (session?.user?.accessToken) {
           request.headers.Authorization = `Bearer ${session.user.accessToken}`;
         } else {

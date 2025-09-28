@@ -68,4 +68,10 @@ export const XSteps = [
 ] as const;
 export const InstagramSteps = ["follow", "verify", "success"] as const;
 
-export const TelegramSteps = ["join", "verify", "signin", "success"] as const;
+export const TelegramSteps = [
+  "join",
+  "verify",
+  "submit",
+  "confirm",
+  "success",
+] as const;

@@ -1,14 +1,14 @@
 import { post } from "@/lib/api-client";
-import { VerifySocialPayload } from "../types";
+import { AddUsernamePayload } from "../types";
 import { API_ENDPOINTS } from "@/lib/api-endpoints";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { QUERY_KEYS } from "@/common/constants/query-keys";
 import { useInvalidateQueries } from "@/hooks/useInvalidateQueries";
 
-export const logTwitterHandle = async (payload: VerifySocialPayload) => {
+export const logTwitterHandle = async (payload: AddUsernamePayload) => {
   try {
-    const data = await post<unknown, VerifySocialPayload>({
+    const data = await post<unknown, AddUsernamePayload>({
       url: API_ENDPOINTS.VERIFY.INSTAGRAM,
       payload: payload,
     });
