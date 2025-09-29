@@ -2,6 +2,7 @@
 
 import { useAccount } from "wagmi";
 import { useState, useEffect } from "react";
+import { useAppKitAccount } from "@reown/appkit/react";
 
 type WalletConnectionStatus =
   | "idle"
@@ -12,6 +13,9 @@ type WalletConnectionStatus =
 
 export function useWalletConnectionStatus() {
   const { status: wagmiStatus, address } = useAccount();
+  const { status: appKitStatus, address: appKitAddress } = useAppKitAccount({
+    namespace: "eip155",
+  });
   const [walletConnectionStatus, setWalletConnectionStatus] =
     useState<WalletConnectionStatus>("idle");
   const [hasInitialized, setHasInitialized] = useState(false);
@@ -20,6 +24,15 @@ export function useWalletConnectionStatus() {
     walletConnectionStatus === "connecting" ||
     walletConnectionStatus === "reconnecting" ||
     walletConnectionStatus === "idle";
+
+  // useEffect(() => {
+  //   console.log({
+  //     appKitStatus,
+  //     appKitAddress,
+  //     wagmiStatus,
+  //     wagmiAddress: address,
+  //   })
+  // }, [appKitStatus, appKitAddress])
 
   useEffect(() => {
     if (!hasInitialized && wagmiStatus === "disconnected") {

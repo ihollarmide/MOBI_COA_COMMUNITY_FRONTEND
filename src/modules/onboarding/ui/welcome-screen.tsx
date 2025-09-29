@@ -5,25 +5,24 @@ import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { SectionTitle } from "@/components/ui/section-title";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
-import { useModal } from "connectkit";
 import { ONBOARDING_STEPS } from "@/modules/onboarding/data";
 import { useInitiateUserAuthentication } from "@/modules/auth/usecases/InitiateUserAuthentication.usecase";
-import { Address } from "viem";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useDisconnect } from "wagmi";
 import { toast } from "sonner";
 import ReCAPTCHA from "react-google-recaptcha";
 import { getRecaptchaV3Token } from "@/lib/captcha";
 import { connectWalletAction } from "@/app/actions";
+import { useAppKit } from "@reown/appkit/react";
+import { useDisconnect } from "@reown/appkit/react";
+
 import {
   // FingerprintJSPro,
   FpjsProvider,
 } from "@fingerprintjs/fingerprintjs-pro-react";
 import { useVisitorData } from "@fingerprintjs/fingerprintjs-pro-react";
 import { AUTH_TOAST_ID, SIGNIN_APP_NAME } from "@/modules/auth/constants";
-
-const TOAST_ID = "onboarding-toast";
+import { useWalletOnConnect } from "@/hooks/useWalletOnConnect";
 
 export function WelcomeScreen({ fingerPrintKey }: { fingerPrintKey: string }) {
   const params = useSearchParams();
@@ -73,6 +72,7 @@ function WelcomeScreenContent() {
   } = useVisitorData({ extendedResult: true }, { immediate: true });
   const [showV2Challenge, setShowV2Challenge] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { disconnect } = useDisconnect();
 
   const { isConnected, address, status } = useWalletConnectionStatus();
   const {
@@ -86,45 +86,33 @@ function WelcomeScreenContent() {
     ipAddress: fingerPrintData?.ip ?? "",
   });
 
-  const { disconnectAsync } = useDisconnect({
-    mutation: {
-      onSuccess: () => {
-        setOpen(true);
-      },
-      onError: (error) => {
-        toast.error("Unable to open wallet connector. Please reload", {
-          description:
-            typeof error === "string"
-              ? error
-              : error?.message || "Unknown error",
-          id: TOAST_ID,
-        });
-      },
-    },
-  });
+  const { open } = useAppKit();
 
-  const { setOpen } = useModal({
-    onConnect: async ({ address }) => {
-      if (address) {
-        initiateUserAuthentication({
-          walletAddress: address as Address,
-          appName: SIGNIN_APP_NAME,
-        });
-      } else {
-        await disconnectAsync();
-        toast.error("Unable to get wallet address. Please reload", {
-          description: "No address found",
-          id: TOAST_ID,
-        });
-      }
+  const handleDisconnect = async () => {
+    await disconnect();
+    open({
+      view: "Connect",
+      namespace: "eip155",
+    });
+  };
+
+  useWalletOnConnect({
+    onConnect: ({ address }) => {
+      initiateUserAuthentication({
+        walletAddress: address,
+        appName: SIGNIN_APP_NAME,
+      });
     },
   });
 
   const handleConnect = async () => {
     if (status !== "disconnected") {
-      await disconnectAsync();
+      await handleDisconnect();
     } else {
-      setOpen(true);
+      open({
+        view: "Connect",
+        namespace: "eip155",
+      });
     }
   };
 

@@ -1,6 +1,6 @@
 import { ADDRESSES } from "@/common/constants/contracts";
 import { airdropAbi } from "@/common/contract-abis/airdropAbi";
-import { config } from "@/config/wagmi";
+import { config } from "@/config";
 import { readContract } from "@wagmi/core";
 import { useChainId, useReadContract } from "wagmi";
 

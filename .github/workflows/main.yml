@@ -39,6 +39,7 @@ jobs:
             echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_DEV }}" >> .env.production
             echo "NEXT_PUBLIC_COA_API_URL=${{ secrets.NEXT_PUBLIC_COA_API_URL_DEV }}" >> .env.production
             echo "AUTH_SECRET=${{ secrets.AUTH_SECRET_DEV }}" >> .env.production
+            echo "NEXT_PUBLIC_PROJECT_ID=${{ secrets.NEXT_PUBLIC_PROJECT_ID }}" >> .env.production
             echo "AUTH_URL=${{ secrets.AUTH_URL_DEV }}" >> .env.production
             echo "NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL_DEV }}" >> .env.production
             echo "BASE_SEPOLIA_RPC_URL=${{ secrets.BASE_SEPOLIA_RPC_URL }}" >> .env.production
@@ -63,6 +64,7 @@ jobs:
             echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_MAIN }}" >> .env.production
             echo "NEXT_PUBLIC_COA_API_URL=${{ secrets.NEXT_PUBLIC_COA_API_URL_MAIN }}" >> .env.production
             echo "AUTH_SECRET=${{ secrets.AUTH_SECRET_MAIN }}" >> .env.production
+            echo "NEXT_PUBLIC_PROJECT_ID=${{ secrets.NEXT_PUBLIC_PROJECT_ID }}" >> .env.production
             echo "AUTH_URL=${{ secrets.AUTH_URL_MAIN }}" >> .env.production
             echo "NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL_MAIN }}" >> .env.production
             echo "BASE_SEPOLIA_RPC_URL=${{ secrets.BASE_SEPOLIA_RPC_URL }}" >> .env.production

@@ -1,21 +1,19 @@
 "use client";
 
 import { signOut } from "next-auth/react";
-import { useDisconnect } from "wagmi";
+import { useDisconnect } from "@reown/appkit/react";
 
 export function useHandleSignout() {
-  const { disconnectAsync } = useDisconnect({
-    mutation: {
-      onSettled: () => {
-        signOut({
-          redirectTo: `/welcome`,
-        });
-      },
-    },
-  });
+  const { disconnect } = useDisconnect();
+
+  const handleSignout = async () => {
+    await disconnect();
+    signOut({
+      redirectTo: `/welcome`,
+    });
+  };
+
   return {
-    handleSignout: () => {
-      disconnectAsync();
-    },
+    handleSignout,
   };
 }

@@ -2,7 +2,7 @@ import { ADDRESSES } from "@/common/constants/contracts";
 import { QUERY_KEYS } from "@/common/constants/query-keys";
 import { coaAuthContractAbi } from "@/common/contract-abis/coaAuthContractAbi";
 import { referralAbi } from "@/common/contract-abis/referralAbi";
-import { config } from "@/config/wagmi";
+import { config } from "@/config";
 import { getEthersProvider } from "@/providers/ethers-provider";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import { isZeroAddress } from "@/lib/utils";

@@ -123,6 +123,7 @@ export function JoinTelegramCommunity() {
     retrieveAuthStatus(undefined, {
       onSuccess: (data) => {
         if (data.data.telegramVerified) {
+          setUsernameError({ isError: false, error: null });
           confirmTelegramMembership(undefined, {
             onSuccess: () => {
               setTelegramStep("success");
@@ -132,8 +133,13 @@ export function JoinTelegramCommunity() {
             },
           });
         } else {
+          setUsernameError({
+            isError: true,
+            error:
+              "Your ownership of the telegram account cannot been verified",
+          });
           toast.error(
-            "Your ownership of the telegram account has not been verified",
+            "Your ownership of the telegram account cannot been verified",
             {
               id: TELEGRAM_TOAST_ID,
             }
@@ -141,12 +147,10 @@ export function JoinTelegramCommunity() {
         }
       },
       onError: (error) => {
-        toast.error(
-          "We were unable to verify your ownership of the telegram account",
-          {
-            id: TELEGRAM_TOAST_ID,
-          }
-        );
+        setUsernameError({ isError: true, error: error.message });
+        toast.error(error.message, {
+          id: TELEGRAM_TOAST_ID,
+        });
       },
     });
   };
