@@ -1,9 +1,13 @@
 import type { NextConfig } from "next";
+import { v4 as uuidv4 } from "uuid";
 
 const nextConfig: NextConfig = {
   // compiler: {
   //   removeConsole: process.env.NODE_ENV === "production",
   // },
+  generateBuildId: async () => {
+    return uuidv4(); // or use commit SHA
+  },
   images: {
     remotePatterns: [
       {
