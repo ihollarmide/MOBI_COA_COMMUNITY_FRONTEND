@@ -21,6 +21,15 @@ export function useWalletConnectionStatus() {
     walletConnectionStatus === "reconnecting" ||
     walletConnectionStatus === "idle";
 
+  // useEffect(() => {
+  //   console.log({
+  //     appKitStatus,
+  //     appKitAddress,
+  //     wagmiStatus,
+  //     wagmiAddress: address,
+  //   })
+  // }, [appKitStatus, appKitAddress])
+
   useEffect(() => {
     if (!hasInitialized && wagmiStatus === "disconnected") {
       // On first load, keep it as idle

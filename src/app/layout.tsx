@@ -6,6 +6,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { GlobalProvider } from "@/providers/global-provider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import Script from "next/script";
+import ContextProvider from "@/ context";
+import { headers } from "next/headers";
 // import { headers } from "next/headers";
 
 const inter = Inter({
@@ -39,7 +41,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // const headersList = await headers();
+  const headersObj = await headers();
+  const cookies = headersObj.get("cookie") || "";
   // const nonce = headersList.get("x-nonce") || "";
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
@@ -55,20 +58,22 @@ export default async function RootLayout({
           // nonce={nonce}
         />
 
-        <NuqsAdapter>
-          <GlobalProvider>
-            {children}
-            <Toaster
-              position="top-center"
-              richColors
-              toastOptions={{
-                style: {
-                  justifyContent: "center",
-                },
-              }}
-            />
-          </GlobalProvider>
-        </NuqsAdapter>
+        <ContextProvider cookies={cookies}>
+          <NuqsAdapter>
+            <GlobalProvider>
+              {children}
+              <Toaster
+                position="top-center"
+                richColors
+                toastOptions={{
+                  style: {
+                    justifyContent: "center",
+                  },
+                }}
+              />
+            </GlobalProvider>
+          </NuqsAdapter>
+        </ContextProvider>
       </body>
     </html>
   );

@@ -1,7 +1,7 @@
 import { ADDRESSES } from "@/common/constants/contracts";
 import { QUERY_KEYS } from "@/common/constants/query-keys";
 import { airdropAbi } from "@/common/contract-abis/airdropAbi";
-import { config } from "@/config/wagmi";
+import { config } from "@/config";
 import { getEthersProvider } from "@/providers/ethers-provider";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import { QueryClient, skipToken, useQuery } from "@tanstack/react-query";

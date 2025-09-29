@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
 import { toast } from "sonner";
 import { disconnect } from "@wagmi/core";
-import { wagmiSSRConfig } from "./config/wagmi-ssr-config";
+import { config } from "./config";
 import { getSession } from "next-auth/react";
 import { signOut } from "./lib/auth";
 // Constants
@@ -81,7 +81,7 @@ export const protectedClient = (): AxiosInstance => {
         await signOut({
           redirectTo: "/welcome",
         });
-        await disconnect(wagmiSSRConfig);
+        await disconnect(config);
         toast.error("Session expired, please re-authenticate", {
           id: "session-expired",
         });
