@@ -8,7 +8,7 @@ import {
   getIsClaimedKey,
   updateIsClaimedKeyQuery,
 } from "./GetIsClaimedKey.usecase";
-import { useOnboardingUrlStates } from "../hooks/useOnboardingUrlStates";
+import { useOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboardingUrlStates";
 import { useChainId } from "wagmi";
 import { ADDRESSES } from "@/common/constants/contracts";
 import { airdropAbi } from "@/common/contract-abis/airdropAbi";
@@ -35,13 +35,14 @@ export const useClaimToken = () => {
     useMutation({
       mutationFn: getIsClaimedKey,
       onMutate: () => {
-        toast.loading("Setting up...", {
+        toast.loading("Checking if you have already claimed...", {
           description: "",
           id: TOAST_ID,
         });
       },
-      onError: () => {
-        toast.error("Unable to claim. Please try again", {
+      onError: (error) => {
+        toast.error("Unable to check if you have already claimed", {
+          description: error.message,
           id: TOAST_ID,
         });
       },
@@ -53,13 +54,14 @@ export const useClaimToken = () => {
   } = useMutation({
     mutationFn: getNextClaimableTokenId,
     onMutate: () => {
-      toast.loading("Claiming Yard Genesis Key...", {
+      toast.loading("Getting next claimable token...", {
         description: "",
         id: TOAST_ID,
       });
     },
-    onError: () => {
-      toast.error("Unable to claim. Please try again", {
+    onError: (error) => {
+      toast.error("Unable to get next claimable token", {
+        description: error.message,
         id: TOAST_ID,
       });
     },
@@ -75,6 +77,7 @@ export const useClaimToken = () => {
     onSuccess() {
       if (!address) {
         toast.error("Please connect your wallet", {
+          description: "We are unable to get your address",
           id: TOAST_ID,
         });
         return;
@@ -87,7 +90,8 @@ export const useClaimToken = () => {
           chainId,
         },
       });
-      toast.success("Yard has been claimed successfully", {
+      toast.success("You have successfully claimed the free Yard Genesis Key", {
+        description: "",
         id: TOAST_ID,
       });
       setOnboardingUrlStates((prev) => ({
@@ -133,10 +137,18 @@ export const useClaimToken = () => {
       {
         onSuccess: (isClaimed) => {
           if (isClaimed) {
-            toast.success("You have already claimed", {
+            toast.success(
+              "You have already claimed the free Yard Genesis Key",
+              {
+                description: "",
+                id: TOAST_ID,
+              }
+            );
+          } else {
+            toast.loading("Initiating Yard Genesis Key claim...", {
+              description: "",
               id: TOAST_ID,
             });
-          } else {
             getClaimParameters(undefined, {
               onSuccess: (claimParameters) => {
                 requestNextClaimableTokenId(
@@ -157,6 +169,7 @@ export const useClaimToken = () => {
 
                       if (!address) {
                         toast.error("Please connect your wallet", {
+                          description: "We are unable to get your address",
                           id: TOAST_ID,
                         });
                         handleSignout();
@@ -194,10 +207,11 @@ export const useClaimToken = () => {
                   }
                 );
               },
-              onError: () => {
-                toast.error("Unable to claim", {
-                  description: "Please try again",
+              onError: (error) => {
+                toast.error("Unable to initiate Yard Genesis Key claim", {
+                  description: error.message,
                   id: TOAST_ID,
+                  duration: 10000,
                 });
               },
             });
