@@ -1,17 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  compiler: {
-    removeConsole: process.env.NODE_ENV === "production",
-  },
-  allowedDevOrigins: [
-    "http://127.0.0.1:80",
-    "http://127.0.0.1",
-    "127.0.0.1:80",
-    "127.0.0.1",
-    "http://localhost:80",
-    "http://localhost",
-  ],
+  // compiler: {
+  //   removeConsole: process.env.NODE_ENV === "production",
+  // },
   images: {
     remotePatterns: [
       {
@@ -35,7 +27,7 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
   },
   /* config options here */
-  webpack(config, { dev }) {
+  webpack(config, { dev, isServer }) {
     // ✅ Fix unsafe-eval by changing source maps
     if (dev) {
       config.devtool = "source-map";
