@@ -59,8 +59,7 @@ export function JoinTelegramCommunity() {
   const [username, setUsername] = useState("");
   const { data: authStatus } = useGetAuthStatus();
   const [isInputFocused, setIsInputFocused] = useState(false);
-  const { mutate: retrieveAuthStatus, isPending: isRetrievingAuthStatus } =
-    useRetrieveAuthStatus();
+  const { mutate: retrieveAuthStatus } = useRetrieveAuthStatus();
 
   const { data: telegramBotLink, isPending: isGettingTelegramBotLink } =
     useGetTelegramBotLink();

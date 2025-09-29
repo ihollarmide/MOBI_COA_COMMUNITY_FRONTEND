@@ -13,9 +13,6 @@ type WalletConnectionStatus =
 
 export function useWalletConnectionStatus() {
   const { status: wagmiStatus, address } = useAccount();
-  const { status: appKitStatus, address: appKitAddress } = useAppKitAccount({
-    namespace: "eip155",
-  });
   const [walletConnectionStatus, setWalletConnectionStatus] =
     useState<WalletConnectionStatus>("idle");
   const [hasInitialized, setHasInitialized] = useState(false);

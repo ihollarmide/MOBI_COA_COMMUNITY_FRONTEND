@@ -35,7 +35,7 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
   },
   /* config options here */
-  webpack(config, { dev, isServer }) {
+  webpack(config, { dev }) {
     // ✅ Fix unsafe-eval by changing source maps
     if (dev) {
       config.devtool = "source-map";
