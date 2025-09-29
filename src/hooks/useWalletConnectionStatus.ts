@@ -2,7 +2,6 @@
 
 import { useAccount } from "wagmi";
 import { useState, useEffect } from "react";
-import { useAppKitAccount } from "@reown/appkit/react";
 
 type WalletConnectionStatus =
   | "idle"
