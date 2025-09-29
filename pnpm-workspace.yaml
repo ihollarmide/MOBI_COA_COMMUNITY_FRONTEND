@@ -1,6 +1,7 @@
 onlyBuiltDependencies:
-  - "@fingerprintjs/fingerprintjs-pro-react"
-  - "@tailwindcss/oxide"
+  - '@fingerprintjs/fingerprintjs-pro-react'
+  - '@reown/appkit'
+  - '@tailwindcss/oxide'
   - bufferutil
   - keccak
   - lefthook
