@@ -50,7 +50,9 @@ async function traceTransactionReceiptError({
   setState: React.Dispatch<React.SetStateAction<SequentialWriteState>>;
 }) {
   const alchemyProvider = new ethers.JsonRpcProvider(
-    chainId === 84532 ? `/api/rpc/base-sepolia` : `/api/rpc/bsc`
+    chainId === 84532
+      ? `https://base-sepolia.g.alchemy.com/v2/ovLFyNjSpw-IizOBzpITg`
+      : `https://bnb-mainnet.g.alchemy.com/v2/VZp21oJ4tRhkRpONwkRGs`
   );
   let errorMessage = "Transaction reverted on-chain";
 
