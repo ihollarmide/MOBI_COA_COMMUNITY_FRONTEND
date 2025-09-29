@@ -5,6 +5,7 @@ export const ONBOARDING_STEPS: {
   step: number;
   slug:
     | "wallet-connected"
+    // | "verify-phone-number"
     | "join-telegram"
     | "follow-us"
     | "enter-referral-code"
@@ -18,6 +19,12 @@ export const ONBOARDING_STEPS: {
     step: 1,
     slug: "wallet-connected",
   },
+  // {
+  //   title: "Verify your phone number.",
+  //   icon: IconsNames.PHONE,
+  //   step: 2,
+  //   slug: "verify-phone-number",
+  // },
   {
     title: "Join the Atlantus City Hall Telegram Community.",
     icon: IconsNames.USERS_3,
@@ -25,7 +32,7 @@ export const ONBOARDING_STEPS: {
     slug: "join-telegram",
   },
   {
-    title: "Follow us on either X or Instagram (or both).",
+    title: "Follow us on X, post a tweet and follow us on Instagram (or both).",
     icon: IconsNames.THUMBS_UP,
     step: 3,
     slug: "follow-us",
@@ -48,4 +55,23 @@ export const ONBOARDING_STEPS: {
     step: 6,
     slug: "join-vmcc-dao",
   },
+] as const;
+
+export const SOCIAL_PLATFORMS = ["x", "instagram"] as const;
+
+export const XSteps = [
+  "follow",
+  "post",
+  "signin",
+  "verify",
+  "success",
+] as const;
+export const InstagramSteps = ["follow", "verify", "success"] as const;
+
+export const TelegramSteps = [
+  "join",
+  "verify",
+  "submit",
+  "confirm",
+  "success",
 ] as const;

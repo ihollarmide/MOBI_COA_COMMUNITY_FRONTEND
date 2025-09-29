@@ -1,0 +1,132 @@
+name: coa-community-frontend
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - closed
+    branches:
+      - main
+      - dev
+      - uat
+
+jobs:
+  build-and-deploy:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      - name: Enable corepack (pnpm)
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Set environment variables
+        run: |
+          if [ "${{ github.event.pull_request.base.ref }}" = "dev" ]; then
+            echo "NEXT_PUBLIC_ENVIRONMENT=local" >> .env.production
+            echo "AUTH_TRUST_HOST=true" >> .env.production
+            echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_DEV }}" >> .env.production
+            echo "NEXT_PUBLIC_COA_API_URL=${{ secrets.NEXT_PUBLIC_COA_API_URL_DEV }}" >> .env.production
+            echo "AUTH_SECRET=${{ secrets.AUTH_SECRET_DEV }}" >> .env.production
+            echo "NEXT_PUBLIC_PROJECT_ID=${{ secrets.NEXT_PUBLIC_PROJECT_ID }}" >> .env.production
+            echo "AUTH_URL=${{ secrets.AUTH_URL_DEV }}" >> .env.production
+            echo "NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL_DEV }}" >> .env.production
+            echo "BASE_SEPOLIA_RPC_URL=${{ secrets.BASE_SEPOLIA_RPC_URL }}" >> .env.production
+            echo "BSC_RPC_URL=${{ secrets.BSC_RPC_URL }}" >> .env.production
+            echo "BASE_SEPOLIA_FALLBACK_RPC_URL=${{ secrets.BASE_SEPOLIA_FALLBACK_RPC_URL }}" >> .env.production
+            echo "BSC_FALLBACK_RPC_URL=${{ secrets.BSC_FALLBACK_RPC_URL }}" >> .env.production
+            echo "NEXT_PUBLIC_APP_SESSION_NAME=${{ secrets.NEXT_PUBLIC_APP_SESSION_NAME_DEV }}" >> .env.production
+            echo "SESSION_SECRET=${{ secrets.SESSION_SECRET_DEV }}" >> .env.production
+            echo "NEXT_PUBLIC_GOOGLE_RECAPTCHA_V3_SITE_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_RECAPTCHA_V3_SITE_KEY }}" >> .env.production
+            echo "GOOGLE_RECAPTCHA_V3_SECRET_KEY=${{ secrets.GOOGLE_RECAPTCHA_V3_SECRET_KEY }}" >> .env.production
+            echo "NEXT_PUBLIC_GOOGLE_RECAPTCHA_V2_SITE_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_RECAPTCHA_V2_SITE_KEY }}" >> .env.production
+            echo "GOOGLE_RECAPTCHA_V2_SECRET_KEY=${{ secrets.GOOGLE_RECAPTCHA_V2_SECRET_KEY }}" >> .env.production
+            echo "TELEGRAM_BOT_SECRET_KEY=${{ secrets.TELEGRAM_BOT_SECRET_KEY_DEV }}" >> .env.production
+            echo "NEXT_PUBLIC_TELEGRAM_BOT_ID=${{ secrets.NEXT_PUBLIC_TELEGRAM_BOT_ID_DEV }}" >> .env.production
+            echo "TWITTER_CLIENT_ID=${{ secrets.TWITTER_CLIENT_ID }}" >> .env.production
+            echo "TWITTER_CLIENT_SECRET=${{ secrets.TWITTER_CLIENT_SECRET }}" >> .env.production
+            echo "TWITTER_REDIRECT_URI=${{ secrets.TWITTER_REDIRECT_URI_DEV }}" >> .env.production
+            echo "FINGERPRINT_SECRET_KEY=${{ secrets.FINGERPRINT_SECRET_KEY }}" >> .env.production
+          elif [ "${{ github.event.pull_request.base.ref }}" = "main" ]; then
+            echo "NEXT_PUBLIC_ENVIRONMENT=production" >> .env.production
+            echo "AUTH_TRUST_HOST=true" >> .env.production
+            echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_MAIN }}" >> .env.production
+            echo "NEXT_PUBLIC_COA_API_URL=${{ secrets.NEXT_PUBLIC_COA_API_URL_MAIN }}" >> .env.production
+            echo "AUTH_SECRET=${{ secrets.AUTH_SECRET_MAIN }}" >> .env.production
+            echo "NEXT_PUBLIC_PROJECT_ID=${{ secrets.NEXT_PUBLIC_PROJECT_ID }}" >> .env.production
+            echo "AUTH_URL=${{ secrets.AUTH_URL_MAIN }}" >> .env.production
+            echo "NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL_MAIN }}" >> .env.production
+            echo "BASE_SEPOLIA_RPC_URL=${{ secrets.BASE_SEPOLIA_RPC_URL }}" >> .env.production
+            echo "BSC_RPC_URL=${{ secrets.BSC_RPC_URL }}" >> .env.production
+            echo "BASE_SEPOLIA_FALLBACK_RPC_URL=${{ secrets.BASE_SEPOLIA_FALLBACK_RPC_URL }}" >> .env.production
+            echo "BSC_FALLBACK_RPC_URL=${{ secrets.BSC_FALLBACK_RPC_URL }}" >> .env.production
+            echo "NEXT_PUBLIC_APP_SESSION_NAME=${{ secrets.NEXT_PUBLIC_APP_SESSION_NAME_MAIN }}" >> .env.production
+            echo "SESSION_SECRET=${{ secrets.SESSION_SECRET_MAIN }}" >> .env.production
+            echo "NEXT_PUBLIC_GOOGLE_RECAPTCHA_V3_SITE_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_RECAPTCHA_V3_SITE_KEY }}" >> .env.production
+            echo "GOOGLE_RECAPTCHA_V3_SECRET_KEY=${{ secrets.GOOGLE_RECAPTCHA_V3_SECRET_KEY }}" >> .env.production
+            echo "NEXT_PUBLIC_GOOGLE_RECAPTCHA_V2_SITE_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_RECAPTCHA_V2_SITE_KEY }}" >> .env.production
+            echo "GOOGLE_RECAPTCHA_V2_SECRET_KEY=${{ secrets.GOOGLE_RECAPTCHA_V2_SECRET_KEY }}" >> .env.production
+            echo "TELEGRAM_BOT_SECRET_KEY=${{ secrets.TELEGRAM_BOT_SECRET_KEY_MAIN }}" >> .env.production
+            echo "NEXT_PUBLIC_TELEGRAM_BOT_ID=${{ secrets.NEXT_PUBLIC_TELEGRAM_BOT_ID_MAIN }}" >> .env.production
+            echo "TWITTER_CLIENT_ID=${{ secrets.TWITTER_CLIENT_ID }}" >> .env.production
+            echo "TWITTER_CLIENT_SECRET=${{ secrets.TWITTER_CLIENT_SECRET }}" >> .env.production
+            echo "TWITTER_REDIRECT_URI=${{ secrets.TWITTER_REDIRECT_URI_MAIN }}" >> .env.production
+            echo "FINGERPRINT_SECRET_KEY=${{ secrets.FINGERPRINT_SECRET_KEY }}" >> .env.production
+          fi
+
+      - name: Build Next.js
+        run: NODE_OPTIONS="--max-old-space-size=4096" pnpm build
+
+      - name: Package build files
+        run: tar -czf build.tar.gz .next .env.production
+
+      - name: Deploy to server
+        run: |
+          sudo apt-get update -yqq
+          sudo apt-get install -yqq sshpass
+
+          if [ "${{ github.event.pull_request.base.ref }}" = "dev" ]; then
+            SERVER_USER=${{ secrets.SERVER_USER }}
+            SERVER_IP=${{ secrets.SERVER_IP }}
+            SERVER_PASS=${{ secrets.SERVER_PASSWORD }}
+            APP_DIR=/home/dev/COA_COMMUNITY_FRONTEND
+            PM2_NAME=coa-community-frontend-dev
+          elif [ "${{ github.event.pull_request.base.ref }}" = "uat" ]; then
+            SERVER_USER=${{ secrets.SERVER_USER }}
+            SERVER_IP=${{ secrets.SERVER_IP }}
+            SERVER_PASS=${{ secrets.SERVER_PASSWORD }}
+            APP_DIR=/home/uat/COA_COMMUNITY_FRONTEND
+            PM2_NAME=coa-community-frontend-uat
+          elif [ "${{ github.event.pull_request.base.ref }}" = "main" ]; then
+            SERVER_USER=${{ secrets.SERVER2_USER }}
+            SERVER_IP=${{ secrets.SERVER2_IP }}
+            SERVER_PASS=${{ secrets.SERVER2_PASSWORD }}
+            APP_DIR=/home/production/COA_COMMUNITY_FRONTEND
+            PM2_NAME=coa-community-frontend-production
+          fi
+
+          # Copy build to server
+          sshpass -p $SERVER_PASS scp -o StrictHostKeyChecking=no build.tar.gz $SERVER_USER@$SERVER_IP:$APP_DIR/
+
+          # Deploy on server
+          sshpass -p $SERVER_PASS ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "
+            cd $APP_DIR &&
+            tar -xzf build.tar.gz &&
+            rm build.tar.gz &&
+            mv .env.production .env &&
+            git stash &&
+            git pull &&
+            pnpm install  &&
+            pm2 reload $PM2_NAME
+          "

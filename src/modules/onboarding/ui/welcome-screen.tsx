@@ -5,185 +5,250 @@ import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { SectionTitle } from "@/components/ui/section-title";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
-import { useModal } from "connectkit";
 import { ONBOARDING_STEPS } from "@/modules/onboarding/data";
-import { useInitiateLogin } from "@/modules/auth/usecases/InitiateLogin.usecase";
-import { Address } from "viem";
-import { useGetUplineId } from "@/modules/onboarding/usecases/GetUplineId.usecase";
-import { useRouter } from "next/navigation";
-import { useGetIsClaimedKey } from "../usecases/GetIsClaimedKey.usecase";
-import { useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { serializeOnboardingUrlStates } from "../hooks/useOnboardingUrlStates";
+import { useInitiateUserAuthentication } from "@/modules/auth/usecases/InitiateUserAuthentication.usecase";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import ReCAPTCHA from "react-google-recaptcha";
+import { getRecaptchaV3Token } from "@/lib/captcha";
+import { connectWalletAction } from "@/app/actions";
+import { useAppKit } from "@reown/appkit/react";
+import { useDisconnect } from "@reown/appkit/react";
 
-export function WelcomeScreen() {
-  const { status: sessionStatus, data: session } = useSession();
-  const { data: isClaimed } = useGetIsClaimedKey();
-  const { data: uplineId } = useGetUplineId();
+import {
+  // FingerprintJSPro,
+  FpjsProvider,
+} from "@fingerprintjs/fingerprintjs-pro-react";
+import { useVisitorData } from "@fingerprintjs/fingerprintjs-pro-react";
+import { AUTH_TOAST_ID, SIGNIN_APP_NAME } from "@/modules/auth/constants";
+import { useWalletOnConnect } from "@/hooks/useWalletOnConnect";
+
+export function WelcomeScreen({ fingerPrintKey }: { fingerPrintKey: string }) {
+  const params = useSearchParams();
+
+  const error = params.get("error");
+  const code = params.get("code");
+
+  // ?error=CredentialsSignin&code=credentials
+
+  useEffect(() => {
+    if (!!error || !!code) {
+      toast.error("There was an error signing in. Please try again.", {
+        description: "",
+        id: AUTH_TOAST_ID,
+      });
+    }
+  }, [error, code]);
+
+  return (
+    <FpjsProvider
+      loadOptions={{
+        apiKey: fingerPrintKey,
+        region: "us",
+        // endpoint: [
+        //   "https://metrics.coa.build/73m1VCzNAzVUBpAV/aqRK0DiVNN1rcQcs",
+        //   FingerprintJSPro.defaultEndpoint,
+        // ],
+        // scriptUrlPattern: [
+        //   "https://metrics.coa.build/73m1VCzNAzVUBpAV/8kBRPgy1iMYUkkOh?apiKey=<apiKey>&version=<version>&loaderVersion=<loaderVersion>",
+        //   FingerprintJSPro.defaultScriptUrlPattern,
+        // ],
+      }}
+    >
+      <WelcomeScreenContent />
+    </FpjsProvider>
+  );
+}
+
+function WelcomeScreenContent() {
   const router = useRouter();
   router.prefetch("/onboarding");
-  useGetUplineId();
-  const { isConnected, address } = useWalletConnectionStatus();
   const {
-    mutate: initiateLogin,
-    isSigninMessage,
-    isCompletingLogin,
-    isInitiating,
-  } = useInitiateLogin();
+    isLoading: isGettingFingerprint,
+    error: fingerPrintError,
+    data: fingerPrintData,
+    getData,
+  } = useVisitorData({ extendedResult: true }, { immediate: true });
+  const [showV2Challenge, setShowV2Challenge] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { disconnect } = useDisconnect();
 
-  const { setOpen } = useModal({
+  const { isConnected, address, status } = useWalletConnectionStatus();
+  const {
+    mutate: initiateUserAuthentication,
+    isSigninMessage,
+    isCompletingUserAuthentication,
+    isInitiatingUserAuthentication,
+    isPending: isAuthenticationInProgress,
+  } = useInitiateUserAuthentication({
+    fingerPrintId: fingerPrintData?.visitorId ?? "",
+    ipAddress: fingerPrintData?.ip ?? "",
+  });
+
+  const { open } = useAppKit();
+
+  const handleDisconnect = async () => {
+    await disconnect();
+    open({
+      view: "Connect",
+      namespace: "eip155",
+    });
+  };
+
+  useWalletOnConnect({
     onConnect: ({ address }) => {
-      if (address) {
-        initiateLogin({
-          walletAddress: address as Address,
-          appName: "COA Community",
-        });
-      }
+      initiateUserAuthentication({
+        walletAddress: address,
+        appName: SIGNIN_APP_NAME,
+      });
     },
   });
 
-  const handleConnect = () => {
-    if (isConnected) {
-      if (address) {
-        initiateLogin({
-          walletAddress: address as Address,
-          appName: "COA Community",
-        });
-      }
+  const handleConnect = async () => {
+    if (status !== "disconnected") {
+      await handleDisconnect();
     } else {
-      setOpen(true);
+      open({
+        view: "Connect",
+        namespace: "eip155",
+      });
     }
   };
 
-  const isLoading = isSigninMessage || isCompletingLogin || isInitiating;
-
-  useEffect(() => {
-    const onboardingRoute = "/onboarding";
-    if (sessionStatus === "authenticated" && address) {
-      if (isClaimed || session?.user?.genesisClaimed) {
-        return router.replace(
-          onboardingRoute +
-            serializeOnboardingUrlStates({
-              step: "join-vmcc-dao",
-            })
-        );
-      } else if (session?.user?.uplineId || !!uplineId) {
-        if (!session?.user?.telegramJoined) {
-          return router.replace(
-            onboardingRoute +
-              serializeOnboardingUrlStates({
-                step: "join-telegram",
-              })
-          );
-        }
-
-        if (
-          !session?.user?.twitterFollowed &&
-          !session?.user?.instagramFollowed
-        ) {
-          return router.replace(
-            onboardingRoute +
-              serializeOnboardingUrlStates({
-                step: "follow-us",
-              })
-          );
-        }
-
-        return router.replace(
-          onboardingRoute +
-            serializeOnboardingUrlStates({
-              step: "claim-genesis-key",
-            })
-        );
-      } else if (
-        session?.user?.twitterFollowed ||
-        session?.user?.instagramFollowed
-      ) {
-        if (!session?.user?.telegramJoined) {
-          return router.replace(
-            onboardingRoute +
-              serializeOnboardingUrlStates({
-                step: "join-telegram",
-              })
-          );
-        }
-
-        return router.replace(
-          onboardingRoute +
-            serializeOnboardingUrlStates({
-              step: "enter-referral-code",
-            })
-        );
-      } else if (session?.user?.telegramJoined) {
-        return router.replace(
-          onboardingRoute +
-            serializeOnboardingUrlStates({
-              step: "follow-us",
-            })
-        );
-      }
-      router.replace(onboardingRoute);
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    if (isGettingFingerprint) return;
+    if (fingerPrintError) {
+      getData({
+        ignoreCache: true,
+      });
     }
-  }, [
-    sessionStatus,
-    address,
-    session?.user?.uplineId,
-    session?.user?.twitterFollowed,
-    session?.user?.instagramFollowed,
-    session?.user?.telegramJoined,
-    session?.user?.genesisClaimed,
-    isClaimed,
-    uplineId,
-  ]);
+
+    e.preventDefault();
+    setIsSubmitting(true);
+    setShowV2Challenge(false);
+    toast.loading("Verifying user...", {
+      id: "captcha",
+    });
+    const v3Token = await getRecaptchaV3Token();
+    const res = await connectWalletAction({ v3Token });
+
+    if (res.success) {
+      toast.success("User verified", {
+        id: "captcha",
+      });
+      handleConnect();
+    } else if (res.requireV2) {
+      toast.error("Additional challenge required", {
+        id: "captcha",
+      });
+      setShowV2Challenge(true);
+    } else {
+      toast.error(res.message ?? "Verification failed. Please try again", {
+        id: "captcha",
+      });
+    }
+    setIsSubmitting(false);
+  }
+
+  // This handler is for the v2 FALLBACK submission
+  async function handleV2Submit(v2Token: string | null) {
+    if (!v2Token) {
+      toast.error("Challenge expired. Please try again.", { id: "captcha" });
+      setShowV2Challenge(false); // Hide and let them retry the form
+      return;
+    }
+
+    setIsSubmitting(true);
+    toast.loading("Finalizing verification...", { id: "captcha" });
+
+    const res = await connectWalletAction({ v2Token }); // Send the v2 token this time
+
+    if (res.success) {
+      toast.success("User verified!", { id: "captcha" });
+      setShowV2Challenge(false);
+      handleConnect();
+    } else {
+      toast.error(res.message || "Final verification failed.", {
+        id: "captcha",
+      });
+      setShowV2Challenge(false); // Hide and let them retry the form
+    }
+    setIsSubmitting(false);
+  }
+
+  const isBtnDisabled =
+    isAuthenticationInProgress ||
+    isSubmitting ||
+    showV2Challenge ||
+    isGettingFingerprint;
 
   return (
-    <div className="w-full @container">
-      <GlassCard className="p-4 @sm:p-6 w-full space-y-8">
-        <div className="space-y-2 text-center w-full">
-          <SectionTitle>Join the VMCC DAO</SectionTitle>
-          <p className="text-sm leading-[1.4] text-white/70">
-            To claim your free Yard Genesis Key NFT, please complete the
-            following steps:
-          </p>
-        </div>
+    <form className="w-full" onSubmit={handleSubmit}>
+      <div className="w-full @container">
+        <GlassCard className="p-4 @sm:p-6 w-full space-y-8">
+          <div className="space-y-2 text-center w-full">
+            <SectionTitle>Join the VMCC DAO</SectionTitle>
+            <p className="text-sm leading-[1.4] text-white/70">
+              To claim your free Yard Genesis Key NFT, please complete the
+              following steps:
+            </p>
+          </div>
 
-        <div className="w-full space-y-5">
-          {ONBOARDING_STEPS.map((step) => (
-            <div
-              key={step.slug}
-              className="flex items-center justify-start gap-x-3"
-            >
-              <div className="bg-glass-gradient inline-flex items-center justify-center rounded-[10px] border-[0.5px] border-white/[0.05] border-solid px-3 py-[11px]">
-                <Icon
-                  name={step.icon}
-                  width={20}
-                  height={20}
-                  className="size-5 text-white"
-                />
+          <div className="w-full space-y-5">
+            {ONBOARDING_STEPS.map((step) => (
+              <div
+                key={step.slug}
+                className="flex items-center justify-start gap-x-3"
+              >
+                <div className="bg-glass-gradient inline-flex items-center justify-center rounded-[10px] border-[0.5px] border-white/[0.05] border-solid px-3 py-[11px]">
+                  <Icon
+                    name={step.icon}
+                    width={20}
+                    height={20}
+                    className="size-5 text-white"
+                  />
+                </div>
+                <p className="text-lg font-normal leading-[1.2] tracking-[0.18px] text-white">
+                  {step.title}
+                </p>
               </div>
-              <p className="text-lg font-normal leading-[1.2] tracking-[0.18px] text-white">
-                {step.title}
-              </p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <Button
-          onClick={handleConnect}
-          disabled={isLoading}
-          className="w-full cursor-pointer"
-        >
-          {isSigninMessage ? (
-            "Signing Message"
-          ) : isInitiating ? (
-            "Initiating Sign in"
-          ) : isCompletingLogin ? (
-            "Completing Authentication"
-          ) : (
-            <>{isConnected && address ? "Continue" : "Connect Wallet"}</>
+          {showV2Challenge && (
+            <div className="flex justify-center w-full my-4">
+              <ReCAPTCHA
+                sitekey={process.env.NEXT_PUBLIC_GOOGLE_RECAPTCHA_V2_SITE_KEY!}
+                onChange={handleV2Submit}
+                theme="light" // Optional: "light" or "dark"
+              />
+            </div>
           )}
-        </Button>
-      </GlassCard>
-    </div>
+
+          <Button
+            type={"submit"}
+            disabled={isBtnDisabled}
+            className="w-full cursor-pointer"
+          >
+            {isGettingFingerprint ? (
+              "Analyzing User..."
+            ) : fingerPrintError ? (
+              fingerPrintError.message
+            ) : isSubmitting ? (
+              "Verifying..."
+            ) : isSigninMessage ? (
+              "Signing Message"
+            ) : isInitiatingUserAuthentication ? (
+              "Initiating Sign in"
+            ) : isCompletingUserAuthentication ? (
+              "Completing Authentication"
+            ) : (
+              <>{isConnected && address ? "Continue" : "Connect Wallet"}</>
+            )}
+          </Button>
+        </GlassCard>
+      </div>
+    </form>
   );
 }

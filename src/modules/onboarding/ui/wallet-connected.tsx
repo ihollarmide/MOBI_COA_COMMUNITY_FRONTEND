@@ -4,26 +4,21 @@ import { Button } from "@/components/ui/button";
 import { SectionTitle } from "@/components/ui/section-title";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import { truncateAddress } from "@/lib/utils";
-import { useDisconnect } from "wagmi";
 import { useOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboardingUrlStates";
 import { ButtonsFooter } from "./buttons-footer";
-import { signOut } from "next-auth/react";
 import { Loader } from "@/components/ui/loader";
+import { useGetUplineId } from "../usecases/GetUplineId.usecase";
+import { useHandleSignout } from "@/modules/auth/hooks/useHandleSignout";
 
 export function WalletConnected() {
-  const { disconnect } = useDisconnect();
+  const { handleSignout } = useHandleSignout();
   const { address } = useWalletConnectionStatus();
   const [, setOnboardingUrlStates] = useOnboardingUrlStates();
 
+  useGetUplineId();
+
   const handleChangeWallet = () => {
-    disconnect(
-      {},
-      {
-        onSuccess: () => {
-          signOut();
-        },
-      }
-    );
+    handleSignout();
   };
 
   const handleConfirm = () => {

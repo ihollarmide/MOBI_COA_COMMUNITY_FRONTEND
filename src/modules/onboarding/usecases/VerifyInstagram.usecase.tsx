@@ -1,5 +1,5 @@
 import { post } from "@/lib/api-client";
-import { VerifySocialPayload, VerifySocialResponse } from "../types";
+import { AddUsernamePayload, VerifySocialResponse } from "../types";
 import { API_ENDPOINTS } from "@/lib/api-endpoints";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -7,9 +7,9 @@ import { useInvalidateQueries } from "@/hooks/useInvalidateQueries";
 import { QUERY_KEYS } from "@/common/constants/query-keys";
 import { updateAuthStatusQuery } from "@/modules/auth/lib/update-auth-query.lib";
 
-export const verifyInstagram = async (payload: VerifySocialPayload) => {
+export const verifyInstagram = async (payload: AddUsernamePayload) => {
   try {
-    const data = await post<VerifySocialResponse, VerifySocialPayload>({
+    const data = await post<VerifySocialResponse, AddUsernamePayload>({
       url: API_ENDPOINTS.VERIFY.INSTAGRAM,
       payload: payload,
     });
@@ -34,7 +34,7 @@ export const useVerifyInstagram = () => {
         id: TOAST_ID,
       });
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       if (data.data.success) {
         toast.success("Your Instagram account has been verified successfully", {
           id: TOAST_ID,
@@ -43,6 +43,7 @@ export const useVerifyInstagram = () => {
           queryClient,
           payload: {
             instagramFollowed: true,
+            instagramUsername: variables.username,
           },
         });
       } else {

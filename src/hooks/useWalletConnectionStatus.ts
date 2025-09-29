@@ -16,6 +16,20 @@ export function useWalletConnectionStatus() {
     useState<WalletConnectionStatus>("idle");
   const [hasInitialized, setHasInitialized] = useState(false);
 
+  const isWalletLoading =
+    walletConnectionStatus === "connecting" ||
+    walletConnectionStatus === "reconnecting" ||
+    walletConnectionStatus === "idle";
+
+  // useEffect(() => {
+  //   console.log({
+  //     appKitStatus,
+  //     appKitAddress,
+  //     wagmiStatus,
+  //     wagmiAddress: address,
+  //   })
+  // }, [appKitStatus, appKitAddress])
+
   useEffect(() => {
     if (!hasInitialized && wagmiStatus === "disconnected") {
       // On first load, keep it as idle
@@ -36,5 +50,6 @@ export function useWalletConnectionStatus() {
     isReconnecting: walletConnectionStatus === "reconnecting",
     isIdle: walletConnectionStatus === "idle",
     address: address,
+    isLoading: isWalletLoading,
   };
 }

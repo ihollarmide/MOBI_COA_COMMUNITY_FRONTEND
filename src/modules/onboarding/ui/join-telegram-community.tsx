@@ -8,8 +8,18 @@ import { CITY_OF_ATLANTUS_TELEGRAM_LINK } from "@/common/constants";
 import { SectionAction } from "./section-action";
 import { SectionMetaInfo } from "./section-meta-info";
 import { ButtonsFooter } from "./buttons-footer";
-import { useVerifyTelegram } from "../usecases/VerifyTelegram.usecase";
-import { useGetAuthStatus } from "@/modules/auth/usecases/GetAuthStatus.usecase";
+import {
+  TELEGRAM_TOAST_ID,
+  useConfirmTelegramMembership,
+} from "../usecases/ConfirmTelegramMembership.usecase";
+import {
+  useGetAuthStatus,
+  useRetrieveAuthStatus,
+} from "@/modules/auth/usecases/GetAuthStatus.usecase";
+import { TelegramSteps } from "../types";
+import { useGetTelegramBotLink } from "../usecases/GetTelegramBotLink.usecase";
+import { useAddTelegramUsername } from "../usecases/AddTelegramUsername.usecase";
+import { toast } from "sonner";
 
 const TITLE_MAP = {
   join: {
@@ -17,30 +27,61 @@ const TITLE_MAP = {
     description:
       "Click “Join Community” to become a part of the Atlantus City Hall Community.",
   },
+  submit: {
+    title:
+      "Confirm Atlantus City Hall Membership by entering your telegram username",
+    description: "Enter your Telegram username and click Submit.",
+  },
   verify: {
+    title: "Verify Atlantus City Hall Membership by engaging the bot",
+    description:
+      "Confirm your Telegram username and community membership by clicking Verify and following the bot prompts.",
+  },
+  confirm: {
     title: "Confirm Atlantus City Hall Membership",
-    description: "Enter your Telegram username to verify your membership.",
+    description: "Confirm your membership by clicking Confirm.",
   },
   success: {
-    title: "Your telegram account has been verified!",
+    title: "Your Telegram account has been verified!",
     description: "Click “Next” to continue.",
   },
 };
 
 const JOIN_ACTION_LIST = [
-  "Click the “Join” button to access the Atlantus City Hall Telegram community. This button redirects you to the Telegram app on your device and enables you to join the community.",
-  "After joining, come back to this window and enter your Telegram username in the input box.",
-  "Click “Verify” to validate your membership.",
+  "Click the “Join” button to access the Atlantus City Hall Telegram community. This button redirects you to the Telegram app on your device and enables you to join Atlantus City Hall",
+  "After joining, come back to this window, enter your Telegram username and click Submit.",
+  "Click “Verify” to confirm your membership, follow instructions from the bot and wait for verification.",
+  "Click “Confirm” to confirm your membership.",
   "Click “Next” to proceed to the next action.",
 ];
 
 export function JoinTelegramCommunity() {
   const [username, setUsername] = useState("");
   const { data: authStatus } = useGetAuthStatus();
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const { mutate: retrieveAuthStatus } = useRetrieveAuthStatus();
 
-  const { mutate: verifyTelegram } = useVerifyTelegram();
+  const { data: telegramBotLink, isPending: isGettingTelegramBotLink } =
+    useGetTelegramBotLink();
 
-  const [page, setPage] = useState<"join" | "verify" | "success">("join");
+  const isTelegramJoined =
+    !!authStatus?.data?.telegramJoined &&
+    !!authStatus?.data?.telegramId &&
+    !!authStatus?.data?.telegramUsername;
+
+  const isTelegramVerified =
+    !!authStatus?.data?.telegramVerified &&
+    !!authStatus?.data?.telegramId &&
+    !!authStatus?.data?.telegramUsername;
+
+  const {
+    mutate: confirmTelegramMembership,
+    isPending: isConfirmingMembership,
+  } = useConfirmTelegramMembership();
+
+  const { mutate: addTelegramUsername, isPending: isAddingTelegramUsername } =
+    useAddTelegramUsername();
+
   const [usernameError, setUsernameError] = useState<{
     isError: boolean;
     error: string | null;
@@ -48,51 +89,124 @@ export function JoinTelegramCommunity() {
     isError: false,
     error: null,
   });
-  const [, setOnboardingUrlStates] = useOnboardingUrlStates();
+  const [{ telegram: telegramStep }, setOnboardingUrlStates] =
+    useOnboardingUrlStates();
 
-  const handleBack = () => {
+  const setTelegramStep = (step: TelegramSteps) => {
     setOnboardingUrlStates((prev) => ({
       ...prev,
-      step: "wallet-connected",
+      telegram: step,
     }));
   };
 
-  const handleConfirm = () => {
-    if (page === "join") {
-      setPage("verify");
-    } else if (page === "verify") {
-      const { isError, error } = isValidUsernameWithAtSign(username);
-      if (isError) {
-        setUsernameError({ isError, error });
-        return;
-      }
-      setUsernameError({ isError: false, error: null });
-      verifyTelegram(
-        {
-          username: removeAtSign(username),
-        },
-        {
-          onSuccess: () => {
-            setPage("success");
-          },
-          onError: (error) => {
-            setUsernameError({ isError: true, error: error.message });
-          },
-        }
-      );
-    } else if (page === "success") {
+  const handleBack = () => {
+    if (
+      telegramStep === "success" ||
+      telegramStep === "join" ||
+      isTelegramJoined
+    ) {
       setOnboardingUrlStates((prev) => ({
         ...prev,
-        step: "follow-us",
+        step: "wallet-connected",
       }));
+    } else if (telegramStep === "confirm") {
+      setTelegramStep("verify");
+    } else if (telegramStep === "verify") {
+      setTelegramStep("submit");
+    } else if (telegramStep === "submit") {
+      setTelegramStep("join");
     }
   };
 
-  useEffect(() => {
-    if (authStatus?.data?.telegramJoined && page !== "success") {
-      setPage("success");
+  const handleConfirmTelegramMembership = () => {
+    retrieveAuthStatus(undefined, {
+      onSuccess: (data) => {
+        if (data.data.telegramVerified) {
+          setUsernameError({ isError: false, error: null });
+          confirmTelegramMembership(undefined, {
+            onSuccess: () => {
+              setTelegramStep("success");
+            },
+            onError: (error) => {
+              setUsernameError({ isError: true, error: error.message });
+            },
+          });
+        } else {
+          setUsernameError({
+            isError: true,
+            error:
+              "Your ownership of the telegram account cannot been verified",
+          });
+          toast.error(
+            "Your ownership of the telegram account cannot been verified",
+            {
+              id: TELEGRAM_TOAST_ID,
+            }
+          );
+        }
+      },
+      onError: (error) => {
+        setUsernameError({ isError: true, error: error.message });
+        toast.error(error.message, {
+          id: TELEGRAM_TOAST_ID,
+        });
+      },
+    });
+  };
+
+  const handleAddTelegramUsername = () => {
+    const { isError, error } = isValidUsernameWithAtSign(username, "telegram");
+    if (isError) {
+      setUsernameError({ isError, error });
+      return;
     }
-  }, [authStatus?.data?.telegramJoined, page]);
+    setUsernameError({ isError: false, error: null });
+
+    addTelegramUsername(
+      { username: removeAtSign(username) },
+      {
+        onSuccess: () => {
+          setTelegramStep("verify");
+        },
+        onError: (error) => {
+          setUsernameError({ isError: true, error: error.message });
+        },
+      }
+    );
+  };
+
+  const onInputFocus = () => {
+    setIsInputFocused(true);
+  };
+
+  const onInputBlur = () => {
+    setIsInputFocused(false);
+  };
+
+  useEffect(() => {
+    if (
+      !!authStatus?.data?.telegramUsername &&
+      (!username || username === "" || username.length === 0) &&
+      !isInputFocused
+    ) {
+      setUsername(authStatus?.data?.telegramUsername);
+    }
+  }, [authStatus?.data?.telegramUsername, username, isInputFocused]);
+
+  useEffect(() => {
+    if (isTelegramJoined && telegramStep !== "success") {
+      setTelegramStep("success");
+      return;
+    }
+
+    if (
+      isTelegramVerified &&
+      telegramStep !== "confirm" &&
+      telegramStep !== "success"
+    ) {
+      setTelegramStep("confirm");
+    }
+  }, [isTelegramJoined, isTelegramVerified, telegramStep]);
 
   return (
     <section className="w-full space-y-6 @container">
@@ -104,16 +218,24 @@ export function JoinTelegramCommunity() {
       </div>
 
       <SectionAction
-        title={TITLE_MAP[page].title}
-        description={TITLE_MAP[page].description}
+        title={TITLE_MAP[telegramStep].title}
+        description={TITLE_MAP[telegramStep].description}
         icon={IconsNames.TELEGRAM}
-        isSuccess={page === "success"}
-        isCollapsibleOpen={page === "verify"}
+        isSuccess={telegramStep === "success"}
+        isCollapsibleOpen={
+          telegramStep === "verify" ||
+          telegramStep === "confirm" ||
+          telegramStep === "submit"
+        }
+        inputValue={username}
+        onInputChange={setUsername}
+        onInputFocus={onInputFocus}
+        onInputBlur={onInputBlur}
+        isInputReadOnly={telegramStep !== "submit"}
+        isInputLoading={isConfirmingMembership || isAddingTelegramUsername}
+        inputPlaceholder="Your Telegram @username"
         isError={usernameError.isError}
         errorMessage={usernameError.error}
-        inputPlaceholder="Your Telegram @username"
-        onInputChange={setUsername}
-        inputValue={username}
       />
 
       <ButtonsFooter>
@@ -124,12 +246,59 @@ export function JoinTelegramCommunity() {
         >
           Back
         </Button>
-        <Button
-          asChild={page === "join"}
-          onClick={handleConfirm}
-          className="cursor-pointer"
-        >
-          {page === "join" ? (
+        {telegramStep === "submit" ? (
+          <Button
+            onClick={handleAddTelegramUsername}
+            disabled={isAddingTelegramUsername}
+          >
+            {isAddingTelegramUsername ? "Adding Telegram username..." : "Next"}
+          </Button>
+        ) : null}
+        {telegramStep === "verify" ? (
+          <Button
+            asChild={true}
+            disabled={isGettingTelegramBotLink || !telegramBotLink}
+            onClick={() => setTelegramStep("confirm")}
+          >
+            {isGettingTelegramBotLink || !telegramBotLink ? (
+              "Fetching bot link..."
+            ) : (
+              <a
+                href={`${telegramBotLink?.botLink}/start`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Verify
+              </a>
+            )}
+          </Button>
+        ) : null}
+        {telegramStep === "confirm" ? (
+          <Button
+            onClick={handleConfirmTelegramMembership}
+            disabled={isConfirmingMembership}
+          >
+            {isConfirmingMembership ? "Confirming Membership..." : "Confirm"}
+          </Button>
+        ) : null}
+        {telegramStep === "success" ? (
+          <Button
+            onClick={() => {
+              setOnboardingUrlStates((prev) => ({
+                ...prev,
+                step: "follow-us",
+              }));
+            }}
+          >
+            Next
+          </Button>
+        ) : null}
+        {telegramStep === "join" ? (
+          <Button
+            asChild={true}
+            onClick={() => setTelegramStep("submit")}
+            className="cursor-pointer"
+          >
             <a
               href={CITY_OF_ATLANTUS_TELEGRAM_LINK}
               target="_blank"
@@ -137,12 +306,8 @@ export function JoinTelegramCommunity() {
             >
               Join Community
             </a>
-          ) : page === "verify" ? (
-            "Verify"
-          ) : (
-            "Next"
-          )}
-        </Button>
+          </Button>
+        ) : null}
       </ButtonsFooter>
     </section>
   );

@@ -81,7 +81,9 @@ export function OnboardingNav() {
   };
 
   const handleStepClick = (slug: OnboardingStepSlug) => {
-    if (!isAccessible(slug)) return;
+    if (!isAccessible(slug)) {
+      return;
+    }
     setStep({ step: slug });
   };
 

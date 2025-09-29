@@ -1,5 +1,6 @@
-import { ONBOARDING_STEPS } from "../data";
+import { ONBOARDING_STEPS } from "@/modules/onboarding/data";
 import { OnboardingStepNumber, OnboardingStepSlug } from "../types";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 export const getStepNumberBySlug = (
   slug: OnboardingStepSlug
@@ -56,37 +57,61 @@ export function canAccessStep({
   return slugToAccessNumber <= accessibleSlugNumber;
 }
 
+export const CHARACTER_LIMITS = {
+  x: {
+    min: 4,
+    max: 15,
+  },
+  instagram: {
+    min: 1,
+    max: 32,
+  },
+  telegram: {
+    min: 5,
+    max: 32,
+  },
+};
+
 export const isValidUsernameWithAtSign = (
-  username: string
+  username: string,
+  platform: "x" | "instagram" | "telegram"
 ): { isError: boolean; error: string | null } => {
   // Check if username is empty or undefined
   if (!username || username.trim().length === 0) {
     return { isError: true, error: "Username is required" };
   }
 
-  // Check if username starts with @
-  if (!username.startsWith("@")) {
-    return { isError: true, error: "Username must start with @" };
-  }
+  // Remove @ if present for validation
+  const usernameWithoutAt = username.startsWith("@")
+    ? username.slice(1)
+    : username;
 
-  // Check if username has minimum length (excluding @)
-  if (username.length < 2) {
+  const { min, max } = CHARACTER_LIMITS[platform];
+  const isUsernameTooShort = usernameWithoutAt.length < min;
+  const isUsernameTooLong = usernameWithoutAt.length > max;
+
+  const platformName =
+    platform === "x"
+      ? "X"
+      : platform === "instagram"
+        ? "Instagram"
+        : "Telegram";
+
+  if (isUsernameTooShort) {
     return {
       isError: true,
-      error: "Username must be at least 1 character after @",
+      error: `${platformName} Username must be at least ${min} characters`,
     };
   }
 
-  // Check if username has maximum length (common social media limits)
-  if (username.length > 16) {
+  if (isUsernameTooLong) {
     return {
       isError: true,
-      error: "Username must be 15 characters or less after @",
+      error: `${platformName} Username must be at most ${max} characters`,
     };
   }
 
   // Check for valid characters (alphanumeric, underscore, hyphen)
-  const usernameWithoutAt = username.slice(1);
   const validUsernameRegex = /^[a-zA-Z0-9_-]+$/;
   if (!validUsernameRegex.test(usernameWithoutAt)) {
     return {
@@ -96,28 +121,61 @@ export const isValidUsernameWithAtSign = (
     };
   }
 
-  // Check if username doesn't start with a number or special character after @
-  if (/^[0-9_-]/.test(usernameWithoutAt)) {
+  // // Check for consecutive special characters
+  // if (/[_-]{2,}/.test(usernameWithoutAt)) {
+  //   return {
+  //     isError: true,
+  //     error: "Username cannot have consecutive underscores or hyphens",
+  //   };
+  // }
+
+  return { isError: false, error: null };
+};
+
+export const isValidPostLink = (
+  postLink: string,
+  platform: "x" | "instagram"
+): { isError: boolean; error: string | null } => {
+  // Check if postLink is empty or undefined
+  if (!postLink || postLink.trim().length === 0) {
     return {
       isError: true,
-      error: "Username must start with a letter after @",
+      error: `Valid ${platform === "x" ? "X tweet" : "Instagram post"} link is required`,
     };
   }
 
-  // Check if username doesn't end with underscore or hyphen
-  if (/[_-]$/.test(usernameWithoutAt)) {
-    return {
-      isError: true,
-      error: "Username cannot end with underscore or hyphen",
-    };
+  const trimmedLink = postLink.trim();
+
+  // Basic URL validation
+  try {
+    new URL(trimmedLink);
+  } catch {
+    return { isError: true, error: "Please enter a valid URL" };
   }
 
-  // Check for consecutive special characters
-  if (/[_-]{2,}/.test(usernameWithoutAt)) {
-    return {
-      isError: true,
-      error: "Username cannot have consecutive underscores or hyphens",
-    };
+  // Platform-specific validation
+  if (platform === "x") {
+    // Validate X (Twitter) post link
+    const xPostRegex =
+      /^https?:\/\/(www\.)?(twitter\.com|x\.com)\/[a-zA-Z0-9_]+\/status\/\d+(\?.*)?$/;
+    if (!xPostRegex.test(trimmedLink)) {
+      return {
+        isError: true,
+        error:
+          "Please enter a valid X (Twitter) post link (e.g., https://x.com/username/status/1234567890)",
+      };
+    }
+  } else if (platform === "instagram") {
+    // Validate Instagram post link
+    const instagramPostRegex =
+      /^https?:\/\/(www\.)?instagram\.com\/p\/[a-zA-Z0-9_-]+\/?(\?.*)?$/;
+    if (!instagramPostRegex.test(trimmedLink)) {
+      return {
+        isError: true,
+        error:
+          "Please enter a valid Instagram post link (e.g., https://instagram.com/p/ABC123/)",
+      };
+    }
   }
 
   return { isError: false, error: null };
@@ -160,3 +218,53 @@ export const isValidReferralCode = (
 export const removeAtSign = (username: string) => {
   return username.replace("@", "").trim();
 };
+
+export const isPhoneNumberValid = (phoneNumber: string) => {
+  const isValid = isValidPhoneNumber(phoneNumber);
+  return {
+    isError: !isValid,
+    error: isValid ? null : "Invalid phone number",
+  };
+};
+
+export const isOtpValid = (otp: string) => {
+  return {
+    isError: otp.length !== 6,
+    error: otp.length !== 6 ? "Invalid OTP" : null,
+  };
+};
+
+export function buildTweetPostLink({
+  text,
+  referralCode,
+  hashtags = [],
+  url,
+}: {
+  text: string;
+  referralCode?: string;
+  hashtags?: string[];
+  url?: string;
+}) {
+  // Append referral code to text if provided
+  let fullText = text;
+  if (referralCode) {
+    fullText += ` Referral Code: ${referralCode}`;
+  }
+
+  // Encode newlines properly for Twitter intent URL
+  const encodedText = fullText.replace(/\n/g, "%0A");
+
+  const params = new URLSearchParams({
+    text: encodedText,
+  });
+
+  if (hashtags.length > 0) {
+    params.set("hashtags", hashtags.join(","));
+  }
+
+  if (url) {
+    params.set("url", url);
+  }
+
+  return `https://x.com/intent/tweet?${params.toString()}`;
+}

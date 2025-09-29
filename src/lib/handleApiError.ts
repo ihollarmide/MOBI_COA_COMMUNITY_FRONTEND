@@ -8,14 +8,14 @@ export const handleApiError = (
 ): Error => {
   if (axios.isAxiosError<ApiErrorResponse>(error)) {
     const apiError = error as AxiosError<ApiErrorResponse>;
-    const message = apiError.response?.data?.data;
+    const message = apiError.response?.data?.message;
 
-    if (message) {
+    if (typeof message === "string") {
       return new Error(message);
     }
 
-    if (apiError.response?.data?.message) {
-      return new Error(apiError.response?.data?.message);
+    if (typeof apiError.response?.data?.data === "string") {
+      return new Error(apiError.response?.data?.data);
     }
 
     return new Error(fallbackMessage);

@@ -4,7 +4,6 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { OnboardingNav } from "./onboarding-nav";
 import { AnimatePresence, m } from "motion/react";
 import { useEffect } from "react";
-import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import { useOnboardingUrlStates } from "../hooks/useOnboardingUrlStates";
 import { WalletConnected } from "./wallet-connected";
 import { JoinTelegramCommunity } from "./join-telegram-community";
@@ -13,13 +12,14 @@ import { ReferralCode } from "./referral-code";
 import { ClaimKeys } from "./claim-keys";
 import { JoinVMCCDao } from "./join-vmcc-dao";
 import { fade } from "@/lib/animation.utils";
-import { signOut, useSession } from "next-auth/react";
 import { useGetStepToRedirectTo } from "../hooks/useStepsCompletionStatus";
 import { canAccessStep } from "../lib/utils";
 import { OnboardingStepSlug } from "../types";
 import { useRouter } from "next/navigation";
 import { useGetIsClaimedKey } from "../usecases/GetIsClaimedKey.usecase";
 import { useGetUplineId } from "../usecases/GetUplineId.usecase";
+import { useGetTelegramBotLink } from "../usecases/GetTelegramBotLink.usecase";
+// import { PhoneVerification } from "./phone-verification";
 
 function StepWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -37,15 +37,31 @@ function StepWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export function MainScreen() {
-  useGetIsClaimedKey();
-  useGetUplineId();
   const router = useRouter();
   router.prefetch("/welcome");
-
-  const { data: session, status: sessionStatus } = useSession();
-  const { status: walletStatus, address } = useWalletConnectionStatus();
+  useGetIsClaimedKey();
+  useGetUplineId();
   const [{ step: stepSlug }, setOnboardingUrlStates] = useOnboardingUrlStates();
   const accessibleSlug = useGetStepToRedirectTo();
+  useGetTelegramBotLink();
+
+  const isTwitterSigninStep =
+    window.location.search.includes("?error") ||
+    window.location.search.includes("error_description") ||
+    window.location.search.includes("?state") ||
+    window.location.search.includes("?code=") ||
+    window.location.search.includes("&code=");
+
+  // Fix malformed URLs with double question marks
+  useEffect(() => {
+    if (isTwitterSigninStep) {
+      setOnboardingUrlStates((prev) => ({
+        ...prev,
+        step: "follow-us",
+        x: "signin",
+      }));
+    }
+  }, [isTwitterSigninStep, setOnboardingUrlStates]);
 
   const isAccessible = (slug: OnboardingStepSlug) => {
     if (!accessibleSlug) return true;
@@ -61,67 +77,51 @@ export function MainScreen() {
     }
   }, [stepSlug, accessibleSlug, isAccessible]);
 
-  useEffect(() => {
-    if (sessionStatus === "unauthenticated") {
-      router.replace("/welcome");
-    }
-  }, [sessionStatus]);
-
-  useEffect(() => {
-    if (walletStatus === "disconnected") {
-      signOut({
-        redirect: true,
-        redirectTo: "/",
-      });
-    }
-  }, [walletStatus]);
-
-  useEffect(() => {
-    if (sessionStatus === "authenticated" && address) {
-      if (session.user.walletAddress.toLowerCase() !== address.toLowerCase()) {
-        signOut({
-          redirect: true,
-          redirectTo: "/",
-        });
-      }
-    }
-  }, [sessionStatus, address, session?.user?.walletAddress]);
-
   return (
     <div className="w-full space-y-6 @sm:space-y-8 @container">
       <OnboardingNav />
       <GlassCard className="p-4 @sm:p-6 w-full">
         <div className="grid-parent-stack">
           <AnimatePresence mode="sync">
-            {stepSlug === "wallet-connected" && (
-              <StepWrapper key={stepSlug}>
-                <WalletConnected />
-              </StepWrapper>
-            )}
-            {stepSlug === "join-telegram" && (
-              <StepWrapper key={stepSlug}>
-                <JoinTelegramCommunity />
-              </StepWrapper>
-            )}
-            {stepSlug === "follow-us" && (
-              <StepWrapper key={stepSlug}>
-                <FollowSocials />
-              </StepWrapper>
-            )}
-            {stepSlug === "enter-referral-code" && (
-              <StepWrapper key={stepSlug}>
-                <ReferralCode />
-              </StepWrapper>
-            )}
-            {stepSlug === "claim-genesis-key" && (
-              <StepWrapper key={stepSlug}>
-                <ClaimKeys />
-              </StepWrapper>
-            )}
-            {stepSlug === "join-vmcc-dao" && (
-              <StepWrapper key={stepSlug}>
-                <JoinVMCCDao />
-              </StepWrapper>
+            {isTwitterSigninStep || stepSlug === "follow-us" ? (
+              <>
+                <StepWrapper key={"follow-us"}>
+                  <FollowSocials />
+                </StepWrapper>
+              </>
+            ) : (
+              <>
+                {stepSlug === "wallet-connected" && (
+                  <StepWrapper key={stepSlug}>
+                    <WalletConnected />
+                  </StepWrapper>
+                )}
+                {/* {stepSlug === "verify-phone-number" && (
+                <StepWrapper key={stepSlug}>
+                  <PhoneVerification />
+                </StepWrapper>
+              )} */}
+                {stepSlug === "join-telegram" && (
+                  <StepWrapper key={stepSlug}>
+                    <JoinTelegramCommunity />
+                  </StepWrapper>
+                )}
+                {stepSlug === "enter-referral-code" && (
+                  <StepWrapper key={stepSlug}>
+                    <ReferralCode />
+                  </StepWrapper>
+                )}
+                {stepSlug === "claim-genesis-key" && (
+                  <StepWrapper key={stepSlug}>
+                    <ClaimKeys />
+                  </StepWrapper>
+                )}
+                {stepSlug === "join-vmcc-dao" && (
+                  <StepWrapper key={stepSlug}>
+                    <JoinVMCCDao />
+                  </StepWrapper>
+                )}
+              </>
             )}
           </AnimatePresence>
         </div>

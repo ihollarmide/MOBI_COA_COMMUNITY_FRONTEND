@@ -1,12 +1,32 @@
 import { ApiResponse } from "@/common/types";
-import { ONBOARDING_STEPS } from "@/modules/onboarding/data";
+import {
+  InstagramSteps,
+  ONBOARDING_STEPS,
+  TelegramSteps,
+  XSteps,
+} from "@/modules/onboarding/data";
 
 export type OnboardingStepSlug = (typeof ONBOARDING_STEPS)[number]["slug"];
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 export type OnboardingStepNumber = (typeof ONBOARDING_STEPS)[number]["step"];
 
-export type VerifySocialPayload = {
+export type AddUsernamePayload = {
   username: string;
+};
+
+export type VerifyTelegramMembershipPayload = {
+  telegramJoined: boolean;
+  telegramUsername: string;
+  telegramId: string | number;
+};
+
+export type VerifyTwitterPayload = {
+  username: string;
+  twitterId: string | number;
+};
+
+export type VerifyTweetPayload = {
+  tweetLink: string;
 };
 
 export interface SetUplineWithClaimPayload {
@@ -31,3 +51,30 @@ export type GetClaimParametersResponse = ApiResponse<{
 export type VerifySocialResponse = ApiResponse<{
   success: boolean;
 }>;
+
+export type VerifyTwitterResponse = ApiResponse<{
+  twitterUsername: string;
+  twitterId: string | number;
+}>;
+
+export type VerifyTweetResponse = ApiResponse<{
+  success: boolean;
+}>;
+
+export type RequestPhoneVerificationPayload = {
+  phoneNumber: string;
+};
+
+export type VerifyPhoneVerificationPayload = {
+  phone: string;
+  code: string;
+};
+
+export type TelegramSteps = (typeof TelegramSteps)[number];
+export type InstagramSteps = (typeof InstagramSteps)[number];
+export type XSteps = (typeof XSteps)[number];
+
+export interface GetTelegramBotLinkResponse {
+  botLink: string;
+  instructions: string;
+}

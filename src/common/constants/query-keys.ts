@@ -41,6 +41,11 @@ export const QUERY_KEYS = {
   AUTH_STATUS: createQueryKeys("auth-status"),
   CLAIM_PARAMETERS: createQueryKeys("claim-parameters"),
   VMCC_DETAILS: createQueryKeys("vmcc-details"),
-  IS_CLAIMED_KEY: createQueryKeys<{ address?: Address }>("is-claimed-key"),
-  UPLINE_ID: createQueryKeys<{ address?: Address }>("upline-id"),
+  IS_CLAIMED_KEY: createQueryKeys<{ address?: Address; chainId?: number }>(
+    "is-claimed-key"
+  ),
+  UPLINE_ID: createQueryKeys<{ address?: Address; chainId?: number }>(
+    "upline-id"
+  ),
+  GET_TELEGRAM_BOT_LINK: createQueryKeys("get-telegram-bot-link"),
 };

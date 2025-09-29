@@ -1,20 +1,29 @@
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
-import { useWriteContractWithReceipt } from "@/hooks/useWriteContractWithReceipt";
 import { toast } from "sonner";
 import { useRetrieveClaimParameters } from "./GetClaimParameters.usecase";
 import { getNextClaimableTokenId } from "./GetNextClaimableTokenId.usecase";
-import { airdropContract } from "@/common/constants/contracts/airdropContract";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Address } from "viem";
 import {
   getIsClaimedKey,
   updateIsClaimedKeyQuery,
 } from "./GetIsClaimedKey.usecase";
-import { useOnboardingUrlStates } from "../hooks/useOnboardingUrlStates";
+import { useOnboardingUrlStates } from "@/modules/onboarding/hooks/useOnboardingUrlStates";
+import { useChainId } from "wagmi";
+import { ADDRESSES } from "@/common/constants/contracts";
+import { airdropAbi } from "@/common/contract-abis/airdropAbi";
+import { useSequentialContractWrite } from "@/hooks/useSequentialContractWrite";
+import { useSession } from "next-auth/react";
+import { useHandleSignout } from "@/modules/auth/hooks/useHandleSignout";
 
 const TOAST_ID = "claim-token";
 
 export const useClaimToken = () => {
+  const { data: session } = useSession();
+
+  const { handleSignout } = useHandleSignout();
+
+  const chainId = useChainId();
   const queryClient = useQueryClient();
   const { address } = useWalletConnectionStatus();
   const { mutate: getClaimParameters, isPending: isGettingClaimParameters } =
@@ -26,13 +35,14 @@ export const useClaimToken = () => {
     useMutation({
       mutationFn: getIsClaimedKey,
       onMutate: () => {
-        toast.loading("Setting up...", {
+        toast.loading("Checking if you have already claimed...", {
           description: "",
           id: TOAST_ID,
         });
       },
-      onError: () => {
-        toast.error("Unable to claim. Please try again", {
+      onError: (error) => {
+        toast.error("Unable to check if you have already claimed", {
+          description: error.message,
           id: TOAST_ID,
         });
       },
@@ -44,122 +54,178 @@ export const useClaimToken = () => {
   } = useMutation({
     mutationFn: getNextClaimableTokenId,
     onMutate: () => {
-      toast.loading("Claiming Yard Genesis Key...", {
+      toast.loading("Getting next claimable token...", {
         description: "",
         id: TOAST_ID,
       });
     },
-    onError: () => {
-      toast.error("Unable to claim. Please try again", {
+    onError: (error) => {
+      toast.error("Unable to get next claimable token", {
+        description: error.message,
         id: TOAST_ID,
       });
     },
   });
 
-  const { writeContract: claim, isWritingContractWithReceipt } =
-    useWriteContractWithReceipt({
-      onMutate() {
-        toast.loading("Claiming Yard Genesis Key...", {
-          description: "",
+  const { write: claim, isLoading: isClaiming } = useSequentialContractWrite({
+    onInProgress() {
+      toast.loading("Claiming Yard Genesis Key...", {
+        description: "",
+        id: TOAST_ID,
+      });
+    },
+    onSuccess() {
+      if (!address) {
+        toast.error("Please connect your wallet", {
+          description: "We are unable to get your address",
           id: TOAST_ID,
         });
-      },
-      onCompleted() {
-        if (!address) {
-          toast.error("Please connect your wallet", {
-            id: TOAST_ID,
-          });
-          return;
-        }
-        updateIsClaimedKeyQuery({
-          queryClient,
-          payload: {
-            isClaimed: true,
-            address,
-          },
-        });
-        toast.success("Yard has been claimed successfully", {
-          id: TOAST_ID,
-        });
-        setOnboardingUrlStates((prev) => ({
-          ...prev,
-          step: "join-vmcc-dao",
-        }));
-      },
-      onWriteContractError(error) {
-        console.error(error);
-        toast.error("Unable to claim genesis key", {
-          description:
-            typeof error === "string"
-              ? error
-              : error?.message || "Unknown error",
-          id: TOAST_ID,
-        });
-      },
-      onTransactionReceiptError(error) {
-        toast.error(error?.message || "Unable to claim genesis key", {
-          id: TOAST_ID,
-        });
-      },
-    });
+        return;
+      }
+      updateIsClaimedKeyQuery({
+        queryClient,
+        payload: {
+          isClaimed: true,
+          address,
+          chainId,
+        },
+      });
+      toast.success("You have successfully claimed the free Yard Genesis Key", {
+        description: "",
+        id: TOAST_ID,
+      });
+      setOnboardingUrlStates((prev) => ({
+        ...prev,
+        step: "join-vmcc-dao",
+      }));
+    },
+    onError(error) {
+      console.error(error);
+      toast.error("Unable to claim genesis key", {
+        description: error,
+        id: TOAST_ID,
+      });
+    },
+  });
 
-  const handleClaim = () => {
+  const handleClaim = async () => {
     if (!address) return;
 
-    retrieveClaimStatus(address, {
-      onSuccess: (isClaimed) => {
-        if (isClaimed) {
-          toast.success("You have already claimed", {
-            id: TOAST_ID,
-          });
-        } else {
-          getClaimParameters(undefined, {
-            onSuccess: (claimParameters) => {
-              requestNextClaimableTokenId(undefined, {
-                onSuccess: (nextTokenId) => {
-                  claim({
-                    abi: airdropContract.abi,
-                    address: airdropContract.address,
-                    functionName: "claim",
-                    args: [
-                      address,
-                      claimParameters.data.nftAddress as unknown as Address,
-                      BigInt(nextTokenId),
-                      BigInt(claimParameters.data.deadline),
-                      claimParameters.data.v,
-                      claimParameters.data.r as unknown as Address,
-                      claimParameters.data.s as unknown as Address,
-                    ],
-                    // args: [
-                    //   "0x517177605394118D4A9d55bd36F48F850C6cF894",
-                    //   "0x14D0B4A8aDB4c9d6AE26Cf2723b197c2316d9417",
-                    //   BigInt(156),
-                    //   BigInt(1754646982),
-                    //   27,
-                    //   "0xd0e340566db26efcf8d564e552af76b755ee76dbd067e8457c75b178fc5fee9b",
-                    //   "0x634f2877443001022b5872ca1ee36eb519b3ef9e7c0d46684b32012007ef9492",
-                    // ]
-                  });
-                },
-              });
-            },
-            onError: () => {
-              toast.error("Unable to claim", {
-                description: "Please try again",
-                id: TOAST_ID,
-              });
-            },
-          });
-        }
+    if (!session) {
+      toast.error("Please sign in again", {
+        id: TOAST_ID,
+        description: "You will be redirected to the welcome page",
+      });
+      handleSignout();
+      return;
+    }
+
+    if (session?.user?.walletAddress.toLowerCase() !== address.toLowerCase()) {
+      toast.error("Session mismatch with wallet address", {
+        id: TOAST_ID,
+        description: "Please reconnect your wallet and sign in again",
+      });
+      handleSignout();
+      return;
+    }
+
+    retrieveClaimStatus(
+      {
+        address,
+        chainId,
       },
-    });
+      {
+        onSuccess: (isClaimed) => {
+          if (isClaimed) {
+            toast.success(
+              "You have already claimed the free Yard Genesis Key",
+              {
+                description: "",
+                id: TOAST_ID,
+              }
+            );
+          } else {
+            toast.loading("Initiating Yard Genesis Key claim...", {
+              description: "",
+              id: TOAST_ID,
+            });
+            getClaimParameters(undefined, {
+              onSuccess: (claimParameters) => {
+                requestNextClaimableTokenId(
+                  {
+                    chainId,
+                  },
+                  {
+                    onSuccess: async (nextTokenId) => {
+                      if (!session) {
+                        toast.error("Please sign in again", {
+                          id: TOAST_ID,
+                          description:
+                            "You will be redirected to the welcome page",
+                        });
+                        handleSignout();
+                        return;
+                      }
+
+                      if (!address) {
+                        toast.error("Please connect your wallet", {
+                          description: "We are unable to get your address",
+                          id: TOAST_ID,
+                        });
+                        handleSignout();
+                        return;
+                      }
+
+                      if (
+                        session?.user?.walletAddress.toLowerCase() !==
+                        address.toLowerCase()
+                      ) {
+                        toast.error("Session mismatch with wallet address", {
+                          id: TOAST_ID,
+                          description:
+                            "Please reconnect your wallet and sign in again",
+                        });
+                        handleSignout();
+                        return;
+                      }
+
+                      claim({
+                        abi: airdropAbi,
+                        address: ADDRESSES[chainId].AIRDROP,
+                        functionName: "claim",
+                        args: [
+                          address,
+                          claimParameters.data.nftAddress as unknown as Address,
+                          BigInt(nextTokenId),
+                          BigInt(claimParameters.data.deadline),
+                          claimParameters.data.v,
+                          claimParameters.data.r as unknown as Address,
+                          claimParameters.data.s as unknown as Address,
+                        ],
+                      });
+                    },
+                  }
+                );
+              },
+              onError: (error) => {
+                toast.error("Unable to initiate Yard Genesis Key claim", {
+                  description: error.message,
+                  id: TOAST_ID,
+                  duration: 10000,
+                });
+              },
+            });
+          }
+        },
+      }
+    );
   };
 
   return {
     handleClaim,
     isLoading:
       isRequestingNextClaimableTokenId ||
-      isWritingContractWithReceipt ||
+      isClaiming ||
       isGettingClaimParameters ||
       isRetrievingClaimStatus,
   };

@@ -21,19 +21,27 @@ export function SectionAction({
   onInputChange,
   inputValue,
   collapsibleContent,
+  isInputReadOnly,
+  children,
+  onInputFocus,
+  onInputBlur,
 }: {
   title: string;
   description: string;
   icon: IconsNames;
   isSuccess: boolean;
   isCollapsibleOpen: boolean;
-  isError: boolean;
-  errorMessage: string | null;
+  isError?: boolean;
+  errorMessage?: string | null;
   isInputLoading?: boolean;
-  inputPlaceholder: string;
-  onInputChange: (value: string) => void;
-  inputValue: string;
+  inputPlaceholder?: string;
+  onInputChange?: (value: string) => void;
+  inputValue?: string;
   collapsibleContent?: ReactNode;
+  isInputReadOnly?: boolean;
+  children?: ReactNode;
+  onInputFocus?: () => void;
+  onInputBlur?: () => void;
 }) {
   return (
     <GlassCard
@@ -63,17 +71,21 @@ export function SectionAction({
 
       <Collapsible isOpen={isCollapsibleOpen}>
         <div className="pt-4">
+          {children ? children : null}
           {collapsibleContent ? (
             collapsibleContent
-          ) : (
+          ) : inputValue !== undefined && onInputChange ? (
             <>
               <Input
                 aria-invalid={isError}
                 value={inputValue}
-                onChange={(e) => onInputChange(e.target.value)}
+                onChange={(e) => onInputChange?.(e.target.value)}
                 placeholder={inputPlaceholder}
-                disabled={isInputLoading}
+                disabled={isInputLoading || isInputReadOnly}
+                readOnly={isInputReadOnly}
                 endContent={isInputLoading ? <Loader loaderSize={16} /> : null}
+                onFocus={onInputFocus}
+                onBlur={onInputBlur}
               />
               {isError && errorMessage && (
                 <p className="text-destructive mt-1 text-xs font-normal leading-[1.5] tracking-xxs line-clamp-1">
@@ -81,7 +93,7 @@ export function SectionAction({
                 </p>
               )}
             </>
-          )}
+          ) : null}
         </div>
       </Collapsible>
     </GlassCard>

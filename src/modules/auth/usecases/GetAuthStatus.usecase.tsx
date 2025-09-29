@@ -1,8 +1,9 @@
 import { QUERY_KEYS } from "@/common/constants/query-keys";
 import { get } from "@/lib/api-client";
 import { API_ENDPOINTS } from "@/lib/api-endpoints";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { GetAuthStatusResponse } from "@/modules/auth/types";
+import { updateAuthStatusQuery } from "@/modules/auth/lib/update-auth-query.lib";
 
 export const getAuthStatus = async () => {
   try {
@@ -27,6 +28,21 @@ export const useGetAuthStatus = ({
     queryKey: QUERY_KEYS.AUTH_STATUS.list(),
     queryFn: getAuthStatus,
     enabled: isEnabled,
+  });
+
+  return res;
+};
+
+export const useRetrieveAuthStatus = () => {
+  const queryClient = useQueryClient();
+  const res = useMutation({
+    mutationFn: getAuthStatus,
+    onSuccess: (data) => {
+      updateAuthStatusQuery({
+        queryClient,
+        payload: data.data,
+      });
+    },
   });
 
   return res;

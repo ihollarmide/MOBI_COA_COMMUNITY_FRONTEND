@@ -1,7 +1,9 @@
-import { coaAuthContract } from "@/common/constants/contracts/coaAuthContract";
-import { referralContract } from "@/common/constants/contracts/referralContract";
+import { ADDRESSES } from "@/common/constants/contracts";
 import { QUERY_KEYS } from "@/common/constants/query-keys";
-import { config } from "@/config/wagmi";
+import { coaAuthContractAbi } from "@/common/contract-abis/coaAuthContractAbi";
+import { referralAbi } from "@/common/contract-abis/referralAbi";
+import { config } from "@/config";
+import { getEthersProvider } from "@/providers/ethers-provider";
 import { useWalletConnectionStatus } from "@/hooks/useWalletConnectionStatus";
 import { isZeroAddress } from "@/lib/utils";
 import {
@@ -10,42 +12,57 @@ import {
   useMutation,
   useQuery,
 } from "@tanstack/react-query";
-import { readContract } from "@wagmi/core";
+import { Contract } from "ethers";
 import { Address } from "viem";
+import { useChainId } from "wagmi";
 
-export const getUplineId = async (address: Address) => {
-  const reffererAddress = await readContract(config, {
-    address: referralContract.address,
-    abi: referralContract.abi,
-    functionName: "uplines",
-    args: [address],
-  });
-
-  if (isZeroAddress(reffererAddress)) {
-    const res = await readContract(config, {
-      address: referralContract.address,
-      abi: referralContract.abi,
-      functionName: "downlineToUplineId",
-      args: [address],
-    });
-    return parseInt(res.toString());
+export const getUplineId = async ({
+  address,
+  chainId,
+}: {
+  address: Address;
+  chainId: number;
+}) => {
+  const provider = getEthersProvider(config, { chainId });
+  if (!provider) {
+    throw new Error(`No provider found for chainId: ${chainId}`);
   }
 
-  const res = await readContract(config, {
-    address: coaAuthContract.address,
-    abi: coaAuthContract.abi,
-    functionName: "walletToUserId",
-    args: [reffererAddress],
-  });
+  try {
+    const referralContract = new Contract(
+      ADDRESSES[chainId].REFERRAL,
+      referralAbi,
+      provider
+    );
+    const reffererAddress: Address = await referralContract.uplines(address);
 
-  return parseInt(res.toString());
+    if (isZeroAddress(reffererAddress)) {
+      const res: bigint = await referralContract.downlineToUplineId(address);
+      return parseInt(res.toString());
+    }
+
+    const authContract = new Contract(
+      ADDRESSES[chainId].AUTH_CONTRACT,
+      coaAuthContractAbi,
+      provider
+    );
+    const res: bigint = await authContract.walletToUserId(reffererAddress);
+    return parseInt(res.toString());
+  } catch (error) {
+    console.log("error", error);
+    return null;
+  }
 };
 
 export const useGetUplineId = () => {
   const { address } = useWalletConnectionStatus();
+  const chainId = useChainId();
   const res = useQuery({
-    queryKey: QUERY_KEYS.UPLINE_ID.detail(address ?? ""),
-    queryFn: !!address ? () => getUplineId(address) : skipToken,
+    queryKey: QUERY_KEYS.UPLINE_ID.list({ address, chainId }),
+    queryFn:
+      !!address && !!chainId
+        ? () => getUplineId({ address, chainId })
+        : skipToken,
   });
 
   return res;
@@ -67,11 +84,15 @@ export const updateUplineIdQuery = ({
   payload: {
     uplineId: number;
     address: Address;
+    chainId: number;
   };
 }) => {
   // Always update the query data, regardless of whether it exists
   queryClient.setQueryData(
-    QUERY_KEYS.UPLINE_ID.detail(payload.address ?? ""),
+    QUERY_KEYS.UPLINE_ID.list({
+      address: payload.address,
+      chainId: payload.chainId,
+    }),
     payload.uplineId
   );
 };

@@ -12,3 +12,5 @@ export { default as Check } from "public/icons/check.svg";
 export { default as Success } from "public/icons/success.svg";
 export { default as Directions } from "public/icons/directions.svg";
 export { default as Telecast } from "public/icons/telecast.svg";
+export { default as Padlock } from "public/icons/padlock.svg";
+export { default as Phone } from "public/icons/phone.svg";
